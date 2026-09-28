@@ -58,12 +58,12 @@ async function loadItems(orderId: string): Promise<OrderItem[]> {
 
 function itemsText(items: OrderItem[]): string {
   return items.map((item) => {
-    const flavors = (item.customization || [])
-      .filter((f) => Number(f.quantity) > 0)
-      .map((f) => `${f.name} x${f.quantity}`)
-      .join(", ");
+    const flavors = (item.customization || []).filter((f) => Number(f.quantity) > 0);
     return `- ${item.product_name} (${item.variant_name}) x${item.quantity}  ${qar(item.total_price)}` +
-      (flavors ? `\n    ${flavors}` : "");
+      (flavors.length
+        ? "\n    CUSTOMIZED - flavours per box:\n" +
+          flavors.map((f) => `      ${f.name}: ${f.quantity}`).join("\n")
+        : "");
   }).join("\n");
 }
 

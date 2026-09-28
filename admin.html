@@ -222,9 +222,32 @@
       font-size: .85rem;
     }
 
-    .items .flavors { display: block; color: var(--text-muted); font-size: .72rem; }
-
     .items li > span:last-child { white-space: nowrap; }
+
+    .custom-box {
+      display: block;
+      margin: 8px 0 4px;
+      padding: 10px 12px;
+      max-width: 260px;
+      background: rgba(201,168,76,.12);
+      border-left: 2px solid var(--gold);
+      font-size: .78rem;
+      white-space: normal;
+    }
+
+    .flavor-row { display: flex; justify-content: space-between; gap: 18px; line-height: 1.7; }
+
+    .flavor-row strong { font-weight: 500; }
+
+    .custom-label {
+      display: block;
+      color: var(--gold-dark);
+      font-size: .6rem;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
 
     .totals { margin-top: 8px; font-size: .8rem; }
 
@@ -439,11 +462,12 @@
 
       const items = (order.order_items || []).map(item => {
         const flavors = Array.isArray(item.customization)
-          ? item.customization.filter(f => Number(f.quantity) > 0).map(f => `${escapeHtml(f.name)} × ${Number(f.quantity)}`).join(', ')
+          ? item.customization.filter(f => Number(f.quantity) > 0)
+              .map(f => `<span class="flavor-row"><span>${escapeHtml(f.name)}</span><strong>${Number(f.quantity)}</strong></span>`).join('')
           : '';
         return `<li>
           <span>${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)} × ${Number(item.quantity)}
-            ${flavors ? `<span class="flavors">${flavors}</span>` : ''}</span>
+            ${flavors ? `<span class="custom-box"><span class="custom-label">Customized · per box</span>${flavors}</span>` : ''}</span>
           <span>${qar(item.total_price)}</span>
         </li>`;
       }).join('');
