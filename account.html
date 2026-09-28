@@ -282,6 +282,70 @@
 
     .shop-link:hover { color: var(--gold-dark); border-color: var(--gold-dark); }
 
+    .order-list { display: grid; gap: 14px; }
+    .order-list[hidden] { display: none; }
+
+    .order-row {
+      border: 1px solid rgba(26,23,19,.12);
+      padding: 20px 22px;
+      background: rgba(235,224,196,.18);
+    }
+
+    .order-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 6px 16px;
+      margin-bottom: 12px;
+    }
+
+    .order-number {
+      font-family: var(--serif);
+      font-size: 1.25rem;
+      color: var(--text-dark);
+    }
+
+    .order-date { color: #7A6D55; font-size: .62rem; letter-spacing: .08em; }
+
+    .order-status {
+      font-size: .52rem;
+      font-weight: 500;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--gold-dark);
+      border: 1px solid rgba(201,168,76,.45);
+      padding: 4px 9px;
+    }
+
+    .order-status.cancelled { color: #7A6D55; border-color: rgba(26,23,19,.2); }
+
+    .order-items { list-style: none; margin: 0 0 12px; padding: 0; }
+
+    .order-items li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-dark);
+      font-size: .7rem;
+      line-height: 1.8;
+    }
+
+    .order-items .flavors { display: block; color: #7A6D55; font-size: .6rem; }
+
+    .order-foot {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 6px 16px;
+      border-top: 1px solid rgba(26,23,19,.1);
+      padding-top: 10px;
+      color: #7A6D55;
+      font-size: .62rem;
+    }
+
+    .order-foot strong { color: var(--text-dark); font-weight: 500; }
+
     .danger {
       background: var(--black);
       color: var(--beige);
@@ -491,7 +555,9 @@
           Your QAVERA orders will appear here once you place an order.
         </p>
 
-        <div class="order-empty">
+        <div class="order-list" id="orderList" hidden></div>
+
+        <div class="order-empty" id="orderEmpty">
           <div class="order-symbol">◆</div>
           <h3>No orders yet</h3>
           <p>Your future purchases and order status will be available here.</p>
@@ -633,6 +699,92 @@
       // Google accounts can still have an email, but may not have password credentials.
       // We leave the password section available because Supabase can update the password
       // for a user when a password identity is present.
+
+      loadOrders(user.id);
+    }
+
+    const ORDER_STATUS_LABELS = {
+      pending: 'Order received',
+      confirmed: 'Confirmed',
+      preparing: 'Preparing',
+      out_for_delivery: 'Out for delivery',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled'
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
+    }
+
+    function formatQar(value) {
+      const amount = Number(value || 0);
+      return `QAR ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+    }
+
+    async function loadOrders(userId) {
+      const { data: orders, error } = await supabaseClient
+        .from('orders')
+        .select('id, order_number, created_at, status, total, points_used, points_earned, order_items(product_name, variant_name, quantity, total_price, customization)')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Orders load error:', error);
+        return;
+      }
+
+      if (!orders || !orders.length) return;
+
+      const orderList = document.getElementById('orderList');
+
+      orderList.innerHTML = orders.map(order => {
+        const status = String(order.status || 'pending');
+        const statusLabel = ORDER_STATUS_LABELS[status] || status.replace(/_/g, ' ');
+        const date = order.created_at
+          ? new Date(order.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+          : '';
+
+        const items = (order.order_items || []).map(item => {
+          const flavors = Array.isArray(item.customization)
+            ? item.customization
+                .filter(f => Number(f.quantity) > 0)
+                .map(f => `${escapeHtml(f.name)} × ${Number(f.quantity)}`)
+                .join(', ')
+            : '';
+
+          return `
+            <li>
+              <span>
+                ${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)} × ${Number(item.quantity)}
+                ${flavors ? `<span class="flavors">${flavors}</span>` : ''}
+              </span>
+              <span>${formatQar(item.total_price)}</span>
+            </li>`;
+        }).join('');
+
+        const pointsNotes = [];
+        if (Number(order.points_used) > 0) pointsNotes.push(`${Number(order.points_used)} points used`);
+        if (Number(order.points_earned) > 0) pointsNotes.push(`${Number(order.points_earned)} points earned`);
+
+        return `
+          <article class="order-row">
+            <div class="order-head">
+              <span class="order-number">${escapeHtml(order.order_number)}</span>
+              <span class="order-status ${status === 'cancelled' ? 'cancelled' : ''}">${escapeHtml(statusLabel)}</span>
+            </div>
+            <div class="order-date">${escapeHtml(date)}</div>
+            <ul class="order-items">${items}</ul>
+            <div class="order-foot">
+              <span>${pointsNotes.join(' · ')}</span>
+              <span>Total <strong>${formatQar(order.total)}</strong></span>
+            </div>
+          </article>`;
+      }).join('');
+
+      orderList.hidden = false;
+      document.getElementById('orderEmpty').hidden = true;
     }
 
     async function logout() {
