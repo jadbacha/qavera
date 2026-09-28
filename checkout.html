@@ -148,10 +148,92 @@
   display: flex;
   align-items: center;
   padding: 0 15px;
+  border: none;
   border-right: 1px solid var(--border);
+  background: transparent;
   color: var(--muted);
+  font-family: Inter, sans-serif;
   font-size: 14px;
+  max-width: 45%;
+  cursor: pointer;
+  outline: none;
 }
+
+.country-code option {
+  background: var(--bg);
+  color: var(--cream);
+}
+
+/* Order confirmation / message dialog */
+.checkout-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8,7,6,.78);
+  backdrop-filter: blur(4px);
+}
+
+.checkout-dialog[hidden] { display: none; }
+
+.checkout-dialog-box {
+  width: 100%;
+  max-width: 440px;
+  padding: 44px 36px 36px;
+  border: 1px solid rgba(201,164,92,.45);
+  background: var(--bg);
+  color: var(--cream);
+  text-align: center;
+}
+
+.checkout-dialog-symbol { color: var(--gold); font-size: .85rem; margin-bottom: 16px; }
+
+.checkout-dialog-label {
+  color: var(--gold);
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.checkout-dialog-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+
+.checkout-dialog-text {
+  color: var(--muted);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.checkout-dialog-details {
+  margin: 22px 0 4px;
+  border-top: 1px solid var(--border);
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+}
+
+.checkout-dialog-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.checkout-dialog-details span:first-child { color: var(--muted); }
+
+.checkout-dialog .confirm-order { margin-top: 28px; }
 
 .phone-input input {
   border: none;
@@ -471,12 +553,33 @@
           Please enter your phone number.
           </div>
           <div class="phone-input">
-            <span class="country-code">+974</span>
+            <select class="country-code" id="countryCode" aria-label="Country code">
+              <option value="+974" selected>Qatar (+974)</option>
+              <option value="+961">Lebanon (+961)</option>
+              <option value="+971">UAE (+971)</option>
+              <option value="+966">Saudi Arabia (+966)</option>
+              <option value="+965">Kuwait (+965)</option>
+              <option value="+973">Bahrain (+973)</option>
+              <option value="+968">Oman (+968)</option>
+              <option value="+962">Jordan (+962)</option>
+              <option value="+20">Egypt (+20)</option>
+              <option value="+90">Türkiye (+90)</option>
+              <option value="+1">USA / Canada (+1)</option>
+              <option value="+44">United Kingdom (+44)</option>
+              <option value="+33">France (+33)</option>
+              <option value="+49">Germany (+49)</option>
+              <option value="+39">Italy (+39)</option>
+              <option value="+34">Spain (+34)</option>
+              <option value="+91">India (+91)</option>
+              <option value="+86">China (+86)</option>
+              <option value="+81">Japan (+81)</option>
+              <option value="+82">South Korea (+82)</option>
+              <option value="+61">Australia (+61)</option>
+            </select>
             <input
             type="tel"
             id="phone"
             inputmode="numeric"
-            pattern="[0-9]{8}"
             maxlength="8"
             placeholder="XXXXXXXX"
             required>
@@ -677,6 +780,78 @@
     const pointsDiscountRow = document.getElementById('pointsDiscountRow');
     const pointsDiscountElement = document.getElementById('pointsDiscount');
     const confirmOrderButton = document.getElementById('confirmOrder');
+
+    // Styled replacement for alert(): showCheckoutDialog({ label, title, text, details, button, onClose })
+    function showCheckoutDialog({ label = '', title = '', text = '', details = null, button = 'OK', onClose = null }) {
+      const dialog = document.getElementById('checkoutDialog');
+      const closeButton = document.getElementById('checkoutDialogButton');
+      const detailsEl = document.getElementById('checkoutDialogDetails');
+
+      document.getElementById('checkoutDialogLabel').textContent = label;
+      document.getElementById('checkoutDialogTitle').textContent = title;
+      document.getElementById('checkoutDialogText').textContent = text;
+
+      detailsEl.replaceChildren();
+      (details || []).forEach(([name, value]) => {
+        const row = document.createElement('div');
+        const nameEl = document.createElement('span');
+        const valueEl = document.createElement('span');
+        nameEl.textContent = name;
+        valueEl.textContent = value;
+        row.append(nameEl, valueEl);
+        detailsEl.appendChild(row);
+      });
+      detailsEl.hidden = !(details && details.length);
+
+      closeButton.textContent = button;
+      closeButton.onclick = () => {
+        dialog.hidden = true;
+        if (onClose) onClose();
+      };
+
+      dialog.hidden = false;
+      closeButton.focus();
+    }
+
+    function showCheckoutMessage(text) {
+      showCheckoutDialog({ label: 'Checkout', title: 'Please check your order', text });
+    }
+
+    // Phone numbers are stored as "+<country code><digits>", e.g. +97455555555 or +96170123456.
+    const QATAR_CODE = '+974';
+
+    function getFullPhone() {
+      return document.getElementById('countryCode').value + document.getElementById('phone').value.trim();
+    }
+
+    function setPhoneFields(storedPhone) {
+      const raw = String(storedPhone || '').replace(/[^\d+]/g, '');
+      if (!raw) return;
+
+      const withPlus = raw.startsWith('+') ? raw : '+' + raw;
+      const codes = Array.from(document.getElementById('countryCode').options)
+        .map(option => option.value)
+        .sort((a, b) => b.length - a.length);
+      const code = codes.find(c => withPlus.startsWith(c));
+
+      if (code) {
+        document.getElementById('countryCode').value = code;
+        document.getElementById('phone').value = withPlus.slice(code.length);
+      } else {
+        // Older entries saved without a country code were Qatar numbers.
+        document.getElementById('countryCode').value = QATAR_CODE;
+        document.getElementById('phone').value = raw.replace(/\D/g, '').slice(-8);
+      }
+      updatePhoneLimits();
+    }
+
+    function updatePhoneLimits() {
+      const phoneInput = document.getElementById('phone');
+      const isQatar = document.getElementById('countryCode').value === QATAR_CODE;
+      phoneInput.maxLength = isQatar ? 8 : 12;
+      phoneInput.placeholder = isQatar ? 'XXXXXXXX' : 'Phone number';
+      phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, phoneInput.maxLength);
+    }
     const savedAddressSelect = document.getElementById('savedAddressSelect');
     const saveAddressCheckbox = document.getElementById('saveAddress');
 
@@ -817,10 +992,7 @@
       if (!addressRecord) return;
 
       document.getElementById('area').value = addressRecord.area || '';
-      document.getElementById('phone').value = String(addressRecord.phone || '')
-        .replace(/\D/g, '')
-        .replace(/^974/, '')
-        .slice(0, 8);
+      setPhoneFields(addressRecord.phone);
 
       const raw = String(addressRecord.full_address || '');
       const buildingMatch = raw.match(/(?:^|\n)Building \/ Villa:\s*(.*)$/m);
@@ -885,7 +1057,7 @@
       if (!currentUser || !saveAddressCheckbox.checked) return;
 
       const area = document.getElementById('area').value.trim();
-      const phone = `+974${document.getElementById('phone').value.trim()}`;
+      const phone = getFullPhone();
       const fullAddress = buildSavedAddressText();
 
       const existing = savedAddresses.find(address =>
@@ -948,8 +1120,7 @@
       }
 
       if (phone) {
-        const cleanedPhone = String(phone).replace(/\D/g, '').replace(/^974/, '').slice(0, 8);
-        document.getElementById('phone').value = cleanedPhone;
+        setPhoneFields(phone);
       }
     }
 
@@ -1073,8 +1244,15 @@
       const phone = document.getElementById('phone');
       const phoneError = document.getElementById('phoneError');
 
-      if (!/^\d{8}$/.test(phone.value.trim())) {
-        phoneError.textContent = 'Please enter a valid 8-digit Qatar phone number.';
+      const isQatarPhone = document.getElementById('countryCode').value === QATAR_CODE;
+      const phoneIsValid = isQatarPhone
+        ? /^\d{8}$/.test(phone.value.trim())
+        : /^\d{6,12}$/.test(phone.value.trim());
+
+      if (!phoneIsValid) {
+        phoneError.textContent = isQatarPhone
+          ? 'Please enter a valid 8-digit Qatar phone number.'
+          : 'Please enter a valid phone number (digits only, without the country code).';
         phoneError.classList.add('show');
         hasError = true;
       } else {
@@ -1083,7 +1261,7 @@
 
       if (cart.length === 0) {
         hasError = true;
-        alert('Your cart is empty.');
+        showCheckoutMessage('Your cart is empty.');
       }
 
       return !hasError;
@@ -1095,14 +1273,16 @@
     });
 
     document.getElementById('phone').addEventListener('input', function () {
-      this.value = this.value.replace(/\D/g, '').slice(0, 8);
+      this.value = this.value.replace(/\D/g, '').slice(0, this.maxLength);
     });
+
+    document.getElementById('countryCode').addEventListener('change', updatePhoneLimits);
 
     document.getElementById('confirmOrder').addEventListener('click', async function () {
       if (!validateCheckout()) return;
 
       if (!currentUser) {
-        alert('Please sign in before continuing.');
+        showCheckoutMessage('Please sign in before continuing.');
         return;
       }
 
@@ -1196,14 +1376,14 @@
           try { localStorage.setItem('qaveraCart', JSON.stringify(cart)); } catch (_) {}
         } catch (resolveError) {
           console.error('Could not resolve cart variants:', resolveError);
-          alert(resolveError?.message || 'Could not identify one of the products in your cart.');
+          showCheckoutMessage(resolveError?.message || 'Could not identify one of the products in your cart.');
           return;
         }
       }
 
       const invalidCartItem = cart.find(item => !item.variant_id || Number(item.quantity || 0) <= 0);
       if (invalidCartItem) {
-        alert('One of the products in your cart is invalid. Please add it again.');
+        showCheckoutMessage('One of the products in your cart is invalid. Please add it again.');
         return;
       }
 
@@ -1213,7 +1393,7 @@
       try {
         const { data, error } = await supabaseClient.rpc('create_qavera_order', {
           p_customer_name: titleCaseName(document.getElementById('fullName').value),
-          p_customer_phone: `+974${document.getElementById('phone').value.trim()}`,
+          p_customer_phone: getFullPhone(),
           p_customer_email: currentUser.email || currentProfile?.email || '',
           p_delivery_address: document.getElementById('address').value.trim(),
           p_delivery_area: document.getElementById('area').value.trim(),
@@ -1244,12 +1424,23 @@
         cart = [];
         renderOrder();
 
-        alert(`Thank you for your order!\n\nOrder number: ${order.order_number}\nTotal: QAR ${Number(order.total).toFixed(0)}\n\nPayment: ${paymentSelection}`);
-        window.location.href = 'account.html';
+        const orderTotal = Number(order.total);
+        showCheckoutDialog({
+          label: 'Order received',
+          title: 'Thank you for your order',
+          text: 'We will contact you shortly to confirm your delivery.',
+          details: [
+            ['Order number', order.order_number],
+            ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`],
+            ['Payment', paymentSelection]
+          ],
+          button: 'View my orders',
+          onClose: () => { window.location.href = 'account.html'; }
+        });
       } catch (error) {
         console.error('Could not create QAVERA order:', error);
         const message = error?.message || 'Something went wrong while placing your order.';
-        alert(message);
+        showCheckoutDialog({ label: 'Checkout', title: 'We could not place your order', text: message });
         confirmOrderButton.disabled = false;
         confirmOrderButton.textContent = 'CONFIRM ORDER';
       }
@@ -1286,5 +1477,15 @@
     });
   </script>
 
+<div class="checkout-dialog" id="checkoutDialog" role="dialog" aria-modal="true" aria-labelledby="checkoutDialogTitle" hidden>
+  <div class="checkout-dialog-box">
+    <div class="checkout-dialog-symbol">◆</div>
+    <div class="checkout-dialog-label" id="checkoutDialogLabel"></div>
+    <h2 class="checkout-dialog-title" id="checkoutDialogTitle"></h2>
+    <p class="checkout-dialog-text" id="checkoutDialogText"></p>
+    <div class="checkout-dialog-details" id="checkoutDialogDetails" hidden></div>
+    <button type="button" class="confirm-order" id="checkoutDialogButton"></button>
+  </div>
+</div>
 </body>
 </html>
