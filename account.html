@@ -282,6 +282,10 @@
 
     .shop-link:hover { color: var(--gold-dark); border-color: var(--gold-dark); }
 
+    /* Show names with capital first letters while typing. */
+    #firstName,
+    #lastName { text-transform: capitalize; }
+
     .order-list { display: grid; gap: 14px; }
     .order-list[hidden] { display: none; }
 
@@ -635,6 +639,20 @@
     const accountMain = document.getElementById('accountMain');
     const welcomeText = document.getElementById('welcomeText');
 
+    // Same rule as sign-up: first letter of each name part capital, the rest lowercase.
+    function capitalizeName(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, separator, letter) => separator + letter.toUpperCase());
+    }
+
+    ['firstName', 'lastName'].forEach(id => {
+      document.getElementById(id).addEventListener('blur', event => {
+        event.target.value = capitalizeName(event.target.value);
+      });
+    });
+
     async function loadAccount() {
       const { data: { session }, error } = await supabaseClient.auth.getSession();
 
@@ -672,10 +690,10 @@
       const matchedCode = supportedCodes.find(code => phoneFull.startsWith(code));
       const countryCode = matchedCode || user.user_metadata?.phone_country_code || '+974';
       const phone = matchedCode ? phoneFull.slice(matchedCode.length).trim() : phoneFull;
-      const displayName = fullName || [firstName, lastName].filter(Boolean).join(' ');
+      const displayName = capitalizeName(fullName || [firstName, lastName].filter(Boolean).join(' '));
 
-      document.getElementById('firstName').value = firstName;
-      document.getElementById('lastName').value = lastName;
+      document.getElementById('firstName').value = capitalizeName(firstName);
+      document.getElementById('lastName').value = capitalizeName(lastName);
       document.getElementById('email').value = user.email || profile?.email || '';
       document.getElementById('phone').value = phone;
       document.getElementById('countryCode').value = countryCode;
@@ -810,8 +828,10 @@
       button.textContent = 'Saving...';
       message.textContent = '';
 
-      const firstName = document.getElementById('firstName').value.trim();
-      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = capitalizeName(document.getElementById('firstName').value);
+      const lastName = capitalizeName(document.getElementById('lastName').value);
+      document.getElementById('firstName').value = firstName;
+      document.getElementById('lastName').value = lastName;
       const countryCode = document.getElementById('countryCode').value;
       const phone = document.getElementById('phone').value.trim();
       const fullName = [firstName, lastName].filter(Boolean).join(' ');
