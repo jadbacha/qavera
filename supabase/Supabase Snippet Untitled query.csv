@@ -1,0 +1,60 @@
+table_name,column_name,data_type,is_nullable,column_default
+addresses,id,uuid,NO,gen_random_uuid()
+addresses,user_id,uuid,NO,null
+addresses,label,text,YES,null
+addresses,full_address,text,NO,null
+addresses,area,text,YES,null
+addresses,phone,text,YES,null
+addresses,is_default,boolean,NO,false
+addresses,created_at,timestamp with time zone,NO,now()
+order_items,id,uuid,NO,gen_random_uuid()
+order_items,order_id,uuid,NO,null
+order_items,variant_id,uuid,YES,null
+order_items,product_name,text,NO,null
+order_items,variant_name,text,NO,null
+order_items,unit_price,numeric,NO,null
+order_items,quantity,integer,NO,null
+order_items,total_price,numeric,NO,null
+order_items,created_at,timestamp with time zone,NO,now()
+orders,id,uuid,NO,gen_random_uuid()
+orders,order_number,text,NO,"('QAV-'::text || lpad((nextval('order_number_seq'::regclass))::text, 6, '0'::text))"
+orders,user_id,uuid,YES,null
+orders,source,text,NO,'website'::text
+orders,fulfillment_type,text,NO,'delivery'::text
+orders,customer_name,text,NO,null
+orders,customer_phone,text,NO,null
+orders,customer_email,text,YES,null
+orders,delivery_address,text,YES,null
+orders,delivery_area,text,YES,null
+orders,subtotal,numeric,NO,0
+orders,delivery_fee,numeric,NO,0
+orders,total,numeric,NO,0
+orders,status,text,NO,'pending'::text
+orders,notes,text,YES,null
+orders,created_at,timestamp with time zone,NO,now()
+orders,payment_method,text,NO,'cash_on_delivery'::text
+orders,payment_status,text,NO,'pending'::text
+orders,points_used,integer,NO,0
+orders,points_discount,numeric,NO,0
+product_variants,id,uuid,NO,gen_random_uuid()
+product_variants,product_id,uuid,NO,null
+product_variants,name,text,NO,null
+product_variants,price,numeric,NO,null
+product_variants,image_url,text,YES,null
+product_variants,active,boolean,NO,true
+product_variants,created_at,timestamp with time zone,NO,now()
+products,id,uuid,NO,gen_random_uuid()
+products,name,text,NO,null
+products,slug,text,NO,null
+products,description,text,YES,null
+products,category,text,YES,null
+products,image_url,text,YES,null
+products,active,boolean,NO,true
+products,created_at,timestamp with time zone,NO,now()
+profiles,id,uuid,NO,null
+profiles,full_name,text,YES,null
+profiles,phone,text,YES,null
+profiles,email,text,YES,null
+profiles,role,text,NO,'customer'::text
+profiles,created_at,timestamp with time zone,NO,now()
+profiles,points,integer,NO,0
