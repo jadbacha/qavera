@@ -3431,7 +3431,8 @@ footer {
   </div>
 
 </footer>
-<script>
+ <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+ <script>
 
     /////CURSOR///////
   const cursor = document.getElementById('cursor');
@@ -3473,16 +3474,42 @@ footer {
   const contactForm = document.querySelector('.contact-form');
   const contactSuccess = document.getElementById('contactSuccess');
 
-  contactForm.addEventListener('submit', function (e) {
+  const contactSupabase = window.supabase.createClient(
+    'https://rhwajaceuhpfwughlgpd.supabase.co',
+    'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0'
+  );
+  const contactSubmit = contactForm.querySelector('.contact-submit');
+
+  contactForm.addEventListener('submit', async function (e) {
 
     e.preventDefault();
 
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
     const reason = document.getElementById('reason').value;
     const message = document.getElementById('message').value.trim();
 
     if (!name || !email || !reason || !message) {
+      alert('Please fill in your name, email, inquiry and message.');
+      return;
+    }
+
+    contactSubmit.disabled = true;
+    contactSubmit.textContent = 'Sending...';
+
+    // Saved to the contact_messages table; a Supabase webhook then emails it to QAVERA.
+    const { error } = await contactSupabase
+      .from('contact_messages')
+      .insert({ name, email, phone: phone || null, reason, message });
+
+    if (error) {
+      console.error('Could not send contact message:', error);
+      alert(error.message && error.message.includes('Too many messages')
+        ? 'You have sent several messages recently. Please try again later.'
+        : 'Sorry, your message could not be sent. Please try again or contact us on WhatsApp.');
+      contactSubmit.disabled = false;
+      contactSubmit.textContent = 'Send Message';
       return;
     }
 

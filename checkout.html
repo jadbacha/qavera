@@ -595,7 +595,7 @@
   <script>
     const SUPABASE_URL = 'https://rhwajaceuhpfwughlgpd.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0';
-    const supabase = window.supabase.createClient(
+    const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_PUBLISHABLE_KEY
     );
@@ -854,7 +854,7 @@
     async function loadSavedAddresses() {
       if (!currentUser) return;
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('addresses')
         .select('id, user_id, label, full_address, area, phone, is_default, created_at')
         .eq('user_id', currentUser.id)
@@ -900,7 +900,7 @@
         // No existing address, so this becomes the user's default.
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('addresses')
         .insert({
           user_id: currentUser.id,
@@ -953,7 +953,7 @@
     async function loadCheckoutUser() {
       try {
         // Use the same session-loading method as the working account page.
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
 
         if (sessionError || !sessionData?.session?.user) {
           const returnUrl = encodeURIComponent(
@@ -975,7 +975,7 @@
         let profileError = null;
 
         try {
-          const profileRequest = supabase
+          const profileRequest = supabaseClient
             .from('profiles')
             .select('id, full_name, phone, email, role, points')
             .eq('id', currentUser.id)
@@ -1118,13 +1118,39 @@
       const missingVariantItems = cart.filter(item => !item.variant_id);
       if (missingVariantItems.length) {
         try {
-          const productIds = [...new Set(missingVariantItems.map(item => item.product_id).filter(Boolean))];
+          // Items from the Assorted, Bites, Slabs, Spreads and LâLI pages carry a
+          // product name instead of a product_id, so look those up by name.
+          const namesToLookUp = [...new Set(
+            missingVariantItems
+              .filter(item => !item.product_id)
+              .map(item => item.product_name || item.name)
+              .filter(Boolean)
+          )];
 
-          if (!productIds.length) {
-            throw new Error('A product in your cart is missing its product information. Please add it again.');
+          if (namesToLookUp.length) {
+            const { data: namedProducts, error: namedProductsError } = await supabaseClient
+              .from('products')
+              .select('id, name')
+              .in('name', namesToLookUp)
+              .eq('active', true);
+
+            if (namedProductsError) throw namedProductsError;
+
+            for (const item of missingVariantItems) {
+              if (item.product_id) continue;
+              const productName = String(item.product_name || item.name || '').trim().toLowerCase();
+              const product = (namedProducts || []).find(p => String(p.name || '').trim().toLowerCase() === productName);
+              if (product) item.product_id = product.id;
+            }
           }
 
-          const { data: variants, error: variantsError } = await supabase
+          const productIds = [...new Set(missingVariantItems.map(item => item.product_id).filter(Boolean))];
+
+          if (!productIds.length || missingVariantItems.some(item => !item.product_id)) {
+            throw new Error('A product in your cart is no longer available. Please remove it and add it again.');
+          }
+
+          const { data: variants, error: variantsError } = await supabaseClient
             .from('product_variants')
             .select('id, product_id, name, price, active')
             .in('product_id', productIds)
@@ -1182,7 +1208,7 @@
       confirmOrderButton.textContent = 'PLACING ORDER...';
 
       try {
-        const { data, error } = await supabase.rpc('create_qavera_order', {
+        const { data, error } = await supabaseClient.rpc('create_qavera_order', {
           p_customer_name: titleCaseName(document.getElementById('fullName').value),
           p_customer_phone: `+974${document.getElementById('phone').value.trim()}`,
           p_customer_email: currentUser.email || currentProfile?.email || '',
@@ -1197,7 +1223,8 @@
           p_address_label: savedAddresses.length === 0 ? 'Home' : 'Address',
           p_items: cart.map(item => ({
             variant_id: item.variant_id,
-            quantity: Number(item.quantity || 0)
+            quantity: Number(item.quantity || 0),
+            flavors: Array.isArray(item.flavors) ? item.flavors : null
           }))
         });
 
