@@ -40,11 +40,28 @@ To also get each one by email:
 Until you verify your own domain in Resend, emails come from `onboarding@resend.dev` and
 can only go to your Resend sign-up address. That's fine for notifications to yourself.
 
-## 3. Managing orders
+## 3. Order emails and the orders page
 
-In **Table Editor → orders**, set `status` to one of: `pending`, `confirmed`, `preparing`,
-`out_for_delivery`, `delivered`, `cancelled` (lowercase). Customers see it under
-**My Orders** on their account page.
+1. Run `004_admin_orders.sql` (SQL Editor). It makes the account with the email at the bottom
+   of the file an admin; change it first if you log in with a different email.
+2. **Edge Functions → Deploy a new function → Via Editor**: name `order-notify`, paste
+   `supabase/functions/order-notify/index.ts`, deploy, then in its **Settings** turn off
+   "Verify JWT" and save. It reuses the secrets from `contact-notify`.
+3. **Integrations → Database Webhooks → Webhooks → Create a new hook**:
+   - Name `order-notify`, table `orders`, events **Insert** and **Update**
+   - Type **Supabase Edge Functions**, function `order-notify`, method `POST`
+   - Header `x-webhook-secret` = the same value as `CONTACT_WEBHOOK_SECRET`
+
+Emails sent: new order (customer confirmation + notice to `CONTACT_TO_EMAIL`), out for
+delivery, and delivered (with points earned). They come from `orders@qavera.qa`; to change
+that, add the secret `ORDERS_FROM_EMAIL`.
+
+Manage orders at **qavera.qa/admin.html** (admins only).
+
+## 4. Managing orders
+
+Use **qavera.qa/admin.html**: each order has buttons for the next step (Confirm → Preparing →
+Out for delivery → Delivered) and Cancel. Customers see the status under **My Orders**.
 
 - `delivered` gives the customer points (100 per QAR 1,000 of products).
 - `cancelled` returns any points they spent and takes back any points the order earned.
