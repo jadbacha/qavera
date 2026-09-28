@@ -821,7 +821,10 @@
     const QATAR_CODE = '+974';
 
     function getFullPhone() {
-      return document.getElementById('countryCode').value + document.getElementById('phone').value.trim();
+      // Local numbers are often typed with a leading 0 (e.g. Lebanon 03 123 456),
+      // which is dropped in international format: +961 3 123 456.
+      const digits = document.getElementById('phone').value.trim().replace(/^0+/, '');
+      return document.getElementById('countryCode').value + digits;
     }
 
     function setPhoneFields(storedPhone) {
@@ -1247,7 +1250,7 @@
       const isQatarPhone = document.getElementById('countryCode').value === QATAR_CODE;
       const phoneIsValid = isQatarPhone
         ? /^\d{8}$/.test(phone.value.trim())
-        : /^\d{6,12}$/.test(phone.value.trim());
+        : /^\d{6,12}$/.test(phone.value.trim().replace(/^0+/, ''));
 
       if (!phoneIsValid) {
         phoneError.textContent = isQatarPhone
