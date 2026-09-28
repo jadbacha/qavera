@@ -1,0 +1,265 @@
+proname,pg_get_functiondef
+rls_auto_enable,"CREATE OR REPLACE FUNCTION public.rls_auto_enable()
+ RETURNS event_trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pg_catalog'
+AS $function$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$function$
+"
+handle_new_user,"CREATE OR REPLACE FUNCTION public.handle_new_user()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+begin
+  insert into public.profiles (
+    id,
+    full_name,
+    email
+  )
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+    new.email
+  );
+
+  return new;
+end;
+$function$
+"
+create_qavera_order,"CREATE OR REPLACE FUNCTION public.create_qavera_order(p_customer_name text, p_customer_phone text, p_customer_email text, p_delivery_address text, p_delivery_area text, p_building text, p_apartment text, p_notes text, p_payment_method text, p_points_used integer, p_save_address boolean, p_address_label text, p_items jsonb)
+ RETURNS TABLE(order_id uuid, order_number text, subtotal numeric, delivery_fee numeric, points_discount numeric, total numeric, points_used integer)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_subtotal numeric := 0;
+  v_delivery numeric := 20;
+  v_discount numeric := 0;
+  v_total numeric := 0;
+  v_points integer := 0;
+  v_order_id uuid;
+  v_order_number text;
+  v_item jsonb;
+  v_variant record;
+  v_qty integer;
+  v_line_total numeric;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
+  IF nullif(trim(p_customer_name), '') IS NULL THEN
+    RAISE EXCEPTION 'Customer name is required';
+  END IF;
+
+  IF nullif(trim(p_customer_phone), '') IS NULL THEN
+    RAISE EXCEPTION 'Customer phone is required';
+  END IF;
+
+  IF nullif(trim(p_delivery_area), '') IS NULL THEN
+    RAISE EXCEPTION 'Delivery area is required';
+  END IF;
+
+  IF nullif(trim(p_delivery_address), '') IS NULL THEN
+    RAISE EXCEPTION 'Delivery address is required';
+  END IF;
+
+  IF nullif(trim(p_building), '') IS NULL THEN
+    RAISE EXCEPTION 'Building / villa number is required';
+  END IF;
+
+  IF nullif(trim(p_apartment), '') IS NULL THEN
+    RAISE EXCEPTION 'Apartment / floor is required';
+  END IF;
+
+  IF p_payment_method NOT IN ('cash_on_delivery', 'card_on_delivery') THEN
+    RAISE EXCEPTION 'Invalid payment method';
+  END IF;
+
+  IF jsonb_typeof(p_items) <> 'array' OR jsonb_array_length(p_items) = 0 THEN
+    RAISE EXCEPTION 'Cart is empty';
+  END IF;
+
+  FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
+  LOOP
+    IF nullif(v_item->>'variant_id', '') IS NULL THEN
+      RAISE EXCEPTION 'Every cart item must have a product variant';
+    END IF;
+
+    v_qty := COALESCE((v_item->>'quantity')::integer, 0);
+    IF v_qty <= 0 THEN
+      RAISE EXCEPTION 'Invalid item quantity';
+    END IF;
+
+    SELECT pv.id, pv.name, pv.price, p.name AS product_name
+      INTO v_variant
+    FROM public.product_variants pv
+    JOIN public.products p ON p.id = pv.product_id
+    WHERE pv.id = (v_item->>'variant_id')::uuid
+      AND pv.active = true
+      AND p.active = true;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'A product in your cart is no longer available';
+    END IF;
+
+    v_line_total := v_variant.price * v_qty;
+    v_subtotal := v_subtotal + v_line_total;
+  END LOOP;
+
+  v_points := GREATEST(COALESCE(p_points_used, 0), 0);
+
+  IF v_points > 0 AND mod(v_points, 100) <> 0 THEN
+    RAISE EXCEPTION 'Points can only be redeemed in 100-point blocks';
+  END IF;
+
+  IF v_points > FLOOR(v_subtotal * 10 / 100) * 100 THEN
+    RAISE EXCEPTION 'Too many points for this order';
+  END IF;
+
+  IF v_points > 0 THEN
+    PERFORM 1
+    FROM public.profiles
+    WHERE id = v_user_id
+      AND points >= v_points
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Insufficient QAVERA points';
+    END IF;
+
+    v_discount := v_points / 10.0;
+  END IF;
+
+  v_total := v_subtotal - v_discount + v_delivery;
+
+  INSERT INTO public.orders (
+    user_id,
+    source,
+    fulfillment_type,
+    customer_name,
+    customer_phone,
+    customer_email,
+    delivery_address,
+    delivery_area,
+    subtotal,
+    delivery_fee,
+    total,
+    status,
+    notes,
+    payment_method,
+    payment_status,
+    points_used,
+    points_discount
+  )
+  VALUES (
+    v_user_id,
+    'website',
+    'delivery',
+    trim(p_customer_name),
+    trim(p_customer_phone),
+    nullif(trim(p_customer_email), ''),
+    trim(p_delivery_address) || E'\nBuilding / Villa: ' || trim(p_building) || E'\nApartment / Floor: ' || trim(p_apartment),
+    trim(p_delivery_area),
+    v_subtotal,
+    v_delivery,
+    v_total,
+    'pending',
+    nullif(trim(p_notes), ''),
+    p_payment_method,
+    'pending',
+    v_points,
+    v_discount
+  )
+  RETURNING id, order_number INTO v_order_id, v_order_number;
+
+  FOR v_item IN SELECT value FROM jsonb_array_elements(p_items)
+  LOOP
+    SELECT pv.id, pv.name, pv.price, p.name AS product_name
+      INTO v_variant
+    FROM public.product_variants pv
+    JOIN public.products p ON p.id = pv.product_id
+    WHERE pv.id = (v_item->>'variant_id')::uuid
+      AND pv.active = true
+      AND p.active = true;
+
+    v_qty := (v_item->>'quantity')::integer;
+
+    INSERT INTO public.order_items (
+      order_id,
+      variant_id,
+      product_name,
+      variant_name,
+      unit_price,
+      quantity,
+      total_price
+    )
+    VALUES (
+      v_order_id,
+      v_variant.id,
+      v_variant.product_name,
+      v_variant.name,
+      v_variant.price,
+      v_qty,
+      v_variant.price * v_qty
+    );
+  END LOOP;
+
+  IF v_points > 0 THEN
+    UPDATE public.profiles
+    SET points = points - v_points
+    WHERE id = v_user_id;
+  END IF;
+
+  IF p_save_address THEN
+    INSERT INTO public.addresses (
+      user_id,
+      label,
+      full_address,
+      area,
+      phone,
+      is_default
+    )
+    VALUES (
+      v_user_id,
+      COALESCE(NULLIF(trim(p_address_label), ''), 'Home'),
+      trim(p_delivery_address) || E'\nBuilding / Villa: ' || trim(p_building) || E'\nApartment / Floor: ' || trim(p_apartment),
+      trim(p_delivery_area),
+      trim(p_customer_phone),
+      NOT EXISTS (
+        SELECT 1 FROM public.addresses a WHERE a.user_id = v_user_id
+      )
+    );
+  END IF;
+
+  RETURN QUERY SELECT v_order_id, v_order_number, v_subtotal, v_delivery, v_discount, v_total, v_points;
+END;
+$function$
+"

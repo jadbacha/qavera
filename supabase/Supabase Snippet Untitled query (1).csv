@@ -1,0 +1,17 @@
+tablename,policyname,cmd,roles,qual,with_check
+profiles,Users can update their own profile,UPDATE,{authenticated},(auth.uid() = id),(auth.uid() = id)
+profiles,Users can view their own profile,SELECT,{authenticated},(auth.uid() = id),null
+orders,Users can create their own orders,INSERT,{authenticated},null,(auth.uid() = user_id)
+orders,Users can view their own orders,SELECT,{authenticated},(auth.uid() = user_id),null
+products,Anyone can view active products,SELECT,{public},(active = true),null
+product_variants,Anyone can view active variants,SELECT,{public},(active = true),null
+addresses,Users can create their own addresses,INSERT,{authenticated},null,(auth.uid() = user_id)
+addresses,Users can delete their own addresses,DELETE,{authenticated},(auth.uid() = user_id),null
+addresses,Users can update their own addresses,UPDATE,{authenticated},(auth.uid() = user_id),(auth.uid() = user_id)
+addresses,Users can view their own addresses,SELECT,{authenticated},(auth.uid() = user_id),null
+order_items,Users can create their own order items,INSERT,{authenticated},null,"(EXISTS ( SELECT 1
+   FROM orders
+  WHERE ((orders.id = order_items.order_id) AND (orders.user_id = auth.uid()))))"
+order_items,Users can view their own order items,SELECT,{authenticated},"(EXISTS ( SELECT 1
+   FROM orders
+  WHERE ((orders.id = order_items.order_id) AND (orders.user_id = auth.uid()))))",null
