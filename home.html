@@ -396,11 +396,20 @@
       align-items: center;
     }
 
-    .house-images { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1rem; align-items: start; }
+    /* The photos are landscape (3:2): show them whole, the second one overlapping. */
+    .house-images { position: relative; padding-bottom: 22%; }
 
-    .house-images img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+    .house-images img { display: block; aspect-ratio: 3 / 2; object-fit: cover; }
 
-    .house-images img:last-child { aspect-ratio: 1; margin-top: 30%; }
+    .house-images img:first-child { width: 84%; }
+
+    .house-images img:last-child {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 58%;
+      border: 8px solid var(--forest);
+    }
 
     .house .caption { color: var(--sand); margin-bottom: 1.4rem; }
 
