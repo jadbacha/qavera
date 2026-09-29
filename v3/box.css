@@ -1,0 +1,138 @@
+/* QAVERA v3 — signature box pages (Premium, Luxury) */
+
+.box-page {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: clamp(2.5rem, 5vw, 6rem);
+  padding: clamp(2rem, 4vw, 3.5rem) var(--gutter) clamp(4rem, 8vw, 6rem);
+  align-items: start;
+}
+
+/* Gallery */
+.gallery { position: sticky; top: calc(var(--header-h) + 1.5rem); }
+.gallery-stage { position: relative; background: #fff; aspect-ratio: 1; overflow: hidden; }
+.gallery-stage img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: clamp(10px, 2vw, 26px); opacity: 0; transition: opacity .7s var(--ease), transform 1.2s var(--ease); transform: scale(1.02); }
+.gallery-stage img.active { opacity: 1; transform: none; }
+.gallery-thumbs { display: flex; gap: .7rem; margin-top: .9rem; }
+.gallery-thumbs button { width: 76px; height: 76px; background: #fff; border: 1px solid transparent; padding: 4px; cursor: pointer; opacity: .55; transition: opacity .3s ease, border-color .3s ease; }
+.gallery-thumbs button img { width: 100%; height: 100%; object-fit: contain; }
+.gallery-thumbs button[aria-pressed="true"] { opacity: 1; border-color: var(--sand); }
+.gallery-note { color: rgba(216,216,216,.45); margin-top: 1rem; font-size: .66rem; }
+
+/* Purchase panel */
+.buy .v3-crumbs { margin-bottom: 1.6rem; }
+.buy .kicker { color: var(--sand); }
+.buy h1 { font-size: clamp(3rem, 6.4vw, 6rem); margin: 1.2rem 0 1.4rem; }
+.buy h1 em { color: var(--sand); }
+.buy .lead { color: var(--muted-dark); font-size: 1.02rem; max-width: 36rem; }
+
+.step-label { display: flex; justify-content: space-between; align-items: baseline; margin: 2.6rem 0 1rem; color: rgba(216,216,216,.6); }
+.step-label b { color: var(--sand); font-weight: 400; }
+
+.sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+.size {
+  position: relative;
+  text-align: left;
+  background: transparent;
+  border: 1px solid rgba(216,216,216,.22);
+  color: var(--silver);
+  padding: 1.1rem 1rem 1rem;
+  cursor: pointer;
+  transition: border-color .4s var(--ease), background .4s var(--ease);
+}
+.size:hover { border-color: rgba(196,169,128,.55); }
+.size[aria-checked="true"] { border-color: var(--sand); background: rgba(196,169,128,.08); }
+.size .pieces { font-family: var(--display); font-size: 2.6rem; line-height: 1; display: block; }
+.size .pieces small { font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; margin-left: .3rem; color: rgba(216,216,216,.55); }
+.size .swatch { position: absolute; top: 1rem; right: 1rem; width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(216,216,216,.35); }
+.size .colour { display: block; margin-top: .6rem; color: rgba(216,216,216,.55); font-size: .64rem; }
+.size .price { display: block; margin-top: .9rem; font-family: var(--mono); font-size: .82rem; color: var(--sand); }
+
+/* Customise switch */
+.custom-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.6rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid rgba(216,216,216,.22);
+  cursor: pointer;
+}
+.custom-toggle strong { display: block; font-weight: 500; }
+.custom-toggle span.hint { display: block; font-size: .85rem; color: rgba(216,216,216,.55); margin-top: .15rem; }
+.switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.switch span { position: absolute; inset: 0; border-radius: 26px; background: rgba(216,216,216,.18); transition: background .4s var(--ease); pointer-events: none; }
+.switch span::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--silver); transition: transform .4s var(--ease); }
+.switch input:checked + span { background: var(--sand); }
+.switch input:checked + span::after { transform: translateX(20px); background: var(--ink); }
+.switch input:focus-visible + span { outline: 1px solid var(--sand); outline-offset: 3px; }
+
+.customiser { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .7s var(--ease); }
+.customiser.open { grid-template-rows: 1fr; }
+.customiser > div { overflow: hidden; }
+.customiser-inner { border: 1px solid rgba(216,216,216,.22); border-top: 0; padding: 1.2rem; }
+
+.progress-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .6rem; }
+.progress-row .count { font-family: var(--display); font-size: 1.6rem; }
+.progress-row .count.full { color: var(--sand); }
+.progress { height: 2px; background: rgba(216,216,216,.14); overflow: hidden; margin-bottom: 1rem; }
+.progress span { display: block; height: 100%; background: var(--sand); width: 0; transition: width .5s var(--ease); }
+
+.flavour-row { display: grid; grid-template-columns: 38px 1fr auto; gap: .9rem; align-items: center; padding: .7rem 0; border-top: 1px solid var(--line-dark); }
+.flavour-row .bonbon { width: 34px; box-shadow: inset -4px -5px 9px rgba(0,0,0,.4), inset 2px 2px 5px rgba(255,255,255,.15); }
+.flavour-row strong { display: block; font-family: var(--display); font-weight: 400; font-size: 1.1rem; line-height: 1.2; }
+.flavour-row .caption { font-size: .6rem; color: rgba(216,216,216,.5); }
+.flavour-row .v3-qty button:disabled { opacity: .25; cursor: not-allowed; }
+.customiser-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: .8rem; padding-top: .8rem; border-top: 1px solid var(--line-dark); }
+.customiser-foot .link { color: rgba(216,216,216,.7); font-size: .66rem; }
+.custom-msg { font-size: .85rem; color: #e39a8e; min-height: 1.2em; margin-top: .8rem; }
+
+.buy-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem; margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line-dark); }
+.buy-row .total { font-family: var(--display); font-size: 2.2rem; line-height: 1; }
+.buy-row .total small { display: block; font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(216,216,216,.5); margin-bottom: .4rem; }
+.buy-row .btn { min-width: 12rem; }
+.buy-note { font-size: .8rem; color: rgba(216,216,216,.45); margin-top: 1.1rem; }
+
+/* The collection */
+.collection-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line-light); border-left: 1px solid var(--line-light); }
+.flavour-card { padding: 2rem 1.6rem 1.8rem; border-right: 1px solid var(--line-light); border-bottom: 1px solid var(--line-light); display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; transition: background .5s var(--ease); }
+.flavour-card:hover { background: rgba(15,14,14,.04); }
+.flavour-card .bonbon { width: clamp(64px, 6vw, 84px); transition: transform .8s var(--ease); }
+.flavour-card:hover .bonbon { transform: rotate(-14deg) scale(1.05); }
+.flavour-card .caption { color: rgba(15,14,14,.5); font-size: .64rem; }
+.flavour-card h3 { font-family: var(--display); font-weight: 400; font-style: italic; font-size: 1.55rem; line-height: 1.15; margin: .35rem 0 .3rem; }
+.flavour-card p { color: var(--muted-light); font-size: .92rem; }
+
+.unique { text-align: center; }
+.unique h2 { font-size: clamp(2.4rem, 5vw, 4.4rem); }
+.unique h2 em { color: var(--sand); }
+.unique p { max-width: 38rem; margin: 1.4rem auto 0; color: var(--muted-dark); }
+
+.other-box { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2rem, 5vw, 5rem); align-items: center; text-decoration: none; color: var(--silver); }
+.other-box .canvas { background: #fff; padding: 18px; }
+.other-box .canvas img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+.other-box .caption { color: var(--sand); }
+.other-box h2 { font-size: clamp(2.4rem, 5vw, 4.4rem); margin: 1rem 0 1.2rem; }
+.other-box h2 em { color: var(--sand); }
+.other-box p { color: var(--muted-dark); max-width: 30rem; margin-bottom: 1.8rem; }
+.other-box .link { color: var(--sand); }
+
+@media (max-width: 1000px) {
+  .box-page { grid-template-columns: 1fr; }
+  .gallery { position: static; }
+  .collection-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .sizes { gap: .5rem; }
+  .size { padding: .9rem .7rem .8rem; }
+  .size .pieces { font-size: 2rem; }
+  .size .swatch { top: .8rem; right: .7rem; width: 11px; height: 11px; }
+  .collection-grid { grid-template-columns: 1fr; }
+  .buy-row { grid-template-columns: 1fr; }
+  .buy-row .btn { width: 100%; }
+  .other-box { grid-template-columns: 1fr; }
+  .gallery-thumbs button { width: 64px; height: 64px; }
+}

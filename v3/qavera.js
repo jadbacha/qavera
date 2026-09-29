@@ -224,7 +224,7 @@
       const flavours = Array.isArray(item.flavors)
         ? item.flavors.filter(f => Number(f.quantity) > 0).map(f => `${escapeHtml(f.name)} ×${Number(f.quantity)}`).join(', ')
         : '';
-      const detail = item.variant_name || item.size || '';
+      const detail = item.display_detail || item.variant_name || item.size || '';
       const thumb = item.image
         ? `<div class="v3-cart-thumb"><img src="${escapeHtml(item.image)}" alt=""></div>`
         : `<div class="v3-cart-thumb painted"><div class="bonbon ${/^p\d{1,2}$/.test(item.paint || '') ? item.paint : paintFor(item.product_name || item.name)}"></div></div>`;
@@ -232,7 +232,7 @@
         <div class="v3-cart-item">
           ${thumb}
           <div>
-            <h3>${escapeHtml(item.product_name || item.name)}</h3>
+            <h3>${escapeHtml(item.display_name || item.product_name || item.name)}</h3>
             ${detail ? `<span class="caption">${escapeHtml(detail)}${item.customized ? ' · Customized' : ''}</span>` : ''}
             ${flavours ? `<p class="v3-cart-flavours">${flavours}</p>` : ''}
             <div class="v3-qty" style="margin-top:.8rem">
@@ -315,7 +315,7 @@
       else cart.push({ ...item, quantity });
       writeCart(cart);
       if (open) openCart();
-      else toast(`${item.product_name || item.name} added to your box`);
+      else toast(`${item.display_name || item.product_name || item.name} added to your box`);
     },
     open: openCart,
     close: closeCart,
