@@ -4,6 +4,7 @@
 //   New order                 -> confirmation to the customer + notice to QAVERA
 //   status -> out_for_delivery -> "on its way" email to the customer
 //   status -> delivered        -> "delivered" email to the customer (with points earned)
+//   Shop sales (source = 'store', from the POS) are ignored.
 //
 // Uses the same secrets as contact-notify:
 //   RESEND_API_KEY, CONTACT_TO_EMAIL (QAVERA inbox), CONTACT_WEBHOOK_SECRET
@@ -276,6 +277,11 @@ Deno.serve(async (req) => {
   const payload = await req.json().catch(() => null);
   if (payload?.table !== "orders" || !payload?.record) {
     return new Response("Ignored", { status: 200 });
+  }
+
+  // Shop sales from the POS are paid on the spot: no emails.
+  if (payload.record.source === "store") {
+    return new Response("Ignored (shop sale)", { status: 200 });
   }
 
   try {
