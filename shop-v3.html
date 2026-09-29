@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop — QAVERA</title>
+  <meta name="description" content="Shop QAVERA: hand-painted Premium and Luxury bonbon boxes, assorted chocolates, slabs, spreads, bites and The Home collection.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3/qavera.css">
+  <style>
+    .jump { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 2.6rem; }
+    .jump a {
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--silver);
+      border: 1px solid rgba(216,216,216,.3);
+      padding: .7rem 1.1rem;
+      transition: border-color .3s ease, color .3s ease, background .3s ease;
+    }
+    .jump a:hover { border-color: var(--sand); color: var(--sand); }
+
+    /* Boxes */
+    .boxes { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.4rem, 3vw, 2.6rem); }
+    .box { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); }
+    .box-canvas { background: #fff; padding: clamp(14px, 2vw, 24px); box-shadow: 0 30px 60px -40px rgba(15,14,14,.6); transition: transform .9s var(--ease); }
+    .box-canvas-inner { position: relative; aspect-ratio: 1; overflow: hidden; }
+    .box-canvas-inner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .7s var(--ease); }
+    .box-canvas-inner img + img { opacity: 0; }
+    .box:hover .box-canvas { transform: translateY(-6px); }
+    .box:hover .box-canvas-inner img:first-child { opacity: 0; }
+    .box:hover .box-canvas-inner img + img { opacity: 1; }
+    .box-info { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; padding: 1.6rem 0 1.2rem; border-bottom: 1px solid var(--line-light); }
+    .box-info h3 { font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1; }
+    .box-info h3 em { color: var(--oxblood); }
+    .box-info .caption { color: var(--muted-light); display: block; margin-top: .6rem; }
+    .box-price { font-family: var(--mono); font-size: .8rem; color: var(--oxblood); white-space: nowrap; }
+    .box .link { color: var(--ink); margin-top: 1.2rem; align-self: flex-start; }
+
+    /* Pantry */
+    .pantry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2rem; }
+    .range {
+      border: 1px solid var(--line-dark);
+      padding: clamp(1.8rem, 3vw, 2.6rem);
+      text-decoration: none;
+      color: var(--silver);
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+      transition: border-color .5s var(--ease), background .5s var(--ease);
+    }
+    .range:hover { border-color: rgba(196,169,128,.5); background: rgba(196,169,128,.04); }
+    .range-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+    .range-top .caption { color: var(--sand); }
+    .range h3 { font-family: var(--display); font-weight: 400; font-size: clamp(2.2rem, 4vw, 3.4rem); line-height: 1; }
+    .range:hover h3 { font-style: italic; color: var(--sand); }
+    .range ul { list-style: none; border-top: 1px solid var(--line-dark); }
+    .range li { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid var(--line-dark); color: var(--muted-dark); font-size: .95rem; }
+    .range li span:last-child { font-family: var(--mono); font-size: .78rem; color: var(--silver); white-space: nowrap; }
+    .range .link { color: var(--sand); align-self: flex-start; margin-top: auto; }
+    .range .bonbon { width: 56px; flex-shrink: 0; }
+
+    /* Home teaser */
+    .teaser { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .teaser img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+    .teaser img:nth-child(2) { margin-top: 3rem; }
+    .teaser-foot { display: flex; justify-content: space-between; align-items: center; gap: 2rem; margin-top: 2.6rem; flex-wrap: wrap; }
+    .teaser-foot p { color: var(--muted-dark); max-width: 30rem; }
+
+    @media (max-width: 900px) {
+      .boxes, .pantry-grid { grid-template-columns: 1fr; }
+      .teaser { grid-template-columns: 1fr 1fr; }
+      .teaser img:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body data-page="shop">
+  <script src="v3/qavera.js"></script>
+
+  <main class="v3-main">
+    <header class="v3-page-head">
+      <p class="caption reveal">The QAVERA collection</p>
+      <h1 class="display reveal d1">The <em>collection</em>.</h1>
+      <p class="lead reveal d2">Hand-painted bonbons in premium Belgian chocolate, presented in two signature boxes, with everyday treats and objects for the table.</p>
+      <nav class="jump reveal d3" aria-label="Collections">
+        <a href="#boxes">Signature boxes</a>
+        <a href="#pantry">The pantry</a>
+        <a href="#home">The Home</a>
+      </nav>
+    </header>
+
+    <section class="v3-section light" id="boxes">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Signature boxes</p>
+          <h2 class="display reveal d1">Painted, <em>boxed</em>, yours.</h2>
+        </div>
+        <p class="reveal d2">Each box comes in 12, 25 or 48 pieces. Choose our selection, or pick every flavour yourself.</p>
+      </div>
+
+      <div class="boxes">
+        <a class="box reveal" href="premium-v3.html">
+          <div class="box-canvas">
+            <div class="box-canvas-inner">
+              <img src="black box.jpg" alt="QAVERA Premium Box">
+              <img src="black box hover.jpg" alt="" aria-hidden="true">
+            </div>
+          </div>
+          <div class="box-info">
+            <div>
+              <h3>The <em>Premium</em> Box</h3>
+              <span class="caption">12 · 25 · 48 pieces</span>
+            </div>
+            <span class="box-price">from QAR 75</span>
+          </div>
+          <span class="link">Choose your Premium box <span class="arrow">→</span></span>
+        </a>
+
+        <a class="box reveal d1" href="luxury-v3.html">
+          <div class="box-canvas">
+            <div class="box-canvas-inner">
+              <img src="green box fitted.webp" alt="QAVERA Luxury Box">
+              <img src="green box hover.jpg" alt="" aria-hidden="true">
+            </div>
+          </div>
+          <div class="box-info">
+            <div>
+              <h3>The <em>Luxury</em> Box</h3>
+              <span class="caption">12 · 25 · 48 pieces</span>
+            </div>
+            <span class="box-price">from QAR 120</span>
+          </div>
+          <span class="link">Choose your Luxury box <span class="arrow">→</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="v3-section" id="pantry">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Everyday indulgence</p>
+          <h2 class="display reveal d1">The <em>pantry</em>.</h2>
+        </div>
+        <p class="reveal d2">For the days in between: assorted chocolates, slabs, spreads and small bites.</p>
+      </div>
+
+      <div class="pantry-grid">
+        <a class="range reveal" href="assorted-v3.html">
+          <div class="range-top"><div><span class="caption">Nº 01 · 500 G</span><h3>Assorted</h3></div><div class="bonbon p1"></div></div>
+          <ul>
+            <li><span>Hazelnut Mendiant</span><span>QAR 190</span></li>
+            <li><span>Almond Mendiant</span><span>QAR 190</span></li>
+            <li><span>Crispy Feuilletine</span><span>QAR 190</span></li>
+            <li><span>Chocolate Gianduja Crispy Rice</span><span>QAR 190</span></li>
+            <li><span>Speculoos with Chocolate Ganache</span><span>QAR 190</span></li>
+            <li><span>Mix Assorted</span><span>QAR 190</span></li>
+          </ul>
+          <span class="link">Shop Assorted <span class="arrow">→</span></span>
+        </a>
+        <a class="range reveal d1" href="slabs-v3.html">
+          <div class="range-top"><div><span class="caption">Nº 02 · 100 G</span><h3>Slabs</h3></div><div class="bonbon p4"></div></div>
+          <ul>
+            <li><span>White Chocolate with Almond &amp; Raspberry</span><span>QAR 50</span></li>
+            <li><span>Dark Chocolate with Hazelnuts &amp; Cashew</span><span>QAR 50</span></li>
+            <li><span>Milk Chocolate with Mix Nuts</span><span>QAR 50</span></li>
+          </ul>
+          <span class="link">Shop Slabs <span class="arrow">→</span></span>
+        </a>
+        <a class="range reveal" href="spreads-v3.html">
+          <div class="range-top"><div><span class="caption">Nº 03 · 280 ML</span><h3>Spreads</h3></div><div class="bonbon p8"></div></div>
+          <ul>
+            <li><span>Hazelnut Spread</span><span>QAR 60</span></li>
+            <li><span>Pistachio Spread</span><span>QAR 60</span></li>
+            <li><span>Lotus Spread</span><span>QAR 60</span></li>
+          </ul>
+          <span class="link">Shop Spreads <span class="arrow">→</span></span>
+        </a>
+        <a class="range reveal d1" href="bites-v3.html">
+          <div class="range-top"><div><span class="caption">Nº 04 · 50 G</span><h3>Bites</h3></div><div class="bonbon p6"></div></div>
+          <ul>
+            <li><span>Almond Florentine with Chocolate</span><span>QAR 25</span></li>
+            <li><span>Pretzels with Chocolate</span><span>QAR 25</span></li>
+            <li><span>Pringles with Chocolate</span><span>QAR 25</span></li>
+          </ul>
+          <span class="link">Shop Bites <span class="arrow">→</span></span>
+        </a>
+      </div>
+    </section>
+
+    <section class="v3-section forest" id="home">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">The Home</p>
+          <h2 class="display reveal d1">Objects for the <em>table</em>.</h2>
+        </div>
+        <p class="reveal d2">Trays and bowls made to present chocolate beautifully. Ordered personally on WhatsApp.</p>
+      </div>
+      <div class="teaser reveal">
+        <img src="stone gold bowl v2.webp" alt="Stone and gold bowl" loading="lazy">
+        <img src="gold leaf.webp" alt="Gold leaf dish" loading="lazy">
+        <img src="wood leaf.webp" alt="Wood leaf dish" loading="lazy">
+      </div>
+      <div class="teaser-foot reveal">
+        <p>Twelve pieces, from QAR 100 to QAR 250.</p>
+        <a class="btn btn-solid" href="home-collection-v3.html">Explore The Home <span class="arrow">→</span></a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

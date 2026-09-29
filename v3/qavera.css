@@ -331,10 +331,11 @@ body.v3-overlay-header main.v3-main { padding-top: 0; }
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform .7s var(--ease);
+  visibility: hidden;
+  transition: transform .7s var(--ease), visibility .7s;
 }
 
-.v3-cart-open .v3-cart { transform: none; }
+.v3-cart-open .v3-cart { transform: none; visibility: visible; }
 .v3-cart-open .v3-cart-backdrop { opacity: 1; visibility: visible; }
 
 .v3-cart-head {
