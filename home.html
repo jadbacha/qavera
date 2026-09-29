@@ -1,3961 +1,740 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Qavera — Luxury Chocolate</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400&family=Funnel+Display:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --beige: #F5EDD9;
-    --beige-light: #FAF5EA;
-    --beige-mid: #EBE0C4;
-    --black: #0D0B08;
-    --charcoal: #1A1713;
-    --gold: #C9A84C;
-    --gold-light: #E2C97E;
-    --gold-dark: #9A7A2E;
-    --text-dark: #1A1713;
-    --text-muted: #6B5F45;
-    --serif: 'Cormorant Garamond', Georgia, serif;
-    --sans: 'Jost', sans-serif;
-  }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: var(--sans);
-    background: var(--beige);
-    color: var(--text-dark);
-    overflow-x: hidden;
-    cursor: none;
-  }
-
-  /* Custom cursor */
-  .cursor {
-    position: fixed;
-    width: 8px; height: 8px;
-    background: var(--gold);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: transform 0.1s ease;
-  }
-  .cursor-ring {
-    position: fixed;
-    width: 32px; height: 32px;
-    border: 1px solid var(--gold);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    transition: all 0.15s ease;
-    opacity: 0.6;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    padding: 1.5rem 3rem;
-    background: transparent;
-    transition: background 0.4s, padding 0.4s;
-  }
-  /* Element 1: nav#mainNav */
-  nav#mainNav {
-    color: #ffffff;
-    background-color: #000000;
-  }
-  nav.scrolled {
-    background: rgba(0,0,0,0.95);
-    backdrop-filter: blur(12px);
-    padding: 1rem 3rem;
-  }
- .nav-logo {
-  justify-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  height: 40px;
-}
-.nav-logo img {
-  width: 200px;
-  height: auto;
-  display: block;
-  object-fit: contain;
-  transition: opacity 0.3s ease;
-}
-.nav-logo:hover img {
-  opacity: 0.8;
-}
-  .nav-links {
-    justify-self: start;
-    display: flex; gap: 2.5rem; list-style: none;
-  }
-  .nav-links a {
-    font-family: var(--sans);
-    font-size: 0.8rem;
-    font-weight: 300;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: rgba(245,237,217,0.75);
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  nav.scrolled .nav-links a { color: rgba(245,237,217,0.6); }
-  .nav-links a:hover { color: var(--gold-light); }
-  .nav-cart {
-    justify-self: end;
-    font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(245,237,217,0.75);
-    border: 1px solid rgba(201,168,76,0.4);
-    padding: 0.5rem 1.2rem;
-    text-decoration: none;
-    transition: all 0.3s;
-  }
-  .nav-cart:hover { background: var(--gold); color: var(--black); border-color: var(--gold); }
-  .nav-right {
-    justify-self: end;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-  }
-  .nav-search {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    border-bottom: 1px solid rgba(245,237,217,0.3);
-    padding: 0.35rem 0;
-    transition: border-color 0.3s;
-  }
-  .nav-search:focus-within {
-    border-color: var(--gold-light);
-  }
-  .nav-search svg {
-    color: rgba(245,237,217,0.6);
-    flex-shrink: 0;
-  }
-  .nav-search input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: #ffffff;
-    font-family: var(--sans);
-    font-size: 0.7rem;
-    font-weight: 300;
-    letter-spacing: 0.1em;
-    width: 140px;
-  }
-  .nav-search input::placeholder {
-    color: rgba(245,237,217,0.4);
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-  }
-  nav.scrolled .nav-search {
-    border-color: rgba(245,237,217,0.25);
-  }
-  nav.scrolled .nav-search:focus-within {
-    border-color: var(--gold-light);
-  }
-  .nav-cart-icon {
-    color: rgba(245,237,217,0.75);
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  .nav-cart-icon:hover { color: var(--gold-light); }
-  nav.scrolled .nav-cart-icon { color: rgba(245,237,217,0.85); }
-  nav.scrolled .nav-cart-icon:hover { color: var(--gold-light); }
-
-  .cart-checkout {
-  display: block;
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-  box-sizing: border-box;
-}
-
-  /* Qavera logo (overrides .nav-logo height/layout) */
- nav#mainNav > a.nav-logo {
-  height: 50px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-  /* =========================================================
-   QAVERA HOMEPAGE HERO
-========================================================= */
-
-.hero {
-  height: 100vh;
-  min-height: 720px;
-
-  position: relative;
-
-  display: flex;
-  align-items: center;
-
-  overflow: hidden;
-
-  background: #0b0908;
-}
-
-
-/* =========================================================
-   HERO IMAGE
-========================================================= */
-
-.hero-image {
-  position: absolute;
-
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  object-position: center center;
-
-  display: block;
-
-  animation: heroImageReveal 2s
-    cubic-bezier(0.22, 1, 0.36, 1)
-    forwards;
-
-  transform: scale(1.04);
-}
-
-@keyframes heroImageReveal {
-
-  from {
-    opacity: 0;
-    transform: scale(1.08);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-}
-
-
-/* =========================================================
-   DARK GRADIENT FOR TEXT
-========================================================= */
-
-.hero-overlay {
-  position: absolute;
-
-  inset: 0;
-
-  background:
-    linear-gradient(
-      90deg,
-      rgba(8,7,6,0.78) 0%,
-      rgba(8,7,6,0.58) 25%,
-      rgba(8,7,6,0.18) 55%,
-      rgba(8,7,6,0.02) 100%
-    );
-
-  z-index: 1;
-}
-
-
-/* =========================================================
-   SIDE LINES
-========================================================= */
-
-.hero-line-left {
-  position: absolute;
-
-  left: 3rem;
-  top: 50%;
-
-  transform: translateY(-50%);
-
-  width: 1px;
-  height: 140px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      transparent,
-      var(--gold),
-      transparent
-    );
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QAVERA — The Painted Collection</title>
+  <meta name="description" content="QAVERA hand-painted chocolate bonbons, crafted in Qatar. Premium and Luxury boxes, build your own box, delivered across Qatar.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Jost:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="v3/qavera.css">
+  <style>
+    /* =====================================================
+       HERO
+    ===================================================== */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: clamp(2rem, 5vw, 6rem);
+      align-items: center;
+      padding: 8rem var(--gutter) 4rem;
+      background:
+        radial-gradient(90% 70% at 85% 30%, rgba(61,3,10,.55), transparent 60%),
+        radial-gradient(60% 60% at 0% 100%, rgba(26,45,40,.6), transparent 60%),
+        var(--ink);
+    }
+
+    .hero-kicker { color: var(--sand); margin-bottom: 2rem; }
+
+    .hero-title { font-size: clamp(3.1rem, 8.2vw, 8.4rem); color: var(--silver); }
+
+    .hero-title em { color: var(--sand); }
+
+    .hero-text {
+      max-width: 30rem;
+      margin: 2.2rem 0 2.6rem;
+      font-size: 1.05rem;
+      color: rgba(216,216,216,.72);
+    }
+
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+
+    .hero-art { position: relative; justify-self: end; width: min(100%, 520px); }
+
+    .arch {
+      position: relative;
+      aspect-ratio: 3 / 4;
+      border-radius: 999px 999px 0 0;
+      overflow: hidden;
+      border: 1px solid rgba(196,169,128,.35);
+      padding: 10px;
+    }
+
+    .arch img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 999px 999px 0 0;
+    }
+
+    .plaque {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: .9rem;
+      border-top: 1px solid rgba(196,169,128,.3);
+      color: rgba(216,216,216,.6);
+    }
+
+    .plaque b { color: var(--sand); font-weight: 400; }
+
+    .hero-scroll {
+      position: absolute;
+      left: var(--gutter);
+      bottom: 2rem;
+      color: rgba(216,216,216,.45);
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+
+    .hero-scroll::before { content: ''; width: 40px; height: 1px; background: currentColor; }
+
+    /* =====================================================
+       MARQUEE
+    ===================================================== */
+    .marquee {
+      overflow: hidden;
+      background: var(--sand);
+      color: var(--ink);
+      border-block: 1px solid var(--ink);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: marquee 48s linear infinite;
+    }
+
+    .marquee-track span {
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 1.35rem;
+      padding: .9rem 1.6rem;
+      white-space: nowrap;
+    }
+
+    .marquee-track span::after { content: '✦'; font-style: normal; font-size: .7rem; margin-left: 3.2rem; vertical-align: middle; }
+
+    @keyframes marquee { to { transform: translateX(-50%); } }
+
+    /* =====================================================
+       MANIFESTO
+    ===================================================== */
+    .manifesto {
+      background: var(--silver);
+      color: var(--ink);
+      padding: clamp(5rem, 11vw, 10rem) var(--gutter);
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 2rem;
+    }
+
+    .manifesto .caption { color: var(--oxblood); padding-top: .8rem; }
+
+    .manifesto p.display {
+      font-family: 'Jost', var(--text);
+      font-weight: 300;
+      font-size: clamp(1.6rem, 3vw, 2.7rem);
+      line-height: 1.3;
+      max-width: 26em;
+    }
+
+    .manifesto p.display em { color: var(--oxblood); }
+
+    /* =====================================================
+       ROOMS (collections)
+    ===================================================== */
+    .rooms { display: grid; grid-template-columns: 1fr 1fr; }
+
+    .room {
+      position: relative;
+      padding: clamp(4rem, 7vw, 7rem) var(--gutter) clamp(3.5rem, 6vw, 6rem);
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: var(--silver);
+      overflow: hidden;
+    }
+
+    .room-ink { background: var(--ink); border-right: 1px solid rgba(196,169,128,.18); }
+    .room-forest { background: var(--forest); }
+
+    .room-head { display: flex; justify-content: space-between; color: var(--sand); margin-bottom: 2.4rem; }
+
+    .canvas {
+      background: #fff;
+      padding: clamp(14px, 2vw, 26px);
+      box-shadow: 0 30px 60px -30px rgba(0,0,0,.8);
+      transition: transform .9s var(--ease);
+    }
+
+    .canvas-inner { position: relative; aspect-ratio: 1 / 1; overflow: hidden; }
+
+    .canvas-inner img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity .7s var(--ease); }
+
+    .canvas-inner img + img { opacity: 0; }
+
+    .room:hover .canvas { transform: translateY(-6px); }
+    .room:hover .canvas-inner img:first-child { opacity: 0; }
+    .room:hover .canvas-inner img + img { opacity: 1; }
+
+    .room h3 { font-size: clamp(2.4rem, 4vw, 3.8rem); margin: 2.6rem 0 .8rem; }
+
+    .room h3 em { color: var(--sand); }
+
+    .room p:not(.caption) { color: rgba(216,216,216,.7); max-width: 28rem; }
+
+    .sizes { list-style: none; margin: 2rem 0 2.2rem; border-top: 1px solid rgba(216,216,216,.18); }
+
+    .sizes li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: .85rem 0;
+      border-bottom: 1px solid rgba(216,216,216,.18);
+      font-family: var(--mono);
+      font-size: .8rem;
+      letter-spacing: .06em;
+    }
+
+    .sizes li span:first-child { color: rgba(216,216,216,.65); }
+
+    .room .link { color: var(--sand); margin-top: auto; align-self: flex-start; }
+
+    /* =====================================================
+       FLAVOUR CATALOGUE
+    ===================================================== */
+    .catalogue { background: var(--silver); color: var(--ink); padding: clamp(5rem, 9vw, 8rem) var(--gutter); }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 2rem;
+      margin-bottom: clamp(3rem, 6vw, 5rem);
+    }
+
+    .section-head .caption { margin-bottom: 1.4rem; }
+
+    .section-head h2 { font-size: clamp(2.6rem, 6vw, 5.6rem); }
+
+    .section-head p { max-width: 24rem; }
+
+    .catalogue .caption { color: var(--oxblood); }
+    .catalogue h2 em { color: var(--oxblood); }
+    .catalogue .section-head p { color: rgba(15,14,14,.72); }
+
+    .flavours {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      border-top: 1px solid rgba(15,14,14,.2);
+      border-left: 1px solid rgba(15,14,14,.2);
+    }
+
+    .flavour {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 2rem 1rem 1.6rem;
+      border-right: 1px solid rgba(15,14,14,.2);
+      border-bottom: 1px solid rgba(15,14,14,.2);
+      transition: background .5s var(--ease);
+    }
+
+    .flavour:hover { background: rgba(15,14,14,.04); }
+
+    .flavour .caption { font-size: .66rem; color: rgba(15,14,14,.55); align-self: flex-start; }
+
+    a.flavour { text-decoration: none; color: inherit; }
+    .flavour .fl-meta { font-size: .6rem; color: rgba(15,14,14,.5); margin-top: .5rem; align-self: center; }
+    .flavour h4 { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 1.2rem; line-height: 1.2; margin-top: 1.2rem; }
+
+    .flavour:hover .bonbon { transform: rotate(-14deg) scale(1.06); }
+
+    /* =====================================================
+       BUILD YOUR BOX
+    ===================================================== */
+    .build {
+      background: var(--oxblood);
+      color: var(--silver);
+      padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(3rem, 6vw, 7rem);
+      align-items: center;
+    }
+
+    .build .caption { color: var(--sand); margin-bottom: 1.4rem; }
+
+    .build h2 { font-size: clamp(2.6rem, 5.4vw, 5rem); }
+
+    .build h2 em { color: var(--sand); }
+
+    .steps { list-style: none; margin: 3rem 0 2.8rem; counter-reset: step; }
+
+    .steps li {
+      display: grid;
+      grid-template-columns: 3.4rem 1fr;
+      gap: 1rem;
+      padding: 1.3rem 0;
+      border-top: 1px solid rgba(196,169,128,.28);
+    }
+
+    .steps li:last-child { border-bottom: 1px solid rgba(196,169,128,.28); }
+
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step, decimal-leading-zero);
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 1.8rem;
+      line-height: 1;
+      color: var(--sand);
+    }
+
+    .steps strong { display: block; font-weight: 500; font-size: 1.05rem; margin-bottom: .2rem; }
+
+    .steps span { color: rgba(216,216,216,.7); font-size: .95rem; }
+
+    .box-demo { justify-self: center; width: min(100%, 480px); }
+
+    .size-switch { display: flex; gap: .5rem; margin-bottom: 1.4rem; }
+
+    .size-switch button {
+      flex: 1;
+      background: transparent;
+      border: 1px solid rgba(196,169,128,.4);
+      color: var(--silver);
+      font-family: var(--mono);
+      font-size: .78rem;
+      letter-spacing: .1em;
+      padding: .85rem .5rem;
+      cursor: pointer;
+      transition: background .3s ease, color .3s ease, border-color .3s ease;
+    }
+
+    .size-switch button[aria-pressed="true"] { background: var(--sand); border-color: var(--sand); color: var(--ink); }
+
+    .box-frame {
+      background: var(--ink);
+      padding: clamp(14px, 2.4vw, 22px);
+      border: 1px solid rgba(196,169,128,.5);
+      box-shadow: 0 40px 70px -35px rgba(0,0,0,.9);
+    }
+
+    .box-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 4), 1fr);
+      gap: clamp(5px, 1vw, 9px);
+    }
 
-  opacity: 0.4;
+    .box-grid .cell {
+      aspect-ratio: 1;
+      background: #1c1a19;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,.7);
+      display: grid;
+      place-items: center;
+    }
 
-  z-index: 2;
-}
+    .box-grid .bonbon {
+      width: 78%;
+      margin: 0;
+      box-shadow: inset -4px -5px 9px rgba(0,0,0,.45), inset 2px 2px 5px rgba(255,255,255,.12);
+      animation: drop .6s var(--ease) both;
+    }
 
-.hero-line-right {
-  position: absolute;
+    @keyframes drop { from { transform: scale(.3); opacity: 0; } }
 
-  right: 3rem;
-  top: 50%;
+    .box-note { display: flex; justify-content: space-between; margin-top: 1rem; color: rgba(216,216,216,.6); }
 
-  transform: translateY(-50%);
+    .box-note b { color: var(--sand); font-weight: 400; }
 
-  width: 1px;
-  height: 140px;
+    /* =====================================================
+       PANTRY (everyday)
+    ===================================================== */
+    .pantry { background: var(--ink); padding: clamp(5rem, 9vw, 8rem) var(--gutter); }
 
-  background:
-    linear-gradient(
-      to bottom,
-      transparent,
-      var(--gold),
-      transparent
-    );
-
-  opacity: 0.4;
-
-  z-index: 2;
-}
-
-
-/* =========================================================
-   HERO CONTENT
-========================================================= */
-
-.hero-content {
-
-  position: relative;
-
-  z-index: 3;
-
-  width: 100%;
-
-  max-width: 650px;
+    .pantry .caption { color: var(--sand); }
+    .pantry h2 em { color: var(--sand); }
+    .pantry .section-head p { color: rgba(216,216,216,.65); }
 
-  margin-left:2rem;
+    .menu-list { list-style: none; border-top: 1px solid rgba(216,216,216,.18); }
 
-  text-align: left;
+    .menu-list a {
+      display: grid;
+      grid-template-columns: 5rem minmax(0, 1.3fr) minmax(0, 2fr) auto;
+      align-items: baseline;
+      gap: 1.5rem;
+      padding: 1.8rem 0;
+      border-bottom: 1px solid rgba(216,216,216,.18);
+      text-decoration: none;
+      transition: padding .5s var(--ease), background .5s var(--ease);
+    }
 
-  display: flex;
+    .menu-list a:hover { padding-left: 1.2rem; padding-right: 1.2rem; background: rgba(196,169,128,.06); }
 
-  flex-direction: column;
+    .menu-list .caption { color: rgba(216,216,216,.45); }
 
-  align-items: flex-start;
+    .menu-list h3 { font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1; }
 
-  animation:
-    heroContentReveal
-    1.5s
-    0.4s
-    cubic-bezier(0.22,1,0.36,1)
-    both;
-}
+    .menu-list a:hover h3 { font-style: italic; color: var(--sand); }
 
-@keyframes heroContentReveal {
+    .menu-list p { color: rgba(216,216,216,.62); font-size: .95rem; }
 
-  from {
-    opacity: 0;
+    .menu-list .price { font-family: var(--mono); font-size: .82rem; letter-spacing: .06em; color: var(--sand); white-space: nowrap; text-align: right; }
 
-    transform:
-      translateY(30px);
-  }
+    .menu-list .price small { display: block; color: rgba(216,216,216,.45); font-size: .72rem; }
 
-  to {
-    opacity: 1;
+    /* =====================================================
+       THE HOME
+    ===================================================== */
+    .house {
+      background: var(--forest);
+      padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: clamp(3rem, 6vw, 7rem);
+      align-items: center;
+    }
 
-    transform:
-      translateY(0);
-  }
+    .house-images { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1rem; align-items: start; }
 
-}
+    .house-images img { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
 
+    .house-images img:last-child { aspect-ratio: 1; margin-top: 30%; }
 
-/* =========================================================
-   EYEBROW
-========================================================= */
+    .house .caption { color: var(--sand); margin-bottom: 1.4rem; }
 
-.hero-eyebrow {
+    .house h2 { font-size: clamp(2.6rem, 5vw, 4.6rem); }
 
-  font-family: var(--sans);
+    .house h2 em { color: var(--sand); }
 
-  font-size: 0.65rem;
+    .house p:not(.caption) { color: rgba(216,216,216,.72); max-width: 28rem; margin: 1.6rem 0 2.4rem; }
 
-  font-weight: 300;
+    .house .actions { display: flex; flex-wrap: wrap; gap: 1rem; }
 
-  letter-spacing: 0.4em;
+    /* =====================================================
+       REWARDS
+    ===================================================== */
+    .rewards { background: var(--sand); color: var(--ink); display: grid; grid-template-columns: 1fr 1fr; }
 
-  text-transform: uppercase;
+    .reward { padding: clamp(4rem, 8vw, 7rem) var(--gutter); }
 
-  color: var(--gold);
+    .reward + .reward { border-left: 1px solid rgba(15,14,14,.2); }
 
-  margin-bottom: 1.8rem;
+    .reward .caption { color: var(--oxblood); }
 
-}
+    .reward .big { font-family: var(--display); font-size: clamp(5rem, 11vw, 9.5rem); line-height: .9; margin: 1.6rem 0 1rem; }
 
+    .reward .big small { font-size: .3em; font-style: italic; margin-left: .3rem; }
 
-/* =========================================================
-   TITLE
-========================================================= */
+    .reward h3 { font-family: var(--display); font-weight: 400; font-style: italic; font-size: 1.9rem; margin-bottom: .8rem; }
 
-section.hero .hero-content h1.hero-title {
-  font-family: var(--sans);
-  font-size: clamp(4rem, 7vw, 7rem);
-  font-weight: 300;
-  font-size: 4.5rem;
-  line-height: 0.95;
-  letter-spacing: 0.08em;
-  color: #ffffff;
-  margin: 0;
-}
+    .reward p:not(.caption):not(.big) { max-width: 26rem; color: rgba(15,14,14,.78); margin-bottom: 2rem; }
 
-section.hero .hero-content h1.hero-title em {
-  display: block;
-  font-family: var(--serif);
-  font-size: 0.58em;
-  font-style: italic;
-  font-weight: 300;
-  font-size: 4rem;
-  letter-spacing: 0.02em;
-  color: #C4A980;
-  margin-top: 0.15em;
-}
+    /* =====================================================
+       RESPONSIVE
+    ===================================================== */
+    @media (max-width: 1100px) {
+      .flavours { grid-template-columns: repeat(4, 1fr); }
+    }
 
+    @media (max-width: 860px) {
 
-/* =========================================================
-   SUBTITLE
-========================================================= */
+      .hero { grid-template-columns: 1fr; padding-top: 7rem; padding-bottom: 5rem; min-height: auto; }
+      .hero-art { justify-self: stretch; width: 100%; max-width: 440px; margin: 0 auto; }
+      .hero-scroll { display: none; }
 
-.hero-subtitle {
+      .manifesto { grid-template-columns: 1fr; }
 
-  font-family: var(--serif);
+      .rooms { grid-template-columns: 1fr; }
+      .room-ink { border-right: 0; border-bottom: 1px solid rgba(196,169,128,.18); }
 
-  font-size: 1.25rem;
+      .build { grid-template-columns: 1fr; }
 
-  font-weight: 300;
+      .menu-list a { grid-template-columns: 1fr auto; gap: .4rem 1rem; }
+      .menu-list .caption { grid-column: 1 / -1; }
+      .menu-list p { grid-column: 1 / -1; grid-row: 3; }
+      .menu-list .price { grid-column: 2; grid-row: 2; }
+      .menu-list a:hover { padding-left: 0; padding-right: 0; background: none; }
 
-  font-style: italic;
+      .house { grid-template-columns: 1fr; }
 
-  color: var(--beige);
+      .rewards { grid-template-columns: 1fr; }
+      .reward + .reward { border-left: 0; border-top: 1px solid rgba(15,14,14,.2); }
 
-  letter-spacing: 0.04em;
+    }
 
-  margin-top: 1.8rem;
-
-}
-
-
-/* =========================================================
-   DIVIDER
-========================================================= */
-
-.hero-divider {
-
-  width: 65px;
-
-  height: 1px;
-
-  background:
-    linear-gradient(
-      to right,
-      var(--gold),
-      transparent
-    );
-
-  margin: 1.8rem 0;
-
-}
-
-
-/* =========================================================
-   BUTTONS
-========================================================= */
-
-.hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
-}
-
-.btn-primary {
-  font-family: var(--sans);
-  font-size: 0.62rem;
-  font-weight: 400;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 1rem 2rem;
-  transition: all 0.35s ease;
-}
-
-/* EXPLORE COLLECTIONS */
-
-.btn-primary {
-  color: var(--black);
-  background: #C4A980;
-  border: 1px solid #C4A980;
-}
-
-.btn-primary:hover {
-  background: #ffffff;
-  border-color: #ffffff;
-  transform: translateY(-2px);
-}
-
-/* OUR STORY */
-
-
-/* =========================================================
-   SCROLL
-========================================================= */
-
-.hero-scroll {
-
-  position: absolute;
-
-  z-index: 3;
-
-  bottom: 2.5rem;
-
-  left: 50%;
-
-  transform:
-    translateX(-50%);
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: center;
-
-  gap: 0.5rem;
-
-  font-family: var(--sans);
-
-  font-size: 0.6rem;
-
-  letter-spacing: 0.3em;
-
-  text-transform: uppercase;
-
-  color:
-    rgba(
-      201,
-      168,
-      76,
-      0.7
-    );
-
-  animation:
-    scrollBounce
-    2s
-    infinite;
-}
-
-.hero-scroll::after {
-
-  content: '';
-
-  width: 1px;
-
-  height: 45px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      var(--gold),
-      transparent
-    );
-
-}
-
-  @media (max-width: 800px) {
-
-  .hero {
-    min-height: 680px;
-  }
-
-  .hero-image {
-    object-position: 35% center;
-  }
-
-  .hero-overlay {
-    background:
-      linear-gradient(
-        90deg,
-        rgba(8,7,6,0.72),
-        rgba(8,7,6,0.25)
-      );
-  }
-
-  .hero-content {
-
-    margin-left: 0;
-
-    padding:
-      0 2rem;
-
-    max-width: 100%;
-  }
-
-  section.hero
-  .hero-content
-  h1.hero-title {
-
-    font-size:
-      clamp(
-        4rem,
-        16vw,
-        6rem
-      );
-  }
-
-  .hero-eyebrow {
-    font-size: 0.55rem;
-
-    letter-spacing: 0.3em;
-  }
-
-  .hero-cta {
-    flex-wrap: wrap;
-  }
-
-  .hero-line-left {
-    left: 1rem;
-  }
-
-  .hero-line-right {
-    right: 1rem;
-  }
-
-}
-
-
-  /* SECTION BASE */
-  section { padding: 7rem 3rem; }
-
- /* =========================================================
-   INTRO
-========================================================= */
-
-.intro {
-  background: var(--beige-light);
-
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
-  align-items: center;
-
-  gap: 6rem;
-
-  padding: 1rem 7rem;
-}
-
-
-/* IMAGE */
-
-.intro-image {
-  width: 100%;
-  height: 560px;
-  overflow: hidden;
-  background: transparent;
-  order: 2;
-}
-
-.intro-image img {
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  display: block;
-
-  transition: transform 1s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.intro-image:hover img {
-  transform: scale(1.03);
-}
-
-
-/* TEXT */
-
-.intro-content {
-  max-width: 600px;
-  order: 1;
-}
-
-.intro-label {
-  font-size: 0.65rem;
-
-  font-weight: 300;
-
-  letter-spacing: 0.4em;
-
-  text-transform: uppercase;
-
-  color: var(--gold-dark);
-
-  margin-bottom: 1.5rem;
-}
-
-.intro-title {
-  font-family: var(--serif);
-
-  font-size: 3.5rem;
-
-  font-weight: 300;
-
-  line-height: 1.1;
-
-  color: var(--text-dark);
-
-  margin-bottom: 1.8rem;
-}
-
-.intro-title em {
-  font-style: italic;
-
-  color: var(--gold-dark);
-}
-
-.intro-text {
-  font-size: 0.85rem;
-
-  font-weight: 300;
-
-  line-height: 2;
-
-  color: var(--text-muted);
-
-  max-width: 520px;
-
-  margin-bottom: 2rem;
-}
-
-.intro-link {
-  font-size: 0.65rem;
-
-  letter-spacing: 0.3em;
-
-  text-transform: uppercase;
-
-  color: var(--gold-dark);
-
-  text-decoration: none;
-
-  border-bottom: 1px solid var(--gold);
-
-  padding-bottom: 4px;
-
-  transition:
-    color 0.3s,
-    border-color 0.3s;
-}
-
-.intro-link:hover {
-  color: var(--black);
-
-  border-color: var(--black);
-}
-
-@media (max-width: 800px) {
-
-  .intro {
-    grid-template-columns: 1fr;
-
-    gap: 3rem;
-
-    padding: 2rem 2rem;
-  }
-
-  .intro-image {
-    height: 450px;
-  }
-
-  .intro-title {
-    font-size: 2.8rem;
-  }
-
-}
-
- 
-  /* GIFTING */
-  .gifting {
-    background: var(--beige);
-    display: grid; grid-template-columns: 1fr 1fr;
-    align-items: center; gap: 0;
-    padding: 0;
-  }
-  .gifting-content { padding: 7rem 5rem; }
-  .gifting-content .section-label { text-align: left; display: block; margin-bottom: 1rem; color: var(--gold-dark); }
-  .gifting-title {
-    font-family: var(--serif); font-size: 2.8rem; font-weight: 300;
-    line-height: 1.15; margin-bottom: 1.5rem; color: var(--text-dark);
-  }
-  .gifting-title em { font-style: italic; color: var(--gold-dark); }
-  .gifting-text {
-    font-size: 0.85rem; font-weight: 300; line-height: 2;
-    color: var(--text-muted); margin-bottom: 2.5rem;
-  }
-  .gifting-visual {
-    background: var(--charcoal); min-height: 500px;
-    position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .gift-box {
-    position: relative; z-index: 1;
-    text-align: center;
-  }
-  .gift-box-outer {
-    width: 200px; height: 200px;
-    border: 1px solid rgba(201,168,76,0.3);
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-    animation: giftFloat 4s ease-in-out infinite;
-  }
-  @keyframes giftFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-  .gift-box-inner {
-    width: 130px; height: 130px;
-    border: 1px solid rgba(201,168,76,0.5);
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(201,168,76,0.05);
-  }
-  .gift-ribbon-h {
-    position: absolute; top: 50%; left: 0; right: 0;
-    height: 1px; background: rgba(201,168,76,0.4);
-    transform: translateY(-50%);
-  }
-  .gift-ribbon-v {
-    position: absolute; left: 50%; top: 0; bottom: 0;
-    width: 1px; background: rgba(201,168,76,0.4);
-    transform: translateX(-50%);
-  }
-  .gift-symbol {
-    font-family: var(--serif); font-size: 3rem; color: rgba(201,168,76,0.5);
-    font-style: italic;
-  }
-  .gift-label {
-    font-size: 0.6rem; letter-spacing: 0.35em; text-transform: uppercase;
-    color: var(--gold); margin-top: 2rem;
-  }
-  .gifting-visual::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(201,168,76,0.07) 0%, transparent 70%);
-  }
-
-  /* NEWSLETTER */
-  .newsletter {
-    background: var(--gold);
-    padding: 5rem 3rem;
-    text-align: center;
-  }
-  .newsletter-title {
-    font-family: var(--serif); font-size: 2.2rem; font-weight: 300;
-    color: var(--black); margin-bottom: 0.5rem;
-  }
-  .newsletter-sub {
-    font-size: 0.8rem; font-weight: 300; letter-spacing: 0.1em;
-    color: rgba(13,11,8,0.6); margin-bottom: 2.5rem;
-  }
-  .newsletter-form {
-    display: flex; justify-content: center; gap: 0;
-    max-width: 480px; margin: 0 auto;
-  }
-  .newsletter-input {
-    flex: 1;
-    padding: 1rem 1.5rem;
-    font-family: var(--sans); font-size: 0.8rem; font-weight: 300;
-    letter-spacing: 0.08em;
-    background: var(--black); color: var(--beige);
-    border: none; outline: none;
-  }
-  .newsletter-input::placeholder { color: rgba(245,237,217,0.35); }
-  .newsletter-btn {
-    font-family: var(--sans); font-size: 0.65rem; font-weight: 300;
-    letter-spacing: 0.3em; text-transform: uppercase;
-    background: var(--charcoal); color: var(--gold);
-    border: none; padding: 1rem 1.8rem;
-    cursor: none; transition: background 0.3s;
-  }
-  .newsletter-btn:hover { background: var(--black); }
-
-  /* =========================================================
-   FOOTER
-========================================================= */
-
-/* =========================================================
-   FOOTER
-========================================================= */
-
-footer {
-  background: var(--black);
-  color: var(--beige);
-  padding: 5rem 4rem 2.5rem;
-}
-
-
-/* =========================================================
-   MAIN FOOTER
-========================================================= */
-
-.footer-main {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 5rem;
-
-  max-width: 1300px;
-  margin: 0 auto;
-}
-
-
-/* =========================================================
-   BRAND
-========================================================= */
-
-.footer-logo {
-  width: 200px;
-  height: auto;
-  display: block;
-  margin-bottom: 1.5rem;
-}
-
-.footer-brand p {
-  max-width: 350px;
-
-  color: rgba(245,237,217,0.5);
-
-  font-size: 0.75rem;
-  font-weight: 300;
-
-  line-height: 1.9;
-
-  letter-spacing: 0.02em;
-}
-
-
-/* =========================================================
-   COLUMN TITLES
-========================================================= */
-
-.footer-column h4 {
-  color: var(--gold);
-
-  font-size: 0.6rem;
-  font-weight: 400;
-
-  letter-spacing: 0.3em;
-
-  text-transform: uppercase;
-
-  margin-bottom: 1.5rem;
-}
-
-
-/* =========================================================
-   LINKS
-========================================================= */
-
-.footer-column ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footer-column li {
-  margin-bottom: 0.85rem;
-}
-
-.footer-column a {
-  color: rgba(245,237,217,0.55);
-
-  text-decoration: none;
-
-  font-size: 0.75rem;
-  font-weight: 300;
-
-  letter-spacing: 0.04em;
-
-  transition:
-    color 0.3s ease,
-    padding-left 0.3s ease;
-}
-
-.footer-column a:hover {
-  color: var(--gold-light);
-
-  padding-left: 5px;
-}
-
-
-/* =========================================================
-   BOTTOM
-========================================================= */
-
-.footer-bottom {
-  max-width: 1300px;
-
-  margin: 4.5rem auto 0;
-
-  display: flex;
-
-  align-items: center;
-
-  gap: 2rem;
-}
-
-.footer-gold-line {
-  flex: 1;
-
-  height: 1px;
-
-  background:
-    linear-gradient(
-      to right,
-      var(--gold),
-      transparent
-    );
-
-  opacity: 0.35;
-}
-
-.footer-gold-line-right {
-  background:
-    linear-gradient(
-      to left,
-      var(--gold),
-      transparent
-    );
-}
-
-.footer-copy {
-  color: rgba(245,237,217,0.3);
-
-  font-size: 0.55rem;
-
-  letter-spacing: 0.15em;
-
-  text-transform: uppercase;
-
-  white-space: nowrap;
-}
-  /* Fade-in on scroll */
-  .fade-up {
-    opacity: 0; transform: translateY(40px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-  }
-  .fade-up.visible { opacity: 1; transform: translateY(0); }
-  .fade-up-d1 { transition-delay: 0.1s; }
-  .fade-up-d2 { transition-delay: 0.2s; }
-  .fade-up-d3 { transition-delay: 0.3s; }
-  .fade-up-d4 { transition-delay: 0.4s; }
-
-  /* =========================================
-   CART
-========================================= */
-.nav-cart-icon {
-  position: relative;
-}
-#cartCount {
-  position: absolute;
-  top: -9px;
-  right: -10px;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gold);
-  color: var(--black);
-  border-radius: 50%;
-  font-family: var(--sans);
-  font-size: 0.55rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  transition: transform 0.3s ease;
-}
-#cartCount.bump {
-  animation: cartBump 0.35s ease;
-}
-@keyframes cartBump {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1); }
-}
-
-/* Overlay */
-
-.cart-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 500;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
-  backdrop-filter: blur(4px);
-}
-.cart-overlay.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Drawer */
-
-.cart-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: min(440px, 100vw);
-  height: 100vh;
-  background: var(--beige-light);
-  z-index: 501;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.5s cubic-bezier(0.77,0,0.175,1);
-  box-shadow: -20px 0 60px rgba(0,0,0,0.2);
-}
-.cart-drawer.active {
-  transform: translateX(0);
-}
-
-/* Header */
-
-.cart-header {
-  padding: 2rem 2rem 1.5rem;
-  border-bottom: 1px solid var(--beige-mid);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.cart-label {
-  display: block;
-  font-size: 0.58rem;
-  letter-spacing: 0.35em;
-  text-transform: uppercase;
-  color: var(--gold-dark);
-  margin-bottom: 0.5rem;
-}
-.cart-header h2 {
-  font-family: var(--serif);
-  font-size: 2.2rem;
-  font-weight: 300;
-  color: var(--text-dark);
-}
-.cart-close {
-  border: none;
-  background: transparent;
-  font-size: 2rem;
-  font-weight: 200;
-  color: var(--text-dark);
-  cursor: pointer;
-  width: 35px;
-  height: 35px;
-  transition: color 0.3s, transform 0.3s;
-}
-.cart-close:hover {
-  color: var(--gold-dark);
-  transform: rotate(90deg);
-}
-
-/* Items */
-
-.cart-items {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem 2rem;
-}
-.cart-item {
-  display: grid;
-  grid-template-columns: 70px 1fr auto;
-  gap: 1rem;
-  padding: 1.25rem 0;
-  border-bottom: 1px solid var(--beige-mid);
-  animation: cartItemIn 0.4s ease;
-}
-@keyframes cartItemIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.cart-item-image {
-  width: 70px;
-  height: 85px;
-  background: #fff;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cart-item-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-.cart-item-info {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.cart-item-name {
-  font-family: var(--serif);
-  font-size: 1.2rem;
-  font-weight: 300;
-  color: var(--text-dark);
-  margin-bottom: 0.25rem;
-}
-.cart-item-price {
-  font-size: 0.7rem;
-  color: var(--gold-dark);
-  letter-spacing: 0.08em;
-  margin-bottom: 0.8rem;
-}
-.cart-quantity {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-}
-.cart-quantity button {
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--beige-mid);
-  background: transparent;
-  color: var(--text-dark);
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-.cart-quantity button:hover {
-  border-color: var(--gold);
-  color: var(--gold-dark);
-}
-.cart-quantity span {
-  font-size: 0.7rem;
-  min-width: 15px;
-  text-align: center;
-}
-.cart-item-total {
-  font-family: var(--serif);
-  font-size: 1rem;
-  color: var(--gold-dark);
-  white-space: nowrap;
-}
-.cart-remove {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  cursor: pointer;
-  margin-top: 0.5rem;
-  transition: color 0.3s;
-}
-.cart-remove:hover {
-  color: #9b3030;
-}
-
-/* Empty */
-
-.cart-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  color: var(--text-muted);
-}
-.cart-empty-symbol {
-  font-size: 2rem;
-  color: var(--gold);
-  margin-bottom: 1rem;
-}
-.cart-empty p {
-  font-family: var(--serif);
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-}
-.cart-empty button {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--gold);
-  padding-bottom: 4px;
-  color: var(--gold-dark);
-  font-family: var(--sans);
-  font-size: 0.6rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-/* Footer */
-
-.cart-footer {
-  padding: 1.5rem 2rem 2rem;
-  border-top: 1px solid var(--beige-mid);
-  background: var(--beige);
-}
-.cart-total-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.25rem;
-}
-.cart-total-row span:first-child {
-  font-size: 0.65rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-#cartSubtotal {
-  font-family: var(--serif);
-  font-size: 1.4rem;
-  color: var(--gold-dark);
-}
-.cart-checkout {
-  width: 100%;
-  padding: 1.15rem;
-  border: 1px solid var(--gold);
-  background: var(--gold);
-  color: var(--black);
-  font-family: var(--sans);
-  font-size: 0.62rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-.cart-checkout:hover {
-  background: var(--gold-light);
-  border-color: var(--gold-light);
-}
-.cart-note {
-  text-align: center;
-  font-size: 0.58rem;
-  color: var(--text-muted);
-  margin-top: 0.8rem;
-  line-height: 1.6;
-}
-
-/* Mobile */
-
-@media (max-width: 600px) {
-  .cart-drawer {
-    width: 100%;
-  }
-  .cart-header {
-    padding: 1.5rem;
-  }
-  .cart-items {
-    padding: 1rem 1.5rem;
-  }
-  .cart-footer {
-    padding: 1.25rem 1.5rem 1.5rem;
-  }
-}
-/* =========================================
-   QAVERA LOADING SCREEN
-========================================= */
-#qaveraLoader {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity 1s ease,
-    visibility 1s ease;
-}
-.qavera-loader-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  animation: qaveraLoaderIn 1.2s ease forwards;
-}
-
-/* MAIN LOGO */
-
-.qavera-main-logo {
-  width: 500px !important;
-  height: auto !important;
-  max-width: 70vw !important;
-  display: block;
-  object-fit: contain;
-  margin: 0 0 25px 0;
-}
-
-/* NAME LOGO */
-
-.qavera-name-logo {
-  width: 350px !important;
-  height: auto !important;
-  max-width: 50vw !important;
-  display: block;
-  object-fit: contain;
-}
-
-/* Entrance animation */
-
-@keyframes qaveraLoaderIn {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Exit animation */
-
-#qaveraLoader.hide {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* Mobile */
-
-@media (max-width: 600px) {
-  .qavera-main-logo {
-    width: 220px !important;
-  }
-  .qavera-name-logo {
-    width: 140px !important;
-  }
-  .featured-product:nth-child(3) .product-image-front {
-  transform: scale(1.16);
-}
-}
-
-/* =========================================
-   COLLECTIONS MEGA MENU
-========================================= */
-
-.collections-dropdown {
-  position: static;
-  padding-bottom: 35px;
-  margin-bottom: -35px;
-}
-
-.collections-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  width: 100%;
-  min-height: 300px;
-  background: #000000;
-  border-top: 1px solid rgba(201, 168, 76, 0.2);
-  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
-  padding: 1.5rem 4rem;
-  display: flex;
-  align-items: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    visibility 0.3s ease;
-  backdrop-filter: blur(15px);
-  z-index: 200;
-}
-
-.collections-dropdown:hover .collections-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-/* COLLECTIONS LINKS */
-
-.collections-links {
-  flex: 1;
-  display: block;
-  padding-left: 2rem;
-  padding-right: 4rem;
-}
-
-/* SHOP ALL — GOLD AND ALONE */
-
-.collections-shop-all {
-  margin-bottom: 25px;
-}
-
-.collections-shop-all a {
-  display: block;
-  padding: 0.45rem 0;
-  color: var(--gold) !important;
-  font-family: var(--sans);
-  font-size: 0.85rem;
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: color 0.3s ease, padding-left 0.3s ease;
-}
-
-.collections-shop-all a:hover {
-  color: var(--gold-light) !important;
-  padding-left: 8px;
-}
-
-/* THREE COLLECTION COLUMNS */
-
-.collections-columns {
-  display: grid;
-  grid-template-columns: 150px 150px 150px;
-  column-gap: 100px;
-  align-items: start;
-}
-
-.collections-columns .collections-column {
-  display: flex;
-  flex-direction: column;
-  width: 150px;
-  gap: 35px;
-  margin: 0;
-  padding: 0;
-}
-
-/* ALL NORMAL COLLECTION LINKS */
-
-.collections-columns .collections-column a {
-  display: block;
-  margin: 0;
-  padding: 0;
-  color: rgba(245, 237, 217, 0.75) !important;
-  font-family: var(--sans);
-  font-size: 0.85rem;
-  font-weight: 300;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: color 0.3s ease, padding-left 0.3s ease;
-}
-
-/* HOVER */
-
-.collections-columns .collections-column a:hover {
-  color: var(--gold-light) !important;
-  padding-left: 8px;
-}
-
-/* IMAGE */
-
-.collections-image {
-  width: 550px;
-  height: 300px;
-  overflow: hidden;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.collections-image img {
-  width: 100%;
-  height: auto;
-  min-height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-  transform: translateY(-90px);
-  transition: transform 0.6s ease;
-}
-
-.collections-dropdown:hover .collections-image img {
-  transform: translateY(-90px) scale(1.04);
-}
-
-nav#mainNav .nav-links > li > a {
-  color: rgba(245, 237, 217, 0.75) !important;
-}
-
-nav#mainNav .nav-links > li > a:hover {
-  color: var(--gold-light) !important;
-}
-
-.nav-account-icon {
-  color: rgba(245,237,217,0.75);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.nav-account-icon:hover {
-  color: var(--gold-light);
-}
-
-nav.scrolled .nav-account-icon {
-  color: rgba(245,237,217,0.85);
-}
-
-nav.scrolled .nav-account-icon:hover {
-  color: var(--gold-light);
-}
-
-/* =========================================
-   OUR STORY MEGA MENU
-========================================= */
-.our-story-dropdown {
-  position: static;
-  padding-bottom: 35px;
-  margin-bottom: -35px;
-}
-.our-story-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  width: 100%;
-  min-height: 300px;
-  background: #000000;
-  border-top: 1px solid rgba(201, 168, 76, 0.2);
-  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
-  padding: 1.5rem 4rem;
-  display: flex;
-  align-items: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    visibility 0.3s ease;
-  backdrop-filter: blur(15px);
-  z-index: 200;
-}
-
-/* Show menu */
-
-.our-story-dropdown:hover .our-story-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-/* =========================================
-   LEFT SIDE — STORY CONTENT
-========================================= */
-.our-story-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  padding-left: 2rem;
-  padding-right: 4rem;
-}
-
-/* Small label */
-
-.our-story-label {
-  display: block;
-  margin-bottom: 1rem;
-  color: var(--gold);
-  font-family: var(--sans);
-  font-size: 0.6rem;
-  font-weight: 300;
-  letter-spacing: 0.35em;
-}
-
-/* Heading */
-
-.our-story-content h3 {
-  margin: 0 0 1rem 0;
-  color: var(--beige);
-  font-family: var(--serif);
-  font-size: 2.2rem;
-  font-weight: 300;
-  line-height: 1.05;
-}
-
-/* Paragraph */
-
-.our-story-content p {
-  max-width: 550px;
-  margin: 0 0 1.3rem 0;
-  color: rgba(245, 237, 217, 0.55);
-  font-family: var(--sans);
-  font-size: 0.9rem;
-  font-weight: 300;
-  line-height: 1.9;
-}
-
-/* Discover link */
-
-.our-story-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.7rem;
-  color: var(--gold);
-  font-family: var(--sans);
-  font-size: 0.6rem;
-  font-weight: 300;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(201, 168, 76, 0.4);
-  padding-bottom: 4px;
-  transition:
-    color 0.3s ease,
-    border-color 0.3s ease;
-}
-.our-story-link:hover {
-  color: var(--gold-light);
-  border-color: var(--gold-light);
-}
-
-/* =========================================
-   RIGHT SIDE — IMAGE
-========================================= */
-.our-story-image {
-  width: 550px !important;
-  height: 300px !important;
-  overflow: hidden;
-  position: relative;
-  flex-shrink: 0;
-}
-.our-story-image img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  object-position: center !important;
-  display: block;
-}
-.our-story-dropdown:hover .our-story-image img {
-  transform: scale(1.04);
-}
-
-/* =========================================
-   GIFTS MEGA MENU
-========================================= */
-
-.gifts-dropdown {
-  position: static;
-  padding-bottom: 35px;
-  margin-bottom: -35px;
-}
-
-.gifts-menu {
-  position: absolute;
-
-  top: 100%;
-  left: 0;
-  right: 0;
-
-  width: 100%;
-  min-height: 300px;
-
-  background: #000000;
-
-  border-top: 1px solid rgba(201, 168, 76, 0.2);
-  border-bottom: 1px solid rgba(201, 168, 76, 0.2);
-
-  padding: 1.5rem 4rem;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  opacity: 0;
-  visibility: hidden;
-
-  transform: translateY(-10px);
-
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease,
-    visibility 0.3s ease;
-
-  backdrop-filter: blur(15px);
-
-  z-index: 200;
-}
-
-
-/* SHOW MENU */
-
-.gifts-dropdown:hover .gifts-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-
-/* =========================================
-   LEFT SIDE — TWO LISTS
-========================================= */
-
-.gifts-links {
-  flex: 1;
-
-  display: flex;
-
-  align-items: flex-start;
-
-  justify-content: flex-start;
-
-  gap: 4rem;
-
-  padding-left: 2rem;
-
-  padding-right: 4rem;
-}
-
-
-/* =========================================
-   COLUMNS
-========================================= */
-
-.gifts-column {
-  display: flex;
-
-  flex-direction: column;
-
-  width: 180px;
-
-  gap: 1.5rem;
-}
-
-
-/* =========================================
-   COLUMN TITLES
-========================================= */
-
-.gifts-column-title {
-  color: var(--gold);
-
-  font-family: var(--sans);
-
-  font-size: 0.65rem;
-
-  font-weight: 400;
-
-  letter-spacing: 0.3em;
-
-  text-transform: uppercase;
-
-  margin-bottom: 0;
-}
-
-
-/* =========================================
-   LINKS
-========================================= */
-
-.gifts-column a {
-  display: block;
-
-  padding: 0.45rem 0;
-
-  color: rgba(245, 237, 217, 0.75) !important;
-
-  font-family: var(--sans);
-
-  font-size: 0.85rem;
-
-  font-weight: 300;
-
-  letter-spacing: 0.2em;
-
-  text-transform: uppercase;
-
-  text-decoration: none;
-
-  transition:
-    color 0.3s ease,
-    padding-left 0.3s ease;
-}
-
-
-/* =========================================
-   HOVER
-========================================= */
-
-.gifts-column a:hover {
-  color: var(--gold-light) !important;
-
-  padding-left: 8px;
-}
-
-
-/* =========================================
-   IMAGE — RIGHT SIDE
-========================================= */
-
-.gifts-image {
-  width: 550px;
-
-  height: 300px;
-
-  overflow: hidden;
-
-  position: relative;
-
-  flex-shrink: 0;
-}
-
-.gifts-image img {
-  width: 100%;
-
-  height: 100%;
-
-  object-fit: cover;
-
-  display: block;
-
-  transition: transform 0.6s ease;
-}
-
-.gifts-dropdown:hover .gifts-image img {
-  transform: scale(1.04);
-}
-
-/* =========================================================
-   FEATURED PRODUCTS
-========================================================= */
-
-.featured-products {
-  background: var(--beige-light);
-  padding: 8rem 5rem;
-}
-.featured-product:nth-child(3) .featured-image {
-  overflow: hidden;
-}
-
-.featured-product:nth-child(3) .product-image-front {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  transform: none !important;
-}
-.featured-product:nth-child(3) .product-image-hover {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  transform: none !important;
-}
-
-/* HEADER */
-
-.featured-header {
-  max-width: 1100px;
-  margin: 0 auto 4rem;
-
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 3rem;
-}
-
-
-.featured-label {
-  display: block;
-
-  font-family: var(--sans);
-  font-size: 0.62rem;
-  font-weight: 300;
-
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-
-  color: var(--gold-dark);
-
-  margin-bottom: 1rem;
-}
-
-
-.featured-title {
-  margin: -19px 0 0;
-
-  font-family: var(--serif);
-  font-size: clamp(2.8rem, 4vw, 4.5rem);
-  font-weight: 300;
-
-  line-height: 1;
-
-  color: var(--text-dark);
-}
-
-
-.featured-title em {
-  font-style: italic;
-  color: var(--gold-dark);
-}
-
-
-/* SHOP ALL */
-
-.featured-shop-link {
-  flex-shrink: 0;
-
-  font-family: var(--sans);
-  font-size: 0.62rem;
-  font-weight: 400;
-
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-
-  color: var(--text-dark);
-
-  text-decoration: none;
-
-  border-bottom: 1px solid var(--gold-dark);
-
-  padding-bottom: 7px;
-
-  transition:
-    color 0.3s ease,
-    border-color 0.3s ease;
-}
-
-
-.featured-shop-link:hover {
-  color: var(--gold-dark);
-  border-color: var(--gold-dark);
-}
-
-
-/* PRODUCT GRID */
-
-.featured-grid {
-  max-width: 1250px;
-  margin: 0 auto;
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(3, 1fr);
-
-  gap: 1.5rem;
-}
-
-
-/* PRODUCT CARD */
-
-.featured-product {
-  display: block;
-
-  color: inherit;
-  text-decoration: none;
-
-  overflow: hidden;
-}
-
-
-/* IMAGE */
-
-.featured-image {
-  position: relative;
-
-  width: 100%;
-
-  aspect-ratio: 1 / 0.95;
-
-  overflow: hidden;
-
-  background: #ffffff;
-}
-
-
-.product-image {
-  position: absolute;
-
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-
-  display: block;
-
-  transition:
-    opacity 0.6s ease,
-    transform 0.8s
-    cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.product-image-hover {
-  object-fit: contain;
-  transform: none !important;
-}
-
-/* FIRST IMAGE */
-
-.product-image-front {
-  opacity: 1;
-  transform: scale(1);
-}
-
-
-/* HOVER IMAGE */
-
-.product-image-hover {
-  opacity: 0;
-
-  transform: scale(1);
-}
-
-
-/* HOVER */
-
-.featured-product:hover
-.product-image-front {
-  opacity: 0;
-
-  transform: scale(1);
-}
-
-
-.featured-product:hover
-.product-image-hover {
-  opacity: 1;
-
-  transform: none !important;
-}
-
-
-/* PRODUCT INFORMATION */
-
-.featured-product-info {
-  display: flex;
-
-  align-items: center;
-  justify-content: space-between;
-
-  padding: 1.2rem 0 0;
-}
-
-
-.featured-product-info h3 {
-  margin: 0;
-
-  font-family: var(--serif);
-  font-size: 1.25rem;
-  font-weight: 400;
-
-  color: var(--text-dark);
-}
-.featured-product:nth-child(3) .product-image-front {
-  object-fit: contain;
-}
-
-.featured-product-info span {
-  font-family: var(--sans);
-
-  font-size: 0.55rem;
-  font-weight: 400;
-
-  letter-spacing: 0.2em;
-
-  text-transform: uppercase;
-
-  color: var(--gold-dark);
-
-  opacity: 0;
-
-  transform: translateX(-5px);
-
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-
-
-.featured-product:hover
-.featured-product-info span {
-  opacity: 1;
-
-  transform: translateX(0);
-
-}
-
-/* =========================================================
-   REFILL / SUSTAINABILITY SECTION
-========================================================= */
-
-.refill-section {
-  width: 100%;
-  margin: 0;
-  padding: 1rem 5rem 10rem;
-
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-
-  gap: 90px;
-
-  background: var(--beige-light);
-}
-
-/* IMAGE */
-
-.refill-image {
-  width: 100%;
-  overflow: hidden;
-}
-
-.refill-image img {
-  width: 105%;
-  height: 500px;
-  display: block;
-  object-fit: cover;
-}
-/* TEXT */
-
-.refill-content {
-  max-width: 560px;
-  padding-left: 20px;
-}
-
-.refill-content h2 {
-  margin: 0 0 28px;
-
-  font-family: 'Inter', sans-serif;
-  font-size: clamp(28px, 2.5vw, 44px);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: 1px;
-
-  color: #0b0908;
-}
-
-.refill-content p {
-  margin: 0 0 28px;
-
-  font-family: 'Inter', sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  font-weight: 400;
-
-  color: #292725;
-}
-
-.refill-discount {
-  margin: 0 0 28px;
-
-  font-family: 'Inter', sans-serif;
-  font-size: clamp(26px, 2.4vw, 36px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -1px;
-
-  color: var(--gold-dark);
-}
-
-.refill-discount span {
-  display: block;
-
-  margin-top: 6px;
-
-  font-size: 0.38em;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-
-  color: #292725;
-}
-
-.refill-content p:last-child {
-  margin-top: 32px;
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 800px) {
-
-  .refill-section {
-  width: 100%;
-  margin: 0;
-  padding: 6rem 2rem 7rem;
-
-  grid-template-columns: 1fr;
-  gap: 45px;
-
-  background: var(--beige-light);
-}
-
-  .refill-image img {
-    height: auto;
-    aspect-ratio: 1 / 1;
-  }
-
-  .refill-content {
-    max-width: 100%;
-    padding-left: 0;
-  }
-
-  .refill-content h2 {
-    font-size: 30px;
-  }
-
-  .refill-content p {
-    font-size: 16px;
-  }
-
-}
-
-
-@media (max-width: 600px) {
-  .discount-banner {
-    padding: 4rem 2rem;
-  }
-
-  .discount-banner::before,
-  .discount-banner::after {
-    display: none;
-  }
-}
-
-/* =========================================================
-   MOBILE NAVIGATION
-========================================================= */
-
-@media (max-width: 768px) {
-
-  /* Mobile navbar */
-  nav#mainNav {
-    height: 76px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #000000;
-  }
-
-  /* Hide desktop navigation */
-  nav#mainNav .nav-links {
-    display: none;
-  }
-
-  /* Hide desktop search */
-  nav#mainNav .nav-search {
-    display: none;
-  }
-
-  /* Keep logo centered */
-  nav#mainNav > a.nav-logo {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    height: 40px;
-  }
-
-  nav#mainNav > a.nav-logo img {
-    width: 145px;
-    height: auto;
-    display: block;
-  }
-
-  /* Mobile menu button */
-  .mobile-menu-button {
-    display: flex;
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: var(--beige);
-    cursor: pointer;
-
-    align-items: center;
-    justify-content: center;
-
-    position: relative;
-    z-index: 300;
-  }
-
-  .mobile-menu-button span,
-  .mobile-menu-button span::before,
-  .mobile-menu-button span::after {
-    content: "";
-    display: block;
-    width: 21px;
-    height: 1px;
-    background: var(--beige);
-    position: absolute;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-menu-button span::before {
-    transform: translateY(-6px);
-  }
-
-  .mobile-menu-button span::after {
-    transform: translateY(6px);
-  }
-
-  /* Hamburger → X */
-  .mobile-menu-button.active span {
-    background: transparent;
-  }
-
-  .mobile-menu-button.active span::before {
-    transform: rotate(45deg);
-  }
-
-  .mobile-menu-button.active span::after {
-    transform: rotate(-45deg);
-  }
-
-  /* Cart */
-  nav#mainNav .nav-right {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin-left: auto;
-  }
-
-  nav#mainNav .nav-cart-icon {
-    display: inline-flex;
-  }
-
-  nav#mainNav .nav-account-icon {
-    display: none;
-  }
-
-  /* Mobile menu overlay */
-  .mobile-menu {
-    position: fixed;
-    inset: 0;
-    z-index: 250;
-
-    background: #0D0B08;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-
-    padding: 100px 35px 50px;
-
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-
-    transition:
-      opacity 0.35s ease,
-      transform 0.35s ease,
-      visibility 0.35s ease;
-  }
-
-  .mobile-menu.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .mobile-menu a {
-    font-family: var(--sans);
-    color: var(--beige);
-    text-decoration: none;
-
-    font-size: 1.1rem;
-    font-weight: 300;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-
-    padding: 18px 0;
-
-    border-bottom: 1px solid rgba(201,168,76,0.15);
-
-    transition: color 0.3s ease;
-  }
-
-  .mobile-menu a:hover {
-    color: var(--gold-light);
-  }
-
-}
-
-
-/* Desktop: hide mobile menu */
-@media (min-width: 769px) {
-
-  .mobile-menu-button,
-  .mobile-menu {
-    display: none;
-  }
-
-}
-
-@media (max-width: 768px) {
-
-  .mobile-menu-button span,
-  .mobile-menu-button span::before,
-  .mobile-menu-button span::after {
-    background: var(--gold) !important;
-  }
-
-}
-/* =========================================================
-   QAVERA — MOBILE MENU FINAL
-========================================================= */
-
-@media (max-width: 768px) {
-
-  /* -------------------------------------------------------
-     HIDE CUSTOM CURSOR ON TOUCH DEVICES
-  ------------------------------------------------------- */
-
-  body {
-    cursor: auto !important;
-  }
-
-  .cursor,
-  .cursor-ring {
-    display: none !important;
-  }
-
-
-  /* -------------------------------------------------------
-     HAMBURGER POSITION
-  ------------------------------------------------------- */
-
-  .mobile-menu-button {
-    position: fixed !important;
-    top: 23px !important;
-    left: 20px !important;
-    background: transparent !important;
-    width: 32px !important;
-    height: 32px !important;
-    z-index: 300 !important;
-  }
-
-  .mobile-menu-button span,
-  .mobile-menu-button span::before,
-  .mobile-menu-button span::after {
-    background: var(--gold) !important;
-  }
-
-
-  /* -------------------------------------------------------
-     MOBILE MENU
-  ------------------------------------------------------- */
-
-  .mobile-menu {
-    padding:
-      125px
-      42px
-      45px;
-
-    justify-content: flex-start;
-
-    overflow-y: auto;
-  }
-
-
-  /* -------------------------------------------------------
-     MAIN MENU ITEMS
-  ------------------------------------------------------- */
-
-  .mobile-menu-item {
-    width: 100%;
-  }
-
-
-  .mobile-menu-toggle,
-  .mobile-direct-link {
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 19px 0;
-
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(201,168,76,0.15);
-
-    color: var(--beige);
-
-    font-family: var(--sans);
-    font-size: 1rem;
-    font-weight: 300;
-
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-
-    text-decoration: none;
-
-    text-align: left;
-  }
-
-  .mobile-menu-toggle {
-    cursor: pointer;
-  }
-
-
-  /* -------------------------------------------------------
-     PLUS ICON
-  ------------------------------------------------------- */
-
-  .mobile-menu-plus {
-    color: var(--gold);
-
-    font-size: 1.2rem;
-    font-weight: 300;
-
-    transition: transform 0.3s ease;
-  }
-
-  .mobile-menu-item.active .mobile-menu-plus {
-    transform: rotate(45deg);
-  }
-
-
-  /* -------------------------------------------------------
-     SUBMENU
-  ------------------------------------------------------- */
-
-  .mobile-submenu {
-    max-height: 0;
-    overflow: hidden;
-
-    opacity: 0;
-
-    transition:
-      max-height 0.4s ease,
-      opacity 0.3s ease;
-  }
-
-  .mobile-menu-item.active .mobile-submenu {
-    max-height: 600px;
-    opacity: 1;
-  }
-
-
-  .mobile-submenu a {
-    display: block;
-
-    padding: 12px 0 12px 18px;
-
-    border: none;
-
-    color: rgba(245,237,217,0.55);
-
-    font-family: var(--sans);
-    font-size: 0.72rem;
-    font-weight: 300;
-
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-
-    text-decoration: none;
-  }
-
-  .mobile-submenu a:first-child {
-    padding-top: 18px;
-  }
-
-  .mobile-submenu a:last-child {
-    padding-bottom: 20px;
-  }
-
-
-  /* -------------------------------------------------------
-     GIFTS SUBMENU TITLES
-  ------------------------------------------------------- */
-
-  .mobile-submenu-title {
-    padding:
-      18px
-      0
-      7px
-      18px;
-
-    color: var(--gold);
-
-    font-family: var(--sans);
-    font-size: 0.55rem;
-
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-  }
-
-
-  /* -------------------------------------------------------
-     OUR STORY TEXT
-  ------------------------------------------------------- */
-
-  .mobile-submenu p {
-    padding:
-      18px
-      18px
-      10px;
-
-    margin: 0;
-
-    color: rgba(245,237,217,0.5);
-
-    font-family: var(--sans);
-    font-size: 0.72rem;
-
-    font-weight: 300;
-    line-height: 1.8;
-  }
-
-  .mobile-story-link {
-    color: var(--gold) !important;
-    padding-left: 18px !important;
-  }
-
-
-  /* -------------------------------------------------------
-     DIRECT LINKS
-  ------------------------------------------------------- */
-
-  .mobile-direct-link {
-    justify-content: flex-start;
-  }
-
-}
-
-/* Prevent mobile horizontal scrolling */
-html,
-body {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-@media (max-width: 768px) {
-
-  html,
-  body {
-    overflow-x: hidden !important;
-    overscroll-behavior-x: none;
-  }
-
-  * {
-    max-width: 100%;
-  }
-
-}
-@media (max-width: 800px) {
-
-  section.hero .hero-content {
-    position: relative !important;
-
-    width: calc(100% - 20px) !important;
-    max-width: none !important;
-
-    margin-left: -1px !important;
-    margin-right: 0 !important;
-
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-
-    transform: translateX(-15px) !important;
-  }
-
-}
-
-/* FLAVOR BAR */
-.marquee-strip {
-  width: 100%;
-  overflow: hidden;
-  background: var(--gold);
-  padding: 14px 0;
-  white-space: nowrap;
-}
-
-.marquee-track {
-  display: flex;
-  align-items: center;
-  width: max-content;
-  flex-wrap: nowrap;
-  gap: 30px;
-}
-
-.marquee-track span {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  font-family: var(--sans);
-  font-size: 0.65rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--black);
-}
-
-.marquee-track b {
-  flex: 0 0 auto;
-  font-weight: 400;
-  color: var(--black);
-}
-
-@media (max-width: 600px) {
-  .marquee-track {
-    gap: 20px;
-  }
-
-  .marquee-track span {
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-  }
-}
-@media (max-width: 600px) {
-  .featured-products {
-    padding: 5rem 1.5rem 6rem;
-  }
-
-  .featured-grid {
-    grid-template-columns: 1fr;
-    gap: 4rem;
-  }
-
-  .featured-image {
-    width: 100%;
-    aspect-ratio: 1 / 0.95;
-  }
-
-  .featured-product-info {
-    padding-top: 1rem;
-  }
-
-  .featured-product-info h3 {
-    font-size: 1.6rem;
-  }
-}
-@media (max-width: 600px) {
-
-  footer {
-    padding: 5rem 2rem 2.5rem;
-    overflow: hidden;
-  }
-
-  .footer-main {
-    grid-template-columns: 1fr;
-    gap: 3.5rem;
-    text-align: center;
-  }
-
-  .footer-logo {
-    width: 130px;
-    margin: 0 auto 1.5rem;
-  }
-
-  .footer-brand p {
-    max-width: 320px;
-    margin: 0 auto;
-    font-size: 0.75rem;
-    line-height: 1.9;
-  }
-
-  .footer-column h4 {
-    margin-bottom: 1.2rem;
-  }
-
-  .footer-column li {
-    margin-bottom: 0.8rem;
-  }
-
-  .footer-column a {
-    font-size: 0.75rem;
-  }
-
-  .footer-bottom {
-    margin-top: 4rem;
-    flex-direction: column;
-    gap: 1.5rem;
-    text-align: center;
-  }
-
-  .footer-gold-line {
-    width: 100%;
-    flex: none;
-  }
-
-  .footer-copy {
-    font-size: 0.5rem;
-    white-space: nowrap;
-  }
-
-}
-@media (max-width: 768px) {
-  #mobileMenu .mobile-menu-item:first-child .mobile-submenu a:first-child {
-    color: var(--gold-light) !important;
-  }
-}
-
-@media (max-width: 600px) {
-  .featured-product:nth-child(3) .featured-image {
-    overflow: hidden;
-  }
-
-  .featured-product:nth-child(3) .product-image-front,
-  .featured-product:nth-child(3) .product-image-hover {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover !important;
-    transform: none !important;
-  }
-}
-
-</style>
-
+    @media (max-width: 560px) {
+      .flavours { grid-template-columns: repeat(2, 1fr); }
+      .flavour { padding: 1.4rem .8rem 1.2rem; }
+      .hero-actions .btn, .build .btn, .house .actions .btn { flex: 1 1 100%; justify-content: center; }
+      .plaque { flex-direction: column; gap: .3rem; }
+    }
+  </style>
 </head>
-<body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
+<body class="v3-overlay-header" data-page="home">
+  <script src="v3/qavera.js"></script>
 
-<nav id="mainNav">
-  <ul class="nav-links">
-   <li class="collections-dropdown">
-  <a href="shop.html">Collections</a>
+  <main class="v3-main">
 
-  <div class="collections-menu">
-
-    <div class="collections-links">
-
-  <!-- SHOP ALL — FULL ROW -->
-  <div class="collections-shop-all">
-    <a href="shop.html">Shop All</a>
-  </div>
-
-  <!-- THREE COLUMNS -->
-  <div class="collections-columns">
-
-    <!-- COLUMN 1 -->
-    <div class="collections-column">
-      <a href="premium.html">Premium Box</a>
-      <a href="luxury.html">Luxury Box</a>
-      <a href="home-collection.html">THE HOME</a>
-    </div>
-
-    <!-- COLUMN 2 -->
-    <div class="collections-column">
-      <a href="assorted.html">Assorted</a>
-      <a href="spreads.html">Spreads</a>
-      <a href="slabs.html">Slabs</a>
-    </div>
-
-    <!-- COLUMN 3 -->
-    <div class="collections-column">
-      <a href="bites.html">Bites</a>
-    </div>
-
-  </div>
-
-</div>
-
-    <!-- IMAGE -->
-    <div class="collections-image">
-      <img src="bonbon design.webp" alt="Qavera chocolates">
-    </div>
-
-  </div>
-</li>
-
-<!--
-<li class="gifts-dropdown">
-
-  <a href="#">Gifts</a>
-
-  <div class="gifts-menu">
-
-    <div class="gifts-links">
-
-      <div class="gifts-column">
-
-        <div class="gifts-column-title">
-          By Occasion
+    <!-- =====================================================
+         HERO
+    ===================================================== -->
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="caption hero-kicker reveal">Exhibition Nº 01 — The Painted Collection</p>
+        <h1 class="display hero-title reveal d1">Chocolate,<br><em>painted</em><br>by hand.</h1>
+        <p class="hero-text reveal d2">Every QAVERA bonbon is a small canvas: a shell of premium Belgian chocolate, painted by hand in Qatar and filled with flavours worth remembering.</p>
+        <div class="hero-actions reveal d3">
+          <a href="#collections" class="btn btn-solid">Shop the collection <span class="arrow">→</span></a>
+          <a href="#build" class="btn btn-line">Build your box</a>
         </div>
-
-        <a href="#">Birthday</a>
-        <a href="#">Wedding</a>
-        <a href="#">Graduation</a>
-        <a href="#">Anniversary</a>
-        <a href="#">Thank You</a>
-
       </div>
 
-      <div class="gifts-column">
-
-        <div class="gifts-column-title">
-          By Price
+      <figure class="hero-art reveal d2">
+        <div class="arch">
+          <img src="bonbon.jpeg" alt="Glossy hand-painted QAVERA bonbons">
         </div>
+        <figcaption class="plaque caption">
+          <span>Nº 01 · Hand-painted bonbons</span>
+          <b>Crafted in Qatar</b>
+        </figcaption>
+      </figure>
 
-        <a href="#">Under 100 QAR</a>
-        <a href="#">Under 250 QAR</a>
-        <a href="#">Under 400 QAR</a>
+      <p class="hero-scroll caption">Scroll to enter</p>
+    </section>
 
+    <!-- =====================================================
+         MARQUEE
+    ===================================================== -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span>Carmelitto Di QAVERA</span><span>Noccelle Di QAVERA</span><span>Pistachio Royal</span><span>Caffezinho</span><span>Manga Di QAVERA</span><span>Fragola Di QAVERA</span><span>Mouhalabia Fustuq</span><span>Cheesecake</span><span>Nocciolla Coffee</span><span>Raspberry Dunkel</span><span>Mango Passion</span><span>Matcha-cha</span>
+        <span>Carmelitto Di QAVERA</span><span>Noccelle Di QAVERA</span><span>Pistachio Royal</span><span>Caffezinho</span><span>Manga Di QAVERA</span><span>Fragola Di QAVERA</span><span>Mouhalabia Fustuq</span><span>Cheesecake</span><span>Nocciolla Coffee</span><span>Raspberry Dunkel</span><span>Mango Passion</span><span>Matcha-cha</span>
       </div>
-
     </div>
 
-    <div class="gifts-image">
+    <!-- =====================================================
+         MANIFESTO
+    ===================================================== -->
+    <section class="manifesto">
+      <p class="caption reveal">The idea</p>
+      <p class="display reveal d1">Chocolate goes far beyond brown, black and white. At QAVERA, <em>colour comes first</em> — each bonbon is painted like a canvas, then filled with a flavour to match the art.</p>
+    </section>
 
-      <img
-        src="greenboxes.webp"
-        alt="Qavera gifts"
-      >
-
-    </div>
-
-  </div>
-
-</li>
--->
-<li class="our-story-dropdown">
-  <a href="ourstory.html">Our Story</a>
-
-  <div class="our-story-menu">
-
-    <div class="our-story-content">
-      <span class="our-story-label">OUR STORY</span>
-
-      <h3>
-        CRAFTED WITH PURPOSE.<br>
-        MADE TO BE REMEMBERED.
-      </h3>
-
-      <p>
-        At Qavera, we believe exceptional chocolate is more than an
-        indulgence. It is an experience. Crafted exclusively with
-        premium chocolate, every creation reflects our commitment
-        to quality, craftsmanship, and refined taste.
-      </p>
-
-      <a href="ourstory.html" class="our-story-link">
-        DISCOVER OUR STORY <span>→</span>
-      </a>
-    </div>
-
-    <div class="our-story-image">
-      <img src="our-story.jpeg" alt="Qavera Chocolate">
-    </div>
-
-  </div>
-</li>
-
-    <li>
-  <a href="contactus.html">Contact Us</a>
-    </li>
-    
-  </ul>
-<a href="#" class="nav-logo">
-  <img src="Qavera without artisan.png" alt="Qavera">
-</a>  <div class="nav-right">
-    <div class="nav-search">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" placeholder="Search...">
-    </div>
-   <a href="#" class="nav-cart-icon" id="cartButton" aria-label="Shopping Cart">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="9" cy="21" r="1"></circle>
-    <circle cx="20" cy="21" r="1"></circle>
-    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-  </svg>
-  <span id="cartCount">0</span>
-</a>
-
-<a href="login.html" class="nav-account-icon" id="accountNavButton" aria-label="Login" title="Login">
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" stroke-width="1.5"
-       stroke-linecap="round" stroke-linejoin="round">
-
-    <circle cx="12" cy="8" r="4"></circle>
-
-    <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path>
-
-  </svg>
-</a>
-  </div>
-</nav>
-
-<button
-  class="mobile-menu-button"
-  id="mobileMenuButton"
-  aria-label="Open menu"
->
-  <span></span>
-</button>
-
-<div class="mobile-menu" id="mobileMenu">
-
-  <!-- COLLECTIONS -->
-  <div class="mobile-menu-item">
-
-    <button class="mobile-menu-toggle" type="button">
-      <span>Collections</span>
-      <span class="mobile-menu-plus">+</span>
-    </button>
-
-    <div class="mobile-submenu">
-
-      <a href="shop.html">Shop All</a>
-      <a href="premium.html">Premium Box</a>
-      <a href="luxury.html">Luxury Box</a>
-      <a href="home-collection.html">THE HOME</a>
-      <!-- <a href="lali.html">LÃLI Box</a> -->
-      <a href="assorted.html">Assorted</a>
-      <a href="spreads.html">Spreads</a>
-      <a href="slabs.html">Slabs</a>
-      <a href="bites.html">Bites</a>
-
-    </div>
-
-  </div>
-
-
-  <!-- GIFTS -->
-<!-- <div class="mobile-menu-item">
-
-    <button class="mobile-menu-toggle" type="button">
-      <span>Gifts</span>
-      <span class="mobile-menu-plus">+</span>
-    </button>
-
-    <div class="mobile-submenu">
-
-      <div class="mobile-submenu-title">
-        By Occasion
-      </div>
-
-      <a href="#">Birthday</a>
-      <a href="#">Wedding</a>
-      <a href="#">Graduation</a>
-      <a href="#">Anniversary</a>
-      <a href="#">Thank You</a>
-
-      <div class="mobile-submenu-title">
-        By Price
-      </div>
-
-      <a href="#">Under 100 QAR</a>
-      <a href="#">Under 250 QAR</a>
-      <a href="#">Under 400 QAR</a>
-
-    </div>
-
-  </div>
-  -->
-
-
-
-  <!-- OUR STORY -->
-  <div class="mobile-menu-item">
-
-    <button class="mobile-menu-toggle" type="button">
-      <span>Our Story</span>
-      <span class="mobile-menu-plus">+</span>
-    </button>
-
-    <div class="mobile-submenu">
-
-      <p>
-        At Qavera, we believe exceptional chocolate
-        is more than an indulgence. It is an experience.
-      </p>
-
-      <a href="ourstory.html" class="mobile-story-link">
-        Discover Our Story →
+    <!-- =====================================================
+         COLLECTIONS
+    ===================================================== -->
+    <section class="rooms" id="collections" aria-label="Collections">
+      <a href="premium.html" class="room room-ink">
+        <div class="room-head caption"><span>Room I — Ink</span><span>Nº 02</span></div>
+        <div class="canvas reveal">
+          <div class="canvas-inner">
+            <img src="black box.jpg" alt="QAVERA Premium Box">
+            <img src="black box hover.jpg" alt="" aria-hidden="true">
+          </div>
+        </div>
+        <h3 class="display">The <em>Premium</em> Box</h3>
+        <p>Artistic bonbon shells in premium Belgian chocolate, in the black box. Choose our selection or pick every flavour yourself.</p>
+        <ul class="sizes">
+          <li><span>12 pieces</span><span>QAR 75</span></li>
+          <li><span>25 pieces</span><span>QAR 165</span></li>
+          <li><span>48 pieces</span><span>QAR 320</span></li>
+        </ul>
+        <span class="link">Discover Premium <span class="arrow">→</span></span>
       </a>
 
-    </div>
-
-  </div>
-
-
-  <!-- CONTACT -->
-  <a class="mobile-direct-link" href="contactus.html">
-    Contact Us
-  </a>
-
-
-  <!-- ACCOUNT -->
-  <a class="mobile-direct-link" href="login.html" id="mobileAccountLink">
-    Account
-  </a>
-
-</div>
-<!-- =========================================================
-     QAVERA HOMEPAGE HERO
-========================================================= -->
-
-<section class="hero">
-
-  <img
-    class="hero-image"
-    src="home background.webp"
-    alt="Qavera artisan chocolate"
-  >
-
-  <div class="hero-overlay"></div>
-
-  <div class="hero-line-left"></div>
-  <div class="hero-line-right"></div>
-
-  <div class="hero-content">
-
-    <p class="hero-eyebrow">
-      HANDCRAFTED · LUXURY
-    </p>
-
-    <h1 class="hero-title">
-      THE FINEST MOMENTS<br>
-      <em>Begin here.</em>
-    </h1>
-
-
-    <div class="hero-divider"></div>
-
-    <div class="hero-cta">
-
-      <a
-        href="#collections"
-        class="btn-primary"
-      >
-        Shop now.
+      <a href="luxury.html" class="room room-forest">
+        <div class="room-head caption"><span>Room II — Forest</span><span>Nº 03</span></div>
+        <div class="canvas reveal d1">
+          <div class="canvas-inner">
+            <img src="green box fitted.webp" alt="QAVERA Luxury Box">
+            <img src="green box hover.jpg" alt="" aria-hidden="true">
+          </div>
+        </div>
+        <h3 class="display">The <em>Luxury</em> Box</h3>
+        <p>Hand-painted bonbons in the forest-green box. Choose our selection or pick every flavour yourself.</p>
+        <ul class="sizes">
+          <li><span>12 pieces</span><span>QAR 120</span></li>
+          <li><span>25 pieces</span><span>QAR 250</span></li>
+          <li><span>48 pieces</span><span>QAR 480</span></li>
+        </ul>
+        <span class="link">Discover Luxury <span class="arrow">→</span></span>
       </a>
+    </section>
 
-    </div>
-
-  </div>
-
-  <div class="hero-scroll">
-    Scroll
-  </div>
-
-</section>
-
-<!-- FLAVOR BAR -->
-<div class="marquee-strip">
-  <div class="marquee-track">
-    <span>Carmelitto Di Qavera</span><b>◆</b>
-    <span>Karak</span><b>◆</b>
-    <span>Raspberrina</span><b>◆</b>
-    <span>Pistachio Royal</span><b>◆</b>
-    <span>Cheesecake</span><b>◆</b>
-    <span>Mango Passion</span><b>◆</b>
-    <span>Majdoulah</span><b>◆</b>
-    <span>Noccelle Di Qavera</span><b>◆</b>
-    <span>Dallah</span><b>◆</b>
-    <span>Strawbelle</span><b>◆</b>
-    <span>Coco Lima</span><b>◆</b>
-    <span>Jouz</span><b>◆</b>
-    <span>Carmelitto Di Qavera</span><b>◆</b>
-    <span>Karak</span><b>◆</b>
-    <span>Raspberrina</span><b>◆</b>
-    <span>Pistachio Royal</span><b>◆</b>
-    <span>Cheesecake</span><b>◆</b>
-    <span>Mango Passion</span><b>◆</b>
-    <span>Majdoulah</span><b>◆</b>
-    <span>Noccelle Di Qavera</span><b>◆</b>
-    <span>Dallah</span><b>◆</b>
-    <span>Strawbelle</span><b>◆</b>
-    <span>Coco Lima</span><b>◆</b>
-    <span>Jouz</span><b>◆</b>
-  </div>
-</div>
-
-<!-- FEATURED PRODUCTS -->
-<section class="featured-products" id="collections">
-
-  <div class="featured-header">
-
-    <div>
-      <span class="featured-label">QAVERA COLLECTION</span>
-
-      <h2 class="featured-title">
-        Discover our <em>signature</em>
-        creations.
-      </h2>
-    </div>
-
-    <a href="shop.html" class="featured-shop-link">
-      Shop All →
-    </a>
-
-  </div>
-
-
-  <div class="featured-grid">
-
-    <!-- PRODUCT 1 -->
-    <a href="premium.html" class="featured-product">
-
-      <div class="featured-image">
-
-        <img
-          src="black box.jpg"
-          class="product-image product-image-front"
-          alt="Qavera chocolate"
-        >
-
-        <img
-          src="black box hover.jpg"
-          class="product-image product-image-hover"
-          alt="Qavera chocolate"
-        >
-
+    <!-- =====================================================
+         FLAVOUR CATALOGUE
+    ===================================================== -->
+    <section class="catalogue" id="flavours">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">The catalogue</p>
+          <h2 class="display reveal d1">Twelve <em>flavours</em>,<br>twelve colours.</h2>
+        </div>
+        <p class="reveal d2">Six in the Premium Box, six in the Luxury Box. Each shell colour tells you the flavour inside. Illustrated here; the real bonbons are painted by hand, so no two are alike.</p>
       </div>
 
-      <div class="featured-product-info">
+      <div class="flavours">
+        <a class="flavour reveal" href="premium.html"><span class="caption">Nº 01</span><div class="bonbon" style="--a:rgb(54, 33, 20);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Carmelitto Di QAVERA</h4><span class="fl-meta caption">Premium · Brown shell</span></a>
+        <a class="flavour reveal d1" href="premium.html"><span class="caption">Nº 02</span><div class="bonbon" style="--a:rgb(13, 12, 11);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Noccelle Di QAVERA</h4><span class="fl-meta caption">Premium · Black shell</span></a>
+        <a class="flavour reveal d2" href="premium.html"><span class="caption">Nº 03</span><div class="bonbon" style="--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Pistachio Royal</h4><span class="fl-meta caption">Premium · Green shell</span></a>
+        <a class="flavour reveal d3" href="premium.html"><span class="caption">Nº 04</span><div class="bonbon" style="--a:rgb(62, 35, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Caffezinho</h4><span class="fl-meta caption">Premium · Purple shell</span></a>
+        <a class="flavour reveal" href="premium.html"><span class="caption">Nº 05</span><div class="bonbon" style="--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Manga Di QAVERA</h4><span class="fl-meta caption">Premium · Yellow shell</span></a>
+        <a class="flavour reveal d1" href="premium.html"><span class="caption">Nº 06</span><div class="bonbon" style="--a:rgb(82, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Fragola Di QAVERA</h4><span class="fl-meta caption">Premium · Red shell</span></a>
+        <a class="flavour reveal d2" href="luxury.html"><span class="caption">Nº 07</span><div class="bonbon" style="--a:rgb(33, 53, 75);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mouhalabia Fustuq</h4><span class="fl-meta caption">Luxury · Blue shell</span></a>
+        <a class="flavour reveal d3" href="luxury.html"><span class="caption">Nº 08</span><div class="bonbon" style="--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Cheesecake</h4><span class="fl-meta caption">Luxury · White shell</span></a>
+        <a class="flavour reveal" href="luxury.html"><span class="caption">Nº 09</span><div class="bonbon" style="--a:rgb(108, 44, 82);--b:#F062B8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Nocciolla Coffee</h4><span class="fl-meta caption">Luxury · Pink shell</span></a>
+        <a class="flavour reveal d1" href="luxury.html"><span class="caption">Nº 10</span><div class="bonbon" style="--a:rgb(49, 13, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Raspberry Dunkel</h4><span class="fl-meta caption">Luxury · Burgundy shell</span></a>
+        <a class="flavour reveal d2" href="luxury.html"><span class="caption">Nº 11</span><div class="bonbon" style="--a:rgb(103, 104, 13);--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mango Passion</h4><span class="fl-meta caption">Luxury · Yellow shell</span></a>
+        <a class="flavour reveal d3" href="luxury.html"><span class="caption">Nº 12</span><div class="bonbon" style="--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Matcha-cha</h4><span class="fl-meta caption">Luxury · Green shell</span></a>
+      </div>
+    </section>
 
-        <h3>Premium Box</h3>
-
-        <span>Discover →</span>
-
+    <!-- =====================================================
+         BUILD YOUR BOX
+    ===================================================== -->
+    <section class="build" id="build">
+      <div>
+        <p class="caption reveal">Room III — Oxblood</p>
+        <h2 class="display reveal d1">Build your<br><em>own</em> box.</h2>
+        <ol class="steps reveal d2">
+          <li><div><strong>Choose your box</strong><span>Premium or Luxury, in 12, 25 or 48 pieces.</span></div></li>
+          <li><div><strong>Pick every flavour</strong><span>Mix Caffezinho with Pistachio Royal, or fill it with your favourite.</span></div></li>
+          <li><div><strong>We paint and fill it by hand</strong><span>Then deliver it anywhere in Qatar.</span></div></li>
+        </ol>
+        <div class="hero-actions reveal d3">
+          <a href="premium.html" class="btn btn-solid">Build a Premium box <span class="arrow">→</span></a>
+          <a href="luxury.html" class="btn btn-line">Build a Luxury box</a>
+        </div>
       </div>
 
-    </a>
+      <div class="box-demo reveal d2">
+        <div class="size-switch" role="group" aria-label="Box size">
+          <button type="button" data-size="12" aria-pressed="true">12 pieces</button>
+          <button type="button" data-size="25" aria-pressed="false">25 pieces</button>
+          <button type="button" data-size="48" aria-pressed="false">48 pieces</button>
+        </div>
+        <div class="box-frame">
+          <div class="box-grid" id="boxGrid"></div>
+        </div>
+        <p class="box-note caption"><span id="boxLabel">12 pieces</span><b>Your flavours, your box</b></p>
+      </div>
+    </section>
 
-
-    <!-- PRODUCT 2 -->
-    <a href="luxury.html" class="featured-product">
-
-      <div class="featured-image">
-
-        <img
-          src="green box fitted.webp"
-          class="product-image product-image-front"
-          alt="Qavera chocolate"
-        >
-
-        <img
-          src="green box hover.jpg"
-          class="product-image product-image-hover"
-          alt="Qavera chocolate"
-        >
-
+    <!-- =====================================================
+         PANTRY
+    ===================================================== -->
+    <section class="pantry">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Everyday indulgence</p>
+          <h2 class="display reveal d1">The <em>pantry</em>.</h2>
+        </div>
+        <p class="reveal d2">For the days in between: bars, spreads and small bites, all made in the same atelier.</p>
       </div>
 
-      <div class="featured-product-info">
-
-        <h3>Luxury Box</h3>
-
-        <span>Discover →</span>
-
-      </div>
-
-    </a>
-
-
-    <!-- PRODUCT 3 -->
-    <!--<a href="lali.html" class="featured-product">
-
-      <div class="featured-image">
-
-        <img
-          src="black box.jpg"
-          class="product-image product-image-front"
-          alt="Qavera chocolate"
-        >
-
-        <img
-          src="black box hover.jpg"
-          class="product-image product-image-hover"
-          alt="Qavera chocolate"
-        >
-
-      </div>
-
-      <div class="featured-product-info">
-
-        <h3>Lâli Box</h3>
-
-        <span>Discover →</span>
-
-      </div>
-
-    </a> -->
-
-    <!-- PRODUCT 4 -->
-     <a href="home-collection.html" class="featured-product">
-      <div class="featured-image">
-        <img
-        src="stone gold bowl v2.webp"
-        class="product-image product-image-front"
-        alt="Qavera chocolate"
-        >
-
-        <img 
-        src="white tray v2.webp"
-        class="product-image product-image-hover"
-        alt="Qavera chocolate"
-        >
-      </div>
-      <div class="featured-product-info">
-        <h3>THE HOME</h3>
-        <span> Discover →</span>
-      </div>
-     </a>
-
-  </div>
-
-</section>
-
-<!-- =========================================================
-     REFILL / SUSTAINABILITY SECTION
-========================================================= -->
-
-<section class="refill-section">
-
-  <div class="refill-image">
-    <img src="discount.webp" alt="Qavera chocolates">
-  </div>
-
-  <div class="refill-content">
-
-    <h2>
-      SAVE THE PLANET.<br>
-      KEEP THE BOX.
-    </h2>
-
-    <div class="refill-discount">
-      15% OFF
-      <span>YOUR REFILL</span>
-    </div>
-
-    <p>
-      Love your Qavera chocolates? Keep the experience going. Bring your empty box back to us for a refill and enjoy 15% off your next collection. A simple way to give your box another life, reduce waste, and return to the chocolates you love.
-    </p>
-
-    <p>
-      Indulge again. Reuse beautifully.
-    </p>
-
-  </div>
-
-</section>
-
-
-
-<!-- INTRO -->
-<section class="intro">
-
-  <div class="intro-image fade-up">
-    <img src="Qavera Logomark.png" alt="Qavera artisan chocolate">
-  </div>
-
-  <div class="intro-content">
-
-    <p class="intro-label fade-up fade-up-d1">
-      The Qavera Story
-    </p>
-
-    <h2 class="intro-title fade-up fade-up-d2">
-      Made by hand.<em><br>Made to remember.</em>
-    </h2>
-
-    <p class="intro-text fade-up fade-up-d3">
-      Qavera was founded on the idea that chocolate should be more than a treat — it should be an experience. We believe chocolate goes far beyond the traditional shades of brown, black, and white, opening a world of creativity, color, and flavor. Each creation combines unique flavors, fresh and carefully selected ingredients, and refined craftsmanship to deliver unforgettable tastes and memorable sensations.
-
-    </p>
-
-    <a href="ourstory.html" class="intro-link fade-up fade-up-d4">
-      Discover Our Story →
-    </a>
-
-  </div>
-
-</section>
-
-<!-- NEWSLETTER -->
-<div class="newsletter" id="contact">
-  <h2 class="newsletter-title fade-up">The Inner Circle</h2>
-  <p class="newsletter-sub fade-up fade-up-d1">Early access to seasonal releases, farm dispatches & exclusive invitations.</p>
-  <div class="newsletter-form fade-up fade-up-d2">
-    <input type="email" class="newsletter-input" placeholder="Your email address">
-    <button class="newsletter-btn">Join</button>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer id="contact">
-
-  <div class="footer-main">
-
-    <!-- BRAND -->
-    <div class="footer-brand">
-
-      <img src="Qavera without artisan.png" alt="Qavera" class="footer-logo">
-      <p>
-        Premium artisan chocolate,
-        crafted in Qatar.
-      </p>
-
-    </div>
-
-
-    <!-- EXPLORE -->
-    <div class="footer-column">
-
-      <h4>Explore</h4>
-
-      <ul>
-
-        <li>
-          <a href="home.html">
-            Home
-          </a>
-        </li>
-
-        <li>
-          <a href="shop.html">
-            Collections
-          </a>
-        </li>
-
-        <li>
-          <a href="#">
-            Gifts
-          </a>
-        </li>
-
-        <li>
-          <a href="ourstory.html">
-            Our Story
-          </a>
-        </li>
-
-        <li>
-          <a href="contactus.html">
-            Contact Us
-          </a>
-        </li>
-
+      <ul class="menu-list">
+        <li class="reveal"><a href="assorted.html">
+          <span class="caption">Nº 04</span>
+          <h3>Wrapped Chocolate</h3>
+          <p>Hazelnut and almond mendiants, crispy feuilletine, gianduja crispy rice and speculoos ganache.</p>
+          <span class="price">QAR 190<small>500 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="slabs.html">
+          <span class="caption">Nº 05</span>
+          <h3>Slabs</h3>
+          <p>White chocolate with almond and raspberry, dark with hazelnut and cashew, milk with mixed nuts.</p>
+          <span class="price">QAR 50<small>100 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="spreads.html">
+          <span class="caption">Nº 06</span>
+          <h3>Spreads</h3>
+          <p>Hazelnut, pistachio and Lotus.</p>
+          <span class="price">QAR 50<small>260 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="bites.html">
+          <span class="caption">Nº 07</span>
+          <h3>Bites</h3>
+          <p>Pretzels and Pringles, dipped in chocolate.</p>
+          <span class="price">QAR 25<small>100 G</small></span>
+        </a></li>
       </ul>
+    </section>
 
-    </div>
-
-
-    <!-- CONNECT -->
-    <div class="footer-column">
-
-      <h4>Connect</h4>
-
-      <ul>
-
-        <li>
-          <a href="https://www.instagram.com/qaverachocolate?stkn=MTJycDNvYjZ6NWFhZg==" target="_blank">
-          Instagram
-          </a>
-        </li>
-
-        <li>
-          <a href="mailto:info@qavera.qa">
-            Email Us
-          </a>
-        </li>
-
-        <li>
-          <a href="https://maps.app.goo.gl/232khX7N1295W4LY9?g_st=i&utm_campaign=ac-im" target="_blank">
-            Location
-          </a>
-        </li>
-
-      </ul>
-
-    </div>
-
-  </div>
-
-
-  <!-- BOTTOM -->
-  <div class="footer-bottom">
-
-    <div class="footer-gold-line"></div>
-
-    <span class="footer-copy">
-      © 2026 Qavera Chocolate. All rights reserved.
-    </span>
-
-    <div class="footer-gold-line footer-gold-line-right"></div>
-
-  </div>
-
-</footer>
-
-<!-- CART DRAWER -->
-<div class="cart-overlay" id="cartOverlay"></div>
-
-<aside class="cart-drawer" id="cartDrawer">
-
-  <div class="cart-header">
-    <div>
-      <span class="cart-label">Your Selection</span>
-      <h2>Your Cart</h2>
-    </div>
-
-    <button class="cart-close" id="cartClose" aria-label="Close cart">
-      ×
-    </button>
-  </div>
-
-  <div class="cart-items" id="cartItems">
-    <!-- Cart items are generated by JavaScript -->
-  </div>
-
-  <div class="cart-empty" id="cartEmpty">
-    <div class="cart-empty-symbol">◆</div>
-    <p>Your selection is empty.</p>
-    <button id="continueShopping">Continue Shopping</button>
-  </div>
-
-  <div class="cart-footer" id="cartFooter">
-
-    <div class="cart-total-row">
-      <span>Subtotal</span>
-      <span id="cartSubtotal">QAR 0</span>
-    </div>
-
-    <a href="checkout.html" class="cart-checkout" id="checkoutButton"
-   onclick="try{const c=localStorage.getItem('qaveraCart')||'[]';sessionStorage.setItem('qaveraCheckoutCart',c);this.href='checkout.html?cart='+encodeURIComponent(c);}catch(e){console.error('QAVERA checkout handoff failed:',e);this.href='checkout.html';}">
-  Checkout
-</a>
-
-  </div>
-
-</aside>
-
-<!-- QAVERA LOADING SCREEN -->
-<div id="qaveraLoader">
-
-  <div class="qavera-loader-content">
-
-    <!-- Main logo -->
-    <img
-      src="Qavera Logomark.png"
-      alt="Qavera Logo"
-      class="qavera-main-logo"
-    >
-
-    <!-- QAVERA name logo -->
-    <img
-      src="Qavera Logotype .png"
-      alt="QAVERA"
-      class="qavera-name-logo"
-    >
-
-  </div>
-
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-  const QAVERA_SUPABASE_URL = 'https://rhwajaceuhpfwughlgpd.supabase.co';
-  const QAVERA_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0';
-
-  const qaveraSupabase = window.supabase.createClient(
-    QAVERA_SUPABASE_URL,
-    QAVERA_SUPABASE_PUBLISHABLE_KEY
-  );
-
-  async function updateQaveraAccountLinks() {
-    const desktopLink = document.getElementById('accountNavButton');
-    const mobileLink = document.getElementById('mobileAccountLink');
-
-    const { data: { session } } = await qaveraSupabase.auth.getSession();
-    const loggedIn = !!session;
-
-    if (desktopLink) {
-      desktopLink.href = loggedIn ? 'account.html' : 'login.html';
-      desktopLink.setAttribute('aria-label', loggedIn ? 'My Account' : 'Login');
-      desktopLink.setAttribute('title', loggedIn ? 'My Account' : 'Login');
-    }
-
-    if (mobileLink) {
-      mobileLink.href = loggedIn ? 'account.html' : 'login.html';
-      mobileLink.textContent = loggedIn ? 'My Account' : 'Account';
-    }
-  }
-
-  updateQaveraAccountLinks();
-
-  qaveraSupabase.auth.onAuthStateChange(() => {
-    updateQaveraAccountLinks();
-  });
-</script>
-
-<script>
-  const cursor = document.getElementById('cursor');
-  const ring = document.getElementById('cursorRing');
-  let mx = 0, my = 0, rx = 0, ry = 0;
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX; my = e.clientY;
-    cursor.style.left = mx + 'px';
-    cursor.style.top = my + 'px';
-  });
-  function animateRing() {
-    rx += (mx - rx) * 0.12;
-    ry += (my - ry) * 0.12;
-    ring.style.left = rx + 'px';
-    ring.style.top = ry + 'px';
-    requestAnimationFrame(animateRing);
-  }
-  animateRing();
-  const nav = document.getElementById('mainNav');
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 80);
-  });
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
-
-  /* =========================================
-   CART SYSTEM
-========================================= */
-let cart = JSON.parse(localStorage.getItem('qaveraCart')) || [];
-const cartButton = document.getElementById('cartButton');
-const cartDrawer = document.getElementById('cartDrawer');
-const cartOverlay = document.getElementById('cartOverlay');
-const cartClose = document.getElementById('cartClose');
-const cartItems = document.getElementById('cartItems');
-const cartEmpty = document.getElementById('cartEmpty');
-const cartFooter = document.getElementById('cartFooter');
-const cartSubtotal = document.getElementById('cartSubtotal');
-const cartCount = document.getElementById('cartCount');
-const continueShopping = document.getElementById('continueShopping');
-
-/* Open cart */
-
-function openCart() {
-  cartDrawer.classList.add('active');
-  cartOverlay.classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-/* Close cart */
-
-function closeCart() {
-  cartDrawer.classList.remove('active');
-  cartOverlay.classList.remove('active');
-  document.body.style.overflow = '';
-}
-cartButton.addEventListener('click', function(e) {
-  e.preventDefault();
-  openCart();
-});
-cartClose.addEventListener('click', closeCart);
-cartOverlay.addEventListener('click', closeCart);
-continueShopping.addEventListener('click', closeCart);
-
-/* Save */
-
-function saveCart() {
-  localStorage.setItem(
-    'qaveraCart',
-    JSON.stringify(cart)
-  );
-}
-
-/* Render */
-
-function renderCart() {
-  cartItems.innerHTML = '';
-  if (cart.length === 0) {
-    cartEmpty.style.display = 'flex';
-    cartFooter.style.display = 'none';
-  } else {
-    cartEmpty.style.display = 'none';
-    cartFooter.style.display = 'block';
-  }
-  let subtotal = 0;
-  let totalQuantity = 0;
-  cart.forEach(item => {
-    subtotal += item.price * item.quantity;
-    totalQuantity += item.quantity;
-    const itemElement = document.createElement('div');
-    itemElement.className = 'cart-item';
-    itemElement.innerHTML = `
-      <div class="cart-item-image">
-      <img src="${item.image}" alt="${item.name}">
+    <!-- =====================================================
+         THE HOME
+    ===================================================== -->
+    <section class="house">
+      <div class="house-images reveal">
+        <img src="gold bowl 2.webp" alt="QAVERA Home gold bowl">
+        <img src="white leaf inside.webp" alt="QAVERA Home white leaf dish">
       </div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">
-          ${item.name}
+      <div>
+        <p class="caption reveal">Nº 08 — The Home</p>
+        <h2 class="display reveal d1">Objects for<br>the <em>table</em>.</h2>
+        <p class="reveal d2">Bowls and trays from the QAVERA Home collection, made to present chocolate beautifully — at home, or as a gift. Order directly on WhatsApp.</p>
+        <div class="actions reveal d3">
+          <a href="home-collection.html" class="btn btn-solid">Explore The Home <span class="arrow">→</span></a>
+          <a href="https://wa.me/97450968968" target="_blank" rel="noopener" class="btn btn-line">Order on WhatsApp</a>
         </div>
-        <div class="cart-item-price">
-          QAR ${item.price}
-        </div>
-        <div class="cart-quantity">
-          <button
-            class="quantity-minus"
-            data-id="${item.id}">
-            −
-          </button>
-          <span>${item.quantity}</span>
-          <button
-            class="quantity-plus"
-            data-id="${item.id}">
-            +
-          </button>
-        </div>
-        <button
-          class="cart-remove"
-          data-id="${item.id}">
-          Remove
-        </button>
       </div>
-      <div class="cart-item-total">
-        QAR ${item.price * item.quantity}
+    </section>
+
+    <!-- =====================================================
+         REWARDS
+    ===================================================== -->
+    <section class="rewards" aria-label="Rewards">
+      <div class="reward">
+        <p class="caption reveal">QAVERA Points</p>
+        <p class="big reveal d1">100<small>points</small></p>
+        <h3 class="reveal d1">for every QAR 1,000.</h3>
+        <p class="reveal d2">Points are added to your account when your order is delivered. Every 100 points is QAR 10 off a future order.</p>
+        <a href="login.html" class="link reveal d3">Create your account <span class="arrow">→</span></a>
       </div>
-    `;
-    cartItems.appendChild(itemElement);
-  });
-  cartSubtotal.textContent = `QAR ${subtotal}`;
-  cartCount.textContent = totalQuantity;
+      <div class="reward">
+        <p class="caption reveal">Keep the box</p>
+        <p class="big reveal d1">15%<small>off</small></p>
+        <h3 class="reveal d1">your refill.</h3>
+        <p class="reveal d2">Bring your empty QAVERA box back for a refill and enjoy 15% off your next collection. Indulge again, reuse beautifully.</p>
+        <a href="contactus.html" class="link reveal d3">Arrange a refill <span class="arrow">→</span></a>
+      </div>
+    </section>
 
-  /* Quantity buttons */
+  </main>
 
-  document.querySelectorAll('.quantity-minus').forEach(button => {
-    button.addEventListener('click', () => {
-      const item = cart.find(
-        item => item.id === button.dataset.id
-      );
-      if (!item) return;
-      item.quantity--;
-      if (item.quantity <= 0) {
-        cart = cart.filter(
-          item => item.id !== button.dataset.id
-        );
+  <script>
+    // Build-your-box demo: fill a box with painted bonbons
+    const boxGrid = document.getElementById('boxGrid');
+    const boxLabel = document.getElementById('boxLabel');
+    const layouts = { 12: 4, 25: 5, 48: 8 };
+    const FLAVOUR_STYLES = ["--a:rgb(54, 33, 20);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(13, 12, 11);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(62, 35, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(82, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(33, 53, 75);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(108, 44, 82);--b:#F062B8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(49, 13, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(103, 104, 13);--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"];
+
+    function fillBox(size) {
+      boxGrid.style.setProperty('--cols', layouts[size]);
+      boxGrid.replaceChildren();
+      for (let i = 0; i < size; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const bonbon = document.createElement('div');
+        bonbon.className = 'bonbon';
+        bonbon.setAttribute('style', FLAVOUR_STYLES[(i * 5) % FLAVOUR_STYLES.length]);
+        bonbon.style.animationDelay = `${i * 18}ms`;
+        cell.appendChild(bonbon);
+        boxGrid.appendChild(cell);
       }
-      saveCart();
-      renderCart();
+      boxLabel.textContent = `${size} pieces`;
+      document.querySelectorAll('.size-switch button').forEach(b => {
+        b.setAttribute('aria-pressed', String(Number(b.dataset.size) === size));
+      });
+    }
+
+    document.querySelectorAll('.size-switch button').forEach(button => {
+      button.addEventListener('click', () => fillBox(Number(button.dataset.size)));
     });
-  });
-  document.querySelectorAll('.quantity-plus').forEach(button => {
-    button.addEventListener('click', () => {
-      const item = cart.find(
-        item => item.id === button.dataset.id
-      );
-      if (!item) return;
-      item.quantity++;
-      saveCart();
-      renderCart();
-    });
-  });
+    fillBox(12);
 
-  /* Remove */
-
-  document.querySelectorAll('.cart-remove').forEach(button => {
-    button.addEventListener('click', () => {
-      cart = cart.filter(
-        item => item.id !== button.dataset.id
-      );
-      saveCart();
-      renderCart();
-    });
-  });
-}
-
-/* Initial render */
-
-renderCart();
-
-/* =========================================
-   QAVERA LOADING SCREEN
-========================================= */
-window.addEventListener('load', () => {
-  const loader = document.getElementById('qaveraLoader');
-  // Keep the loading screen visible briefly
-  setTimeout(() => {
-    loader.classList.add('hide');
-    // Remove it completely after the fade-out
-    setTimeout(() => {
-      loader.remove();
-    }, 1000);
-  }, 1800);
-});
-
-const mobileMenuButton = document.getElementById('mobileMenuButton');
-const mobileMenu = document.getElementById('mobileMenu');
-
-mobileMenuButton.addEventListener('click', () => {
-
-  mobileMenuButton.classList.toggle('active');
-  mobileMenu.classList.toggle('active');
-
-});
-
-document.querySelectorAll('.mobile-menu-toggle').forEach(button => {
-
-  button.addEventListener('click', () => {
-
-    const item = button.parentElement;
-
-    item.classList.toggle('active');
-
-  });
-
-});
-
-/* iPHONE SAFARI — FORCE SPREADS NAVIGATION */
-const spreadsLink = document.querySelector('#mobileMenu .mobile-submenu a[href="spreads.html"]');
-
-if (spreadsLink) {
-  spreadsLink.style.position = 'relative';
-  spreadsLink.style.zIndex = '10';
-  spreadsLink.style.pointerEvents = 'auto';
-  spreadsLink.style.touchAction = 'manipulation';
-
-  spreadsLink.addEventListener('click', function (e) {
-    e.preventDefault();
-    window.location.href = 'spreads.html';
-  });
-}
-
-const track = document.querySelector('.marquee-track');
-
-let position = 0;
-
-function moveMarquee() {
-  position -= 1;
-
-  if (Math.abs(position) >= track.scrollWidth / 2) {
-    position = 0;
-  }
-
-  track.style.transform = `translateX(${position}px)`;
-
-  requestAnimationFrame(moveMarquee);
-}
-
-moveMarquee();
-
-</script>
+  </script>
 </body>
 </html>

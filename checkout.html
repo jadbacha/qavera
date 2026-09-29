@@ -3,557 +3,140 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Checkout — QAVERA</title>
-
+  <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3/qavera.css">
   <style>
-    :root {
-      --bg: #11100f;
-      --cream: #f5edd9;
-      --gold: #c9a45c;
-      --muted: rgba(245,237,217,.65);
-      --border: rgba(245,237,217,.15);
-    }
+    .co-head { padding: clamp(2.6rem, 5vw, 4rem) var(--gutter) 0; }
+    .co-head .caption { color: var(--sand); }
+    .co-head h1 { font-size: clamp(3rem, 7vw, 6rem); margin-top: 1rem; }
+    .co-head h1 em { color: var(--sand); }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background: var(--bg);
-      color: var(--cream);
-      font-family: Inter, sans-serif;
-      font-weight: 300;
-    }
-
-    /* NAVBAR */
-    .navbar {
-      height: 90px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
- .nav-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
-
-.nav-logo img {
-  width: 200px;
-  height: auto;
-  display: block;
-  object-fit: contain;
-}
-    .back-home {
-      position: absolute;
-      left: 40px;
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 11px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-    }
-
-    .back-home:hover {
-      color: var(--gold);
-    }
-
-    /* PAGE */
-    .checkout-page {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 80px 30px 120px;
-    }
-
-    .page-title {
-      text-align: center;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 52px;
-      font-weight: 400;
-      margin-bottom: 70px;
-    }
-
-    .checkout-grid {
+    .co-grid {
       display: grid;
-      grid-template-columns: 1.4fr .8fr;
-      gap: 70px;
+      grid-template-columns: 1.15fr .85fr;
+      gap: clamp(2rem, 5vw, 5rem);
+      padding: clamp(2rem, 4vw, 3rem) var(--gutter) clamp(4rem, 8vw, 6rem);
       align-items: start;
     }
 
-    .section-title {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 28px;
-      font-weight: 400;
-      margin-bottom: 25px;
-    }
+    .co-step { padding: 2rem 0 2.4rem; border-top: 1px solid var(--line-dark); }
+    .co-step-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.6rem; }
+    .co-step-head .num { font-family: var(--display); font-style: italic; font-size: 1.8rem; color: var(--sand); line-height: 1; }
+    .co-step-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1; }
 
-    /* FORM */
-    .form-group {
-      margin-bottom: 22px;
-    }
+    .co-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 1.4rem; }
+    .co-fields .full { grid-column: 1 / -1; }
+    .phone-row { display: grid; grid-template-columns: minmax(0, 12rem) 1fr; gap: 1rem; }
+    .required-error { display: none; font-size: .8rem; color: #e39a8e; }
+    .required-error.show { display: block; }
 
-    label {
-      display: block;
-      font-size: 11px;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      margin-bottom: 9px;
-      color: var(--muted);
-    }
-
-    input,
-    textarea {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--cream);
-      padding: 15px;
-      font-family: Inter, sans-serif;
-      font-size: 14px;
-      outline: none;
-    }
-
-    input:focus,
-    textarea:focus {
-      border-color: var(--gold);
-    }
-
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
-
-    .two-columns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-    .phone-input {
-  display: flex;
-  border: 1px solid var(--border);
-}
-
-.country-code {
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  border: none;
-  border-right: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
-  font-family: Inter, sans-serif;
-  font-size: 14px;
-  max-width: 45%;
-  cursor: pointer;
-  outline: none;
-}
-
-.country-code option {
-  background: var(--bg);
-  color: var(--cream);
-}
-
-/* Order confirmation / message dialog */
-.checkout-dialog {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  background: rgba(8,7,6,.78);
-  backdrop-filter: blur(4px);
-}
-
-.checkout-dialog[hidden] { display: none; }
-
-.checkout-dialog-box {
-  width: 100%;
-  max-width: 440px;
-  padding: 44px 36px 36px;
-  border: 1px solid rgba(201,164,92,.45);
-  background: var(--bg);
-  color: var(--cream);
-  text-align: center;
-}
-
-.checkout-dialog-symbol { color: var(--gold); font-size: .85rem; margin-bottom: 16px; }
-
-.checkout-dialog-label {
-  color: var(--gold);
-  font-family: Inter, sans-serif;
-  font-size: 10px;
-  letter-spacing: .25em;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
-.checkout-dialog-title {
-  font-family: "Cormorant Garamond", serif;
-  font-size: 2rem;
-  font-weight: 400;
-  line-height: 1.15;
-  margin-bottom: 18px;
-}
-
-.checkout-dialog-text {
-  color: var(--muted);
-  font-family: Inter, sans-serif;
-  font-size: 13px;
-  line-height: 1.7;
-  white-space: pre-line;
-}
-
-.checkout-dialog-details {
-  margin: 22px 0 4px;
-  border-top: 1px solid var(--border);
-  font-family: Inter, sans-serif;
-  font-size: 13px;
-}
-
-.checkout-dialog-details div {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.checkout-dialog-details span:first-child { color: var(--muted); }
-
-.checkout-dialog .confirm-order { margin-top: 28px; }
-
-.phone-input input {
-  border: none;
-  flex: 1;
-}
-
-.phone-input:focus-within {
-  border-color: var(--gold);
-}
-
-    /* PAYMENT */
-    .payment-options {
-      display: grid;
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .payment-option {
-      border: 1px solid var(--border);
-      padding: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .payment-option:hover {
-      border-color: var(--gold);
-    }
-
-    .payment-option input {
-      width: auto;
-    }
-
-    .payment-option span {
-      font-size: 13px;
-    }
-
-    /* QAVERA POINTS */
-    .points-box {
-      border: 1px solid var(--border);
-      padding: 20px;
-      margin-bottom: 25px;
-    }
-
-    .points-header {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 21px;
-      margin-bottom: 6px;
-    }
-
-    .points-balance {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 15px;
-    }
-
-    .points-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      color: var(--cream);
-      font-size: 12px;
-      letter-spacing: .03em;
-    }
-
-    .points-option input {
-      width: auto;
-      margin: 0;
-      accent-color: var(--gold);
-    }
-
-    .points-note {
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
-
-    /* SAVED ADDRESSES */
-    .saved-address-box {
-      border: 1px solid var(--border);
-      padding: 18px;
-      margin-bottom: 30px;
-    }
-
-    .saved-address-box select,
-    .saved-address-box input {
-      width: 100%;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--cream);
-      padding: 13px 14px;
-      font-family: Inter, sans-serif;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .saved-address-box select:focus,
-    .saved-address-box input:focus {
-      border-color: var(--gold);
-    }
-
-    .saved-address-box select option {
-      background: #11100f;
-      color: #f4eee4;
-    }
-
-    .saved-address-title {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 21px;
-      margin-bottom: 6px;
-    }
-
-    .saved-address-note {
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.5;
-      margin-bottom: 14px;
-    }
-
-    .save-address-option {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-      color: var(--cream);
-      font-size: 11px;
-      letter-spacing: .03em;
-      margin-top: 12px;
-    }
-
-    .save-address-option input {
-      width: auto;
-      margin: 0;
-      accent-color: var(--gold);
-    }
-
-    .points-discount {
-      display: none;
-    }
-
-    /* ORDER SUMMARY */
-    .order-summary {
-      border: 1px solid var(--border);
-      padding: 30px;
-      position: sticky;
-      top: 30px;
-    }
-
-    .cart-product {
-      display: flex;
-      gap: 15px;
-      padding: 18px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cart-product img {
-      width: 70px;
-      height: 70px;
-      object-fit: contain;
-    }
-
-    .product-info {
-      flex: 1;
-    }
-
-    .product-name {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 19px;
-    }
-
-    .product-details {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 5px;
-    }
-
-    .product-price {
-      font-size: 13px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      padding-top: 18px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .summary-total {
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid var(--border);
-      margin-top: 20px;
-      padding-top: 20px;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 25px;
-      color: var(--cream);
-    }
-
-    /* BUTTON */
-    .confirm-order {
-      width: 100%;
-      margin-top: 30px;
-      padding: 17px;
-      border: 1px solid var(--gold);
-      background: var(--gold);
-      color: #11100f;
-      font-family: Inter, sans-serif;
-      font-size: 11px;
-      letter-spacing: .2em;
-      text-transform: uppercase;
-      cursor: pointer;
-    }
-
-    .confirm-order:hover {
-      background: transparent;
-      color: var(--gold);
-    }
-
-    /* EMPTY CART */
-    .empty-cart {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    @media (max-width: 800px) {
-      .checkout-grid {
-        grid-template-columns: 1fr;
-        gap: 50px;
-      }
-
-      .order-summary {
-        position: static;
-      }
-
-      .page-title {
-        font-size: 42px;
-      }
-
-      .back-home {
-        left: 20px;
-      }
-
-      .checkout-page {
-        padding: 50px 20px 80px;
-      }
-
-      .two-columns {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-    }
-
-    .required-error {
-  display: none;
-  color: #c96b6b;
-  font-size: 11px;
-  margin-top: -4px;
-  margin-bottom: 9px;
-}
-
-.required-error.show {
-  display: block;
-}
-  
-    /* Show the name with capital first letters while typing. */
+    .saved { display: grid; grid-template-columns: 1fr auto; gap: 1rem 1.4rem; align-items: end; margin-bottom: 1.8rem; padding: 1.2rem; border: 1px solid var(--line-dark); background: rgba(216,216,216,.03); }
+    .check { display: flex; align-items: center; gap: .7rem; cursor: pointer; font-size: .92rem; color: var(--muted-dark); }
+    .check input { width: 18px; height: 18px; accent-color: var(--sand); cursor: pointer; }
+    .check input:disabled { cursor: not-allowed; }
+    .check:has(input:disabled) { opacity: .45; cursor: not-allowed; }
     #fullName { text-transform: capitalize; }
+
+    .points { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; padding: 1.4rem; border: 1px solid rgba(196,169,128,.35); }
+    .points .big { font-family: var(--display); font-size: 2.6rem; line-height: 1; color: var(--sand); }
+    .points .big small { font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(216,216,216,.5); display: block; margin-top: .3rem; }
+    .points .note { font-size: .8rem; color: rgba(216,216,216,.45); margin-top: .4rem; }
+
+    .pay { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+    .pay label { position: relative; display: flex; flex-direction: column; gap: .3rem; padding: 1.2rem; border: 1px solid rgba(216,216,216,.22); cursor: pointer; transition: border-color .3s ease, background .3s ease; }
+    .pay label:has(input:checked) { border-color: var(--sand); background: rgba(196,169,128,.08); }
+    .pay input { position: absolute; opacity: 0; }
+    .pay strong { font-weight: 500; }
+    .pay span { font-size: .85rem; color: rgba(216,216,216,.55); }
+    .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
+
+    .summary { position: sticky; top: calc(var(--header-h) + 1.5rem); background: var(--ink-2); border: 1px solid rgba(196,169,128,.2); padding: clamp(1.4rem, 3vw, 2.2rem); }
+    .summary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
+    .summary-head h2 { font-family: var(--display); font-weight: 400; font-size: 2rem; }
+    .summary-head h2 em { color: var(--sand); }
+    .summary-head .link { color: rgba(216,216,216,.6); font-size: .64rem; }
+
+    .line { display: grid; grid-template-columns: 58px 1fr auto; gap: .9rem; padding: 1rem 0; border-top: 1px solid var(--line-dark); align-items: start; }
+    .line .thumb { width: 58px; height: 58px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+    .line .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .line .thumb.painted { background: #1c1a19; }
+    .line .thumb .bonbon { width: 36px; }
+    .line h3 { font-family: var(--display); font-weight: 400; font-size: 1.1rem; line-height: 1.2; }
+    .line .caption { font-size: .6rem; color: rgba(216,216,216,.5); display: block; margin-top: .25rem; }
+    .line .flav { font-size: .76rem; color: rgba(216,216,216,.55); margin-top: .35rem; }
+    .line .price { font-family: var(--mono); font-size: .8rem; color: var(--sand); white-space: nowrap; }
+    .empty-cart { padding: 1.6rem 0; color: var(--muted-dark); border-top: 1px solid var(--line-dark); }
+    .empty-cart a { color: var(--sand); }
+
+    .rows { border-top: 1px solid var(--line-dark); padding-top: 1rem; margin-top: .2rem; }
+    .summary-row { display: flex; justify-content: space-between; padding: .35rem 0; color: var(--muted-dark); font-size: .95rem; }
+    .summary-row.points-discount { color: var(--sand); }
+    .summary-total { display: flex; justify-content: space-between; align-items: baseline; margin: 1rem 0 1.4rem; padding-top: 1rem; border-top: 1px solid var(--line-dark); }
+    .summary-total span:first-child { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(216,216,216,.6); }
+    .summary-total span:last-child { font-family: var(--display); font-size: 2.4rem; line-height: 1; }
+    .secure { display: flex; gap: .6rem; justify-content: center; margin-top: 1rem; color: rgba(216,216,216,.4); font-size: .62rem; }
+
+    /* Dialog (order confirmation / messages) */
+    .checkout-dialog { position: fixed; inset: 0; z-index: 150; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8,7,7,.78); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .checkout-dialog[hidden] { display: none; }
+    .checkout-dialog-box { width: 100%; max-width: 460px; padding: 2.8rem 2.2rem 2.2rem; border: 1px solid rgba(196,169,128,.45); background: var(--ink); text-align: center; animation: dialogIn .6s var(--ease); }
+    @keyframes dialogIn { from { opacity: 0; transform: translateY(16px); } }
+    .checkout-dialog-box .bonbon { width: 58px; margin: 0 auto 1.4rem; }
+    .checkout-dialog-label { color: var(--sand); margin-bottom: .8rem; }
+    .checkout-dialog-title { font-family: var(--display); font-weight: 400; font-size: 2.2rem; line-height: 1.1; margin-bottom: 1rem; }
+    .checkout-dialog-text { color: var(--muted-dark); font-size: .95rem; white-space: pre-line; }
+    .checkout-dialog-details { margin: 1.6rem 0 .4rem; border-top: 1px solid var(--line-dark); text-align: left; }
+    .checkout-dialog-details div { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid var(--line-dark); font-size: .92rem; }
+    .checkout-dialog-details span:first-child { color: rgba(216,216,216,.55); }
+    .checkout-dialog .btn { margin-top: 1.8rem; width: 100%; }
+
+    @media (max-width: 1000px) {
+      .co-grid { grid-template-columns: 1fr; }
+      .summary { position: static; order: -1; }
+    }
+    @media (max-width: 560px) {
+      .co-fields, .pay { grid-template-columns: 1fr; }
+      .phone-row { grid-template-columns: minmax(0, 9.5rem) 1fr; }
+      .saved { grid-template-columns: 1fr; }
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+<body data-page="checkout" data-no-loader>
+  <script src="v3/qavera.js"></script>
 
-<body>
+  <main class="v3-main">
+    <header class="co-head">
+      <p class="caption">Secure checkout</p>
+      <h1 class="display">Almost <em>yours</em>.</h1>
+    </header>
 
-  <nav class="navbar">
-    <a href="home.html" class="back-home">← Back</a>
-    <a href="home.html" class="nav-logo">
-  <img src="Qavera without artisan.png" alt="Qavera">
-</a>
-  </nav>
-
-  <main class="checkout-page">
-
-    <h1 class="page-title">Checkout</h1>
-
-    <div class="checkout-grid">
-
-      <!-- CUSTOMER INFORMATION -->
+    <div class="co-grid">
       <section>
+        <div class="co-step">
+          <div class="co-step-head"><span class="num">01</span><h2>Delivery</h2></div>
 
-        <h2 class="section-title">Delivery Information</h2>
-
-        <div class="saved-address-box">
-          <div class="saved-address-title">Saved Addresses</div>
-          <div class="saved-address-note">Choose a saved address or enter a new one below.</div>
-          <select id="savedAddressSelect">
-            <option value="">Enter a new address</option>
-          </select>
-          <label class="save-address-option">
-            <input type="checkbox" id="saveAddress" checked>
-            <span>Save this address for future orders</span>
-          </label>
-        </div>
-
-        <div class="form-group">
-          <label for="fullName">Full Name *</label>
-          <div class="required-error" id="fullNameError" hidden>Please enter your full name.</div>
-          <input type="text" id="fullName" required>
-        </div>
-
-        <div class="form-group">
-          <label for="phone">Phone Number *</label>
-          <div class="required-error" id="phoneError" hidden>
-          Please enter your phone number.
+          <div class="saved">
+            <div class="v3-field">
+              <label for="savedAddressSelect">Saved addresses</label>
+              <select id="savedAddressSelect"><option value="">Enter a new address</option></select>
+            </div>
+            <label class="check"><input type="checkbox" id="saveAddress" checked><span>Save for next time</span></label>
           </div>
-          <div class="phone-input">
-            <select class="country-code" id="countryCode" aria-label="Country code">
+
+          <div class="co-fields">
+            <div class="v3-field full">
+              <label for="fullName">Full name *</label>
+              <input type="text" id="fullName" autocomplete="name" required>
+              <div class="required-error" id="fullNameError">Please enter your full name.</div>
+            </div>
+            <div class="v3-field full">
+              <label for="phone">Phone number *</label>
+              <div class="phone-row">
+                <select id="countryCode" aria-label="Country code">
               <option value="+974" selected>Qatar (+974)</option>
               <option value="+961">Lebanon (+961)</option>
               <option value="+971">UAE (+971)</option>
@@ -575,129 +158,88 @@
               <option value="+81">Japan (+81)</option>
               <option value="+82">South Korea (+82)</option>
               <option value="+61">Australia (+61)</option>
-            </select>
-            <input
-            type="tel"
-            id="phone"
-            inputmode="numeric"
-            maxlength="8"
-            placeholder="XXXXXXXX"
-            required>
-        </div>
-        </div>
-
-        <div class="form-group">
-          <label for="area">Delivery Area *</label>
-          <div class="required-error" id="areaError" hidden>Please enter your delivery area.</div>
-          <input type="text" id="area" required>
-        </div>
-
-        <div class="form-group">
-          <label for="address">Full Address *</label>
-          <div class="required-error" id="addressError" hidden>Please enter your full address.</div>
-          <textarea id="address" required></textarea>
-        </div>
-
-        <div class="two-columns">
-
-          <div class="form-group">
-            <label for="building">Building / Villa Number *</label>
-            <div class="required-error" id="buildingError" hidden>Please enter your building / villa number.</div>
-            <input type="text" id="building" required>
-          </div>
-
-          <div class="form-group">
-  <label for="apartment">Apartment / Floor *</label>
-  <div class="required-error" id="apartmentError">
-    Please enter your apartment / floor.
-  </div>
-  <input type="text" id="apartment" required>
-</div>
-
-        </div>
-
-        <div class="form-group">
-          <label for="notes">Delivery Notes</label>
-          <textarea id="notes" placeholder="Optional"></textarea>
-        </div>
-
-        <h2 class="section-title" style="margin-top:45px;">
-          QAVERA Points
-        </h2>
-
-        <div class="points-box">
-          <div class="points-header">Use your points</div>
-          <div class="points-balance">
-            You have <strong id="pointsBalance">0 points</strong>
-          </div>
-
-          <label class="points-option">
-            <input type="checkbox" id="usePoints">
-            <span>Use my points for this order</span>
-          </label>
-
-          <div class="points-note">
-            100 points = QAR 10 discount
+                </select>
+                <input type="tel" id="phone" inputmode="numeric" maxlength="8" placeholder="XXXXXXXX" autocomplete="tel-national" required>
+              </div>
+              <div class="required-error" id="phoneError">Please enter your phone number.</div>
+            </div>
+            <div class="v3-field full">
+              <label for="area">Delivery area *</label>
+              <input type="text" id="area" placeholder="e.g. West Bay, Al Waab, Lusail" required>
+              <div class="required-error" id="areaError">Please enter your delivery area.</div>
+            </div>
+            <div class="v3-field full">
+              <label for="address">Street / full address *</label>
+              <textarea id="address" rows="2" required></textarea>
+              <div class="required-error" id="addressError">Please enter your full address.</div>
+            </div>
+            <div class="v3-field">
+              <label for="building">Building / villa *</label>
+              <input type="text" id="building" required>
+              <div class="required-error" id="buildingError">Please enter your building / villa number.</div>
+            </div>
+            <div class="v3-field">
+              <label for="apartment">Apartment / floor *</label>
+              <input type="text" id="apartment" required>
+              <div class="required-error" id="apartmentError">Please enter your apartment / floor.</div>
+            </div>
+            <div class="v3-field full">
+              <label for="notes">Delivery notes</label>
+              <textarea id="notes" rows="2" placeholder="Optional — e.g. call on arrival"></textarea>
+            </div>
           </div>
         </div>
 
-        <h2 class="section-title" style="margin-top:45px;">
-          Payment
-        </h2>
-
-        <div class="payment-options">
-
-          <label class="payment-option">
-            <input type="radio" name="payment" value="Cash on Delivery" checked>
-            <span>Cash on Delivery</span>
-          </label>
-
-          <label class="payment-option">
-            <input type="radio" name="payment" value="Card on Delivery">
-            <span>Card on Delivery</span>
-          </label>
-
+        <div class="co-step">
+          <div class="co-step-head"><span class="num">02</span><h2>QAVERA Points</h2></div>
+          <div class="points">
+            <div class="big"><span id="pointsBalance">0 points</span><small>Your balance</small></div>
+            <div>
+              <label class="check"><input type="checkbox" id="usePoints"><span>Use my points for this order</span></label>
+              <p class="note" id="pointsNote">100 points = QAR 10 off. Points are used in blocks of 100.</p>
+            </div>
+          </div>
         </div>
 
+        <div class="co-step">
+          <div class="co-step-head"><span class="num">03</span><h2>Payment</h2></div>
+          <div class="pay">
+            <label><input type="radio" name="payment" value="Cash on Delivery" checked><strong>Cash on delivery</strong><span>Pay when your order arrives.</span></label>
+            <label><input type="radio" name="payment" value="Card on Delivery"><strong>Card on delivery</strong><span>Pay by card at your door.</span></label>
+          </div>
+        </div>
       </section>
 
-      <!-- ORDER SUMMARY -->
-      <aside class="order-summary">
-
-        <h2 class="section-title">Your Order</h2>
-
+      <aside class="summary" aria-label="Order summary">
+        <div class="summary-head">
+          <h2>Your <em>order</em></h2>
+          <button type="button" class="link" id="editCart">Edit</button>
+        </div>
         <div id="orderItems"></div>
-
-        <div class="summary-row">
-          <span>Subtotal</span>
-          <span id="subtotal">QAR 0</span>
+        <div class="rows">
+          <div class="summary-row"><span>Subtotal</span><span id="subtotal">QAR 0</span></div>
+          <div class="summary-row points-discount" id="pointsDiscountRow" style="display:none"><span>Points discount</span><span id="pointsDiscount">-QAR 0</span></div>
+          <div class="summary-row"><span>Delivery across Qatar</span><span>QAR 20</span></div>
         </div>
-
-        <div class="summary-row points-discount" id="pointsDiscountRow">
-          <span>Points Discount</span>
-          <span id="pointsDiscount">-QAR 0</span>
-        </div>
-
-        <div class="summary-row">
-          <span>Delivery</span>
-          <span>QAR 20</span>
-        </div>
-
-        <div class="summary-total">
-          <span>Total</span>
-          <span id="total">QAR 20</span>
-        </div>
-
-        <button type="button" class="confirm-order" id="confirmOrder">
-        Confirm Order
-        </button>
-
+        <div class="summary-total"><span>Total</span><span id="total">QAR 20</span></div>
+        <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
+        <p class="secure caption"><span>Signed in</span><span>·</span><span>Pay on delivery</span></p>
       </aside>
-
     </div>
-
   </main>
 
+  <div class="checkout-dialog" id="checkoutDialog" role="dialog" aria-modal="true" aria-labelledby="checkoutDialogTitle" hidden>
+    <div class="checkout-dialog-box">
+      <div class="bonbon p9"></div>
+      <p class="checkout-dialog-label caption" id="checkoutDialogLabel"></p>
+      <h2 class="checkout-dialog-title" id="checkoutDialogTitle"></h2>
+      <p class="checkout-dialog-text" id="checkoutDialogText"></p>
+      <div class="checkout-dialog-details" id="checkoutDialogDetails" hidden></div>
+      <button type="button" class="btn btn-solid" id="checkoutDialogButton"></button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const SUPABASE_URL = 'https://rhwajaceuhpfwughlgpd.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0';
@@ -896,11 +438,7 @@
       orderItems.innerHTML = '';
 
       if (cart.length === 0) {
-        orderItems.innerHTML = `
-          <p class="empty-cart">
-            Your cart is empty.
-          </p>
-        `;
+        orderItems.innerHTML = `<p class="empty-cart">Your cart is empty. <a href="shop.html">Explore the collection</a>.</p>`;
 
         subtotalElement.textContent = 'QAR 0';
         pointsBalanceElement.textContent = `${USER_POINTS} points`;
@@ -915,30 +453,27 @@
       confirmOrderButton.style.opacity = '';
       confirmOrderButton.style.cursor = '';
 
-      cart.forEach(item => {
-        const product = document.createElement('div');
-        product.className = 'cart-product';
-
+      const { escapeHtml, qar } = window.QaveraFormat;
+      orderItems.innerHTML = cart.map(item => {
         const lineTotal = Number(item.price || 0) * Number(item.quantity || 0);
-
-        product.innerHTML = `
-          <img src="${item.image || ''}" alt="${item.name || 'QAVERA product'}">
-
-          <div class="product-info">
-            <div class="product-name">${item.name || 'QAVERA Product'}</div>
-
-            <div class="product-details">
-              Quantity: ${item.quantity || 0}
+        const flavours = Array.isArray(item.flavors)
+          ? item.flavors.filter(f => Number(f.quantity) > 0).map(f => `${escapeHtml(f.name)} ×${Number(f.quantity)}`).join(', ')
+          : '';
+        const detail = item.display_detail || item.variant_name || item.size || '';
+        const thumb = item.image
+          ? `<div class="thumb"><img src="${escapeHtml(item.image)}" alt=""></div>`
+          : `<div class="thumb painted"><div class="bonbon ${/^p\d{1,2}$/.test(item.paint || '') ? item.paint : 'p9'}"></div></div>`;
+        return `
+          <div class="line">
+            ${thumb}
+            <div>
+              <h3>${escapeHtml(item.display_name || item.product_name || item.name || 'QAVERA product')}</h3>
+              <span class="caption">${escapeHtml(detail)}${item.customized ? ' · Customized' : ''} · × ${Number(item.quantity || 0)}</span>
+              ${flavours ? `<p class="flav">${flavours}</p>` : ''}
             </div>
-          </div>
-
-          <div class="product-price">
-            QAR ${lineTotal}
-          </div>
-        `;
-
-        orderItems.appendChild(product);
-      });
+            <span class="price">${qar(lineTotal)}</span>
+          </div>`;
+      }).join('');
 
       const totals = getTotals();
       subtotalElement.textContent = `QAR ${totals.subtotal}`;
@@ -951,6 +486,16 @@
       const maxRedeemablePoints = Math.floor(Math.min(USER_POINTS, subtotal * 10) / MIN_REDEEMABLE_POINTS) * MIN_REDEEMABLE_POINTS;
       usePointsCheckbox.disabled = maxRedeemablePoints < MIN_REDEEMABLE_POINTS;
       if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) usePointsCheckbox.checked = false;
+
+      // Explain why the option is locked, or what it is worth.
+      const pointsNote = document.getElementById('pointsNote');
+      if (USER_POINTS < MIN_REDEEMABLE_POINTS) {
+        pointsNote.textContent = `You can use points from ${MIN_REDEEMABLE_POINTS} (QAR 10 off). You have ${USER_POINTS}. You earn 100 points for every QAR 1,000 when an order is delivered.`;
+      } else if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) {
+        pointsNote.textContent = 'Add items to your cart to use your points.';
+      } else {
+        pointsNote.textContent = `Use ${maxRedeemablePoints} points for QAR ${maxRedeemablePoints / 10} off this order. Points are used in blocks of 100.`;
+      }
 
       if (!usePointsCheckbox.checked || subtotal <= 0) {
         pointsDiscountRow.style.display = 'none';
@@ -1133,15 +678,7 @@
         const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
 
         if (sessionError || !sessionData?.session?.user) {
-          const returnUrl = encodeURIComponent(
-            window.location.pathname + window.location.search
-          );
-
-          const isProduction = window.location.hostname === 'qavera.qa';
-          const loginUrl = isProduction
-            ? `https://qavera.qa/login.html?redirect=${returnUrl}`
-            : `login.html?redirect=${returnUrl}`;
-
+          const loginUrl = 'login.html?next=checkout.html';
           window.location.href = loginUrl;
           return false;
         }
@@ -1280,6 +817,7 @@
     });
 
     document.getElementById('countryCode').addEventListener('change', updatePhoneLimits);
+    document.getElementById('fullName').addEventListener('blur', function () { this.value = titleCaseName(this.value); });
 
     document.getElementById('confirmOrder').addEventListener('click', async function () {
       if (!validateCheckout()) return;
@@ -1391,7 +929,7 @@
       }
 
       confirmOrderButton.disabled = true;
-      confirmOrderButton.textContent = 'PLACING ORDER...';
+      confirmOrderButton.textContent = 'Placing order…';
 
       try {
         const { data, error } = await supabaseClient.rpc('create_qavera_order', {
@@ -1426,6 +964,8 @@
         sessionStorage.removeItem('qaveraPendingCheckout');
         cart = [];
         renderOrder();
+        try { sessionStorage.removeItem('qaveraCheckoutCart'); } catch (_) {}
+        window.QaveraCart && window.QaveraCart.render();
 
         const orderTotal = Number(order.total);
         showCheckoutDialog({
@@ -1445,7 +985,7 @@
         const message = error?.message || 'Something went wrong while placing your order.';
         showCheckoutDialog({ label: 'Checkout', title: 'We could not place your order', text: message });
         confirmOrderButton.disabled = false;
-        confirmOrderButton.textContent = 'CONFIRM ORDER';
+        confirmOrderButton.textContent = 'Confirm order';
       }
     });
 
@@ -1462,6 +1002,8 @@
       if (event.key === 'qaveraCart') refreshCartFromStorage();
     });
     window.addEventListener('pageshow', refreshCartFromStorage);
+    window.addEventListener('qavera:cart', refreshCartFromStorage);
+    document.getElementById('editCart').addEventListener('click', () => window.QaveraCart && window.QaveraCart.open());
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) refreshCartFromStorage();
     });
@@ -1479,16 +1021,5 @@
       renderOrder();
     });
   </script>
-
-<div class="checkout-dialog" id="checkoutDialog" role="dialog" aria-modal="true" aria-labelledby="checkoutDialogTitle" hidden>
-  <div class="checkout-dialog-box">
-    <div class="checkout-dialog-symbol">◆</div>
-    <div class="checkout-dialog-label" id="checkoutDialogLabel"></div>
-    <h2 class="checkout-dialog-title" id="checkoutDialogTitle"></h2>
-    <p class="checkout-dialog-text" id="checkoutDialogText"></p>
-    <div class="checkout-dialog-details" id="checkoutDialogDetails" hidden></div>
-    <button type="button" class="confirm-order" id="checkoutDialogButton"></button>
-  </div>
-</div>
 </body>
 </html>

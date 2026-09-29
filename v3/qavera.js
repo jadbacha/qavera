@@ -12,20 +12,20 @@
 
   // One place for every v3 page address (change here at launch).
   const PAGES = {
-    home: 'home-v3.html',
-    shop: 'shop-v3.html',
-    premium: 'premium-v3.html',
-    luxury: 'luxury-v3.html',
-    assorted: 'assorted-v3.html',
-    slabs: 'slabs-v3.html',
-    spreads: 'spreads-v3.html',
-    bites: 'bites-v3.html',
-    homeCollection: 'home-collection-v3.html',
-    story: 'ourstory-v3.html',
-    contact: 'contactus-v3.html',
-    account: 'account-v3.html',
-    login: 'login-v3.html',
-    checkout: 'checkout-v3.html'
+    home: 'home.html',
+    shop: 'shop.html',
+    premium: 'premium.html',
+    luxury: 'luxury.html',
+    assorted: 'assorted.html',
+    slabs: 'slabs.html',
+    spreads: 'spreads.html',
+    bites: 'bites.html',
+    homeCollection: 'home-collection.html',
+    story: 'ourstory.html',
+    contact: 'contactus.html',
+    account: 'account.html',
+    login: 'login.html',
+    checkout: 'checkout.html'
   };
 
   const WHATSAPP = 'https://wa.me/97450968968';

@@ -8,22 +8,24 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --beige: #F5EDD9;
-      --beige-light: #FAF5EA;
-      --beige-mid: #EBE0C4;
-      --black: #0D0B08;
-      --gold: #C9A84C;
-      --gold-light: #E2C97E;
-      --gold-dark: #9A7A2E;
-      --text-dark: #1A1713;
-      --text-muted: #6B5F45;
-      --border: rgba(26,23,19,.12);
-      --serif: 'Cormorant Garamond', Georgia, serif;
-      --sans: 'Jost', sans-serif;
+      /* QAVERA v3 palette */
+      --beige: #D8D8D8;
+      --beige-light: #E6E5E3;
+      --beige-mid: #CFCECC;
+      --black: #0F0E0E;
+      --gold: #C4A980;
+      --gold-light: #C4A980;
+      --gold-dark: #3D030A;
+      --text-dark: #0F0E0E;
+      --text-muted: rgba(15,14,14,.66);
+      --border: rgba(15,14,14,.16);
+      --serif: 'Bodoni Moda', Georgia, serif;
+      --sans: 'Instrument Sans', system-ui, sans-serif;
+      --mono: 'DM Mono', ui-monospace, monospace;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -287,6 +289,16 @@
     .order-message { width: 100%; font-size: .75rem; color: #7a2e1f; }
 
     .final-note { color: var(--text-muted); font-size: .75rem; }
+
+    /* v3 details */
+    .ghost-button, .filter, .block-label, .status, .action, .order-time, .subtitle, .contact-links a, .final-note { font-family: var(--mono); }
+    .brand { font-family: var(--serif); letter-spacing: .28em; }
+    h1 { font-weight: 400; }
+    .order-number { font-weight: 400; }
+    .status.pending { background: var(--black); border-color: var(--black); color: var(--gold); }
+    .status.delivered { background: #1A2D28; border-color: #1A2D28; color: var(--beige); }
+    .custom-box { background: rgba(61,3,10,.07); border-left-color: var(--gold-dark); }
+    .order.is-new { border-left-color: var(--gold); }
   </style>
 </head>
 <body>
@@ -383,7 +395,7 @@
       const { data: { session } } = await adminSupabase.auth.getSession();
 
       if (!session) {
-        window.location.replace('login.html');
+        window.location.replace('login.html?next=admin.html');
         return;
       }
 
@@ -582,7 +594,7 @@ ${escapeHtml(order.delivery_address)}</div>
 
     document.getElementById('logoutButton').addEventListener('click', async () => {
       await adminSupabase.auth.signOut();
-      window.location.replace('login.html');
+      window.location.replace('login.html?next=admin.html');
     });
 
     init();
