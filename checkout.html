@@ -27,6 +27,7 @@
     .co-step-head { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.6rem; }
     .co-step-head .num { font-family: var(--display); font-style: italic; font-size: 1.8rem; color: var(--sand); line-height: 1; }
     .co-step-head h2 { font-family: var(--display); font-weight: 400; font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1; }
+    .co-step-head h2 em { color: var(--sand); }
 
     .co-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 1.4rem; }
     .co-fields .full { grid-column: 1 / -1; }
@@ -53,6 +54,24 @@
     .pay strong { font-weight: 500; }
     .pay span { font-size: .85rem; color: rgba(216,216,216,.55); }
     .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
+
+    /* Delivery or pickup, date and time */
+    .choice { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-bottom: 1.8rem; }
+    .choice label { position: relative; display: flex; flex-direction: column; gap: .3rem; padding: 1.2rem; border: 1px solid rgba(216,216,216,.22); cursor: pointer; transition: border-color .3s ease, background .3s ease; }
+    .choice label:has(input:checked) { border-color: var(--sand); background: rgba(196,169,128,.08); }
+    .choice input { position: absolute; opacity: 0; }
+    .choice strong { font-weight: 500; display: flex; justify-content: space-between; gap: 1rem; }
+    .choice strong em { font-style: normal; font-family: var(--mono); font-size: .75rem; color: var(--sand); }
+    .choice span { font-size: .85rem; color: rgba(216,216,216,.55); }
+    .choice input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
+    .pickup-note { display: none; margin-bottom: 1.8rem; padding: 1.2rem; border: 1px solid var(--line-dark); background: rgba(216,216,216,.03); font-size: .92rem; color: var(--muted-dark); }
+    .pickup-note strong { display: block; color: var(--silver); font-weight: 500; margin-bottom: .3rem; }
+    body.is-pickup .pickup-note { display: block; }
+    body.is-pickup .delivery-only { display: none !important; }
+    .when-note { font-size: .85rem; color: rgba(216,216,216,.55); margin: -.6rem 0 1.4rem; }
+    .when-fields { display: grid; gap: 1.6rem; }
+    .when-fields input[type="date"] { color-scheme: dark; max-width: 20rem; }
+    .slots { margin-bottom: 0; }
 
     .summary { position: sticky; top: calc(var(--header-h) + 1.5rem); background: var(--ink-2); border: 1px solid rgba(196,169,128,.2); padding: clamp(1.4rem, 3vw, 2.2rem); }
     .summary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
@@ -99,7 +118,7 @@
       .summary { position: static; order: -1; }
     }
     @media (max-width: 560px) {
-      .co-fields, .pay { grid-template-columns: 1fr; }
+      .co-fields, .pay, .choice { grid-template-columns: 1fr; }
       .phone-row { grid-template-columns: minmax(0, 9.5rem) 1fr; }
       .saved { grid-template-columns: 1fr; }
     }
@@ -117,9 +136,20 @@
     <div class="co-grid">
       <section>
         <div class="co-step">
-          <div class="co-step-head"><span class="num">01</span><h2>Delivery</h2></div>
+          <div class="co-step-head"><span class="num">01</span><h2>Delivery or <em>pickup</em></h2></div>
 
-          <div class="saved">
+          <div class="choice" role="radiogroup" aria-label="Delivery or pickup">
+            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em>QAR 20</em></strong><span>To your door, anywhere in Qatar.</span></label>
+            <label><input type="radio" name="fulfillment" value="pickup"><strong>Pickup <em>Free</em></strong><span>Collect it from the QAVERA shop.</span></label>
+          </div>
+
+          <div class="pickup-note">
+            <strong>QAVERA shop</strong>
+            Zone 55, Street 162, Building 44 · +974 5096 8968<br>
+            Please bring your order number when you collect.
+          </div>
+
+          <div class="saved delivery-only">
             <div class="v3-field">
               <label for="savedAddressSelect">Saved addresses</label>
               <select id="savedAddressSelect"><option value="">Enter a new address</option></select>
@@ -163,35 +193,54 @@
               </div>
               <div class="required-error" id="phoneError">Please enter your phone number.</div>
             </div>
-            <div class="v3-field full">
+            <div class="v3-field full delivery-only">
               <label for="area">Delivery area *</label>
               <input type="text" id="area" placeholder="e.g. West Bay, Al Waab, Lusail" required>
               <div class="required-error" id="areaError">Please enter your delivery area.</div>
             </div>
-            <div class="v3-field full">
+            <div class="v3-field full delivery-only">
               <label for="address">Street / full address *</label>
               <textarea id="address" rows="2" required></textarea>
               <div class="required-error" id="addressError">Please enter your full address.</div>
             </div>
-            <div class="v3-field">
+            <div class="v3-field delivery-only">
               <label for="building">Building / villa *</label>
               <input type="text" id="building" required>
               <div class="required-error" id="buildingError">Please enter your building / villa number.</div>
             </div>
-            <div class="v3-field">
+            <div class="v3-field delivery-only">
               <label for="apartment">Apartment / floor *</label>
               <input type="text" id="apartment" required>
               <div class="required-error" id="apartmentError">Please enter your apartment / floor.</div>
             </div>
             <div class="v3-field full">
-              <label for="notes">Delivery notes</label>
+              <label for="notes" id="notesLabel">Delivery notes</label>
               <textarea id="notes" rows="2" placeholder="Optional — e.g. call on arrival"></textarea>
             </div>
           </div>
         </div>
 
         <div class="co-step">
-          <div class="co-step-head"><span class="num">02</span><h2>QAVERA Points</h2></div>
+          <div class="co-step-head"><span class="num">02</span><h2 id="whenTitle">Delivery date &amp; time</h2></div>
+          <p class="when-note">Every order is prepared by hand, so the earliest date is tomorrow.</p>
+          <div class="when-fields">
+            <div class="v3-field">
+              <label for="scheduledDate" id="dateLabel">Delivery date *</label>
+              <input type="date" id="scheduledDate" required>
+              <div class="required-error" id="scheduledDateError">Please choose a date.</div>
+            </div>
+            <div>
+              <div class="choice slots" role="radiogroup" aria-label="Time">
+                <label><input type="radio" name="timeSlot" value="12:00-16:00"><strong>12 PM – 4 PM</strong><span>Afternoon</span></label>
+                <label><input type="radio" name="timeSlot" value="18:00-23:00"><strong>6 PM – 11 PM</strong><span>Evening</span></label>
+              </div>
+              <div class="required-error" id="timeSlotError">Please choose a time.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-step">
+          <div class="co-step-head"><span class="num">03</span><h2>QAVERA Points</h2></div>
           <div class="points">
             <div class="big"><span id="pointsBalance">0 points</span><small>Your balance</small></div>
             <div>
@@ -202,10 +251,10 @@
         </div>
 
         <div class="co-step">
-          <div class="co-step-head"><span class="num">03</span><h2>Payment</h2></div>
+          <div class="co-step-head"><span class="num">04</span><h2>Payment</h2></div>
           <div class="pay">
-            <label><input type="radio" name="payment" value="Cash on Delivery" checked><strong>Cash on delivery</strong><span>Pay when your order arrives.</span></label>
-            <label><input type="radio" name="payment" value="Card on Delivery"><strong>Card on delivery</strong><span>Pay by card at your door.</span></label>
+            <label><input type="radio" name="payment" value="Cash on Delivery" checked><strong data-pay="cash">Cash on delivery</strong><span data-pay-note="cash">Pay when your order arrives.</span></label>
+            <label><input type="radio" name="payment" value="Card on Delivery"><strong data-pay="card">Card on delivery</strong><span data-pay-note="card">Pay by card at your door.</span></label>
           </div>
         </div>
       </section>
@@ -219,11 +268,11 @@
         <div class="rows">
           <div class="summary-row"><span>Subtotal</span><span id="subtotal">QAR 0</span></div>
           <div class="summary-row points-discount" id="pointsDiscountRow" style="display:none"><span>Points discount</span><span id="pointsDiscount">-QAR 0</span></div>
-          <div class="summary-row"><span>Delivery across Qatar</span><span>QAR 20</span></div>
+          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">QAR 20</span></div>
         </div>
         <div class="summary-total"><span>Total</span><span id="total">QAR 20</span></div>
         <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
-        <p class="secure caption"><span>Signed in</span><span>·</span><span>Pay on delivery</span></p>
+        <p class="secure caption"><span>Signed in</span><span>·</span><span id="payWhen">Pay on delivery</span></p>
       </aside>
     </div>
   </main>
@@ -406,6 +455,28 @@
     let USER_POINTS = 0;
     pointsBalanceElement.textContent = '0 points';
     const DELIVERY_FEE = 20;
+    const SLOT_LABELS = { '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM' };
+
+    const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
+    const deliveryFee = () => (isPickup() ? 0 : DELIVERY_FEE);
+
+    // Dates are counted in Qatar time: earliest tomorrow, latest 30 days ahead.
+    function qatarDate(offsetDays) {
+      const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
+      const date = new Date(`${today}T12:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + offsetDays);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function formatScheduledDate(value) {
+      return new Date(`${value}T12:00:00Z`).toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
+      });
+    }
+
+    const scheduledDateInput = document.getElementById('scheduledDate');
+    scheduledDateInput.min = qatarDate(1);
+    scheduledDateInput.max = qatarDate(30);
     const POINTS_PER_QAR_SPENT = 0.1; // 100 points per QAR 1,000 spent
     const QAR_PER_100_POINTS = 10;
     const MIN_REDEEMABLE_POINTS = 100;
@@ -429,8 +500,8 @@
       return {
         subtotal,
         discount,
-        delivery: DELIVERY_FEE,
-        total: subtotal - discount + DELIVERY_FEE
+        delivery: deliveryFee(),
+        total: subtotal - discount + deliveryFee()
       };
     }
 
@@ -500,7 +571,7 @@
       if (!usePointsCheckbox.checked || subtotal <= 0) {
         pointsDiscountRow.style.display = 'none';
         pointsDiscountElement.textContent = '-QAR 0';
-        totalElement.textContent = `QAR ${subtotal + DELIVERY_FEE}`;
+        totalElement.textContent = `QAR ${subtotal + deliveryFee()}`;
         return;
       }
 
@@ -508,7 +579,7 @@
 
       pointsDiscountRow.style.display = 'flex';
       pointsDiscountElement.textContent = `-QAR ${discount}`;
-      totalElement.textContent = `QAR ${subtotal - discount + DELIVERY_FEE}`;
+      totalElement.textContent = `QAR ${subtotal - discount + deliveryFee()}`;
     }
 
     function titleCaseName(value) {
@@ -757,29 +828,57 @@
         'Please enter your full name.'
       ) || hasError;
 
-      hasError = showFieldError(
-        'area',
-        'areaError',
-        'Please enter your delivery area.'
-      ) || hasError;
+      if (!isPickup()) {
+        hasError = showFieldError(
+          'area',
+          'areaError',
+          'Please enter your delivery area.'
+        ) || hasError;
 
-      hasError = showFieldError(
-        'address',
-        'addressError',
-        'Please enter your full address.'
-      ) || hasError;
+        hasError = showFieldError(
+          'address',
+          'addressError',
+          'Please enter your full address.'
+        ) || hasError;
 
-      hasError = showFieldError(
-        'building',
-        'buildingError',
-        'Please enter your building / villa number.'
-      ) || hasError;
+        hasError = showFieldError(
+          'building',
+          'buildingError',
+          'Please enter your building / villa number.'
+        ) || hasError;
 
-      hasError = showFieldError(
-        'apartment',
-        'apartmentError',
-        'Please enter your apartment / floor.'
-      ) || hasError;
+        hasError = showFieldError(
+          'apartment',
+          'apartmentError',
+          'Please enter your apartment / floor.'
+        ) || hasError;
+      }
+
+      const dateError = document.getElementById('scheduledDateError');
+      const dateValue = scheduledDateInput.value;
+      if (!dateValue) {
+        dateError.textContent = `Please choose a ${isPickup() ? 'pickup' : 'delivery'} date.`;
+        dateError.classList.add('show');
+        hasError = true;
+      } else if (dateValue < scheduledDateInput.min) {
+        dateError.textContent = 'The earliest date is tomorrow, as every order is prepared by hand.';
+        dateError.classList.add('show');
+        hasError = true;
+      } else if (dateValue > scheduledDateInput.max) {
+        dateError.textContent = 'Orders can be scheduled up to 30 days ahead.';
+        dateError.classList.add('show');
+        hasError = true;
+      } else {
+        dateError.classList.remove('show');
+      }
+
+      const slotError = document.getElementById('timeSlotError');
+      if (!document.querySelector('input[name="timeSlot"]:checked')) {
+        slotError.classList.add('show');
+        hasError = true;
+      } else {
+        slotError.classList.remove('show');
+      }
 
       const phone = document.getElementById('phone');
       const phoneError = document.getElementById('phoneError');
@@ -807,6 +906,29 @@
       return !hasError;
     }
 
+    // Delivery or pickup: fee, labels and which fields are needed.
+    function applyFulfillment() {
+      const pickup = isPickup();
+      document.body.classList.toggle('is-pickup', pickup);
+      document.getElementById('deliveryLabel').textContent = pickup ? 'Pickup from the shop' : 'Delivery across Qatar';
+      document.getElementById('deliveryFee').textContent = pickup ? 'Free' : `QAR ${DELIVERY_FEE}`;
+      document.getElementById('whenTitle').textContent = pickup ? 'Pickup date & time' : 'Delivery date & time';
+      document.getElementById('dateLabel').textContent = pickup ? 'Pickup date *' : 'Delivery date *';
+      document.getElementById('notesLabel').textContent = pickup ? 'Notes' : 'Delivery notes';
+      document.getElementById('payWhen').textContent = pickup ? 'Pay on pickup' : 'Pay on delivery';
+      document.querySelector('[data-pay="cash"]').textContent = pickup ? 'Cash on pickup' : 'Cash on delivery';
+      document.querySelector('[data-pay="card"]').textContent = pickup ? 'Card on pickup' : 'Card on delivery';
+      document.querySelector('[data-pay-note="cash"]').textContent = pickup ? 'Pay when you collect your order.' : 'Pay when your order arrives.';
+      document.querySelector('[data-pay-note="card"]').textContent = pickup ? 'Pay by card at the shop.' : 'Pay by card at your door.';
+      ['areaError', 'addressError', 'buildingError', 'apartmentError'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+      updatePointsDiscount(getTotals().subtotal);
+    }
+
+    document.querySelectorAll('input[name="fulfillment"]').forEach(input => input.addEventListener('change', applyFulfillment));
+    scheduledDateInput.addEventListener('change', () => document.getElementById('scheduledDateError').classList.remove('show'));
+    document.querySelectorAll('input[name="timeSlot"]').forEach(input =>
+      input.addEventListener('change', () => document.getElementById('timeSlotError').classList.remove('show')));
+
     usePointsCheckbox.addEventListener('change', function () {
       const totals = getTotals();
       updatePointsDiscount(totals.subtotal);
@@ -829,6 +951,10 @@
 
       const totals = getTotals();
       const paymentSelection = document.querySelector('input[name="payment"]:checked')?.value || 'Cash on Delivery';
+      const pickup = isPickup();
+      const timeSlot = document.querySelector('input[name="timeSlot"]:checked')?.value;
+      const scheduledDate = scheduledDateInput.value;
+      const paymentLabel = pickup ? paymentSelection.replace('Delivery', 'Pickup') : paymentSelection;
       const paymentMethod = paymentSelection === 'Card on Delivery'
         ? 'card_on_delivery'
         : 'cash_on_delivery';
@@ -943,13 +1069,16 @@
           p_notes: document.getElementById('notes').value.trim(),
           p_payment_method: paymentMethod,
           p_points_used: pointsUsed,
-          p_save_address: saveAddressCheckbox.checked,
+          p_save_address: !pickup && saveAddressCheckbox.checked,
           p_address_label: savedAddresses.length === 0 ? 'Home' : 'Address',
           p_items: cart.map(item => ({
             variant_id: item.variant_id,
             quantity: Number(item.quantity || 0),
             flavors: Array.isArray(item.flavors) ? item.flavors : null
-          }))
+          })),
+          p_fulfillment: pickup ? 'pickup' : 'delivery',
+          p_scheduled_date: scheduledDate,
+          p_time_slot: timeSlot
         });
 
         if (error) throw error;
@@ -971,11 +1100,14 @@
         showCheckoutDialog({
           label: 'Order received',
           title: 'Thank you for your order',
-          text: 'We will contact you shortly to confirm your delivery.',
+          text: pickup
+            ? 'We will contact you shortly to confirm. Your order will be ready to collect from the QAVERA shop.'
+            : 'We will contact you shortly to confirm your delivery.',
           details: [
             ['Order number', order.order_number],
+            [pickup ? 'Pickup' : 'Delivery', `${formatScheduledDate(scheduledDate)} · ${SLOT_LABELS[timeSlot]}`],
             ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`],
-            ['Payment', paymentSelection]
+            ['Payment', paymentLabel]
           ],
           button: 'View my orders',
           onClose: () => { window.location.href = 'account.html'; }

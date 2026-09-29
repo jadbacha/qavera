@@ -66,6 +66,7 @@
       .track div { font-size: 0; }
       .track div.current { font-size: .56rem; }
     }
+      .order-when { color: var(--sand); margin: -.2rem 0 1rem; }
   </style>
 </head>
 <body data-page="account">
@@ -406,6 +407,9 @@
 
     const STEPS = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'];
     const STEP_LABELS = { pending: 'Received', confirmed: 'Confirmed', preparing: 'Preparing', out_for_delivery: 'On its way', delivered: 'Delivered', cancelled: 'Cancelled' };
+    // Pickup orders: same steps, pickup wording.
+    const PICKUP_LABELS = { ...STEP_LABELS, out_for_delivery: 'Ready', delivered: 'Collected' };
+    const SLOT_LABELS = { '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM' };
 
     // Same rule as sign-up: first letter of each name part capital, the rest lowercase.
     const capitalizeName = value => String(value || '').trim().toLowerCase()
@@ -480,7 +484,7 @@
     async function loadOrders(userId) {
       const { data: orders, error } = await supabaseClient
         .from('orders')
-        .select('id, order_number, created_at, status, total, points_used, points_earned, payment_method, order_items(product_name, variant_name, quantity, total_price, customization)')
+        .select('*, order_items(product_name, variant_name, quantity, total_price, customization)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -490,8 +494,13 @@
       $('orders').innerHTML = orders.map(order => {
         const status = String(order.status || 'pending');
         const stepIndex = STEPS.indexOf(status);
+        const pickup = order.fulfillment_type === 'pickup';
+        const labels = pickup ? PICKUP_LABELS : STEP_LABELS;
         const track = status === 'cancelled' ? '' : `
-          <div class="track">${STEPS.map((s, i) => `<div class="${i <= stepIndex ? 'done' : ''}${i === stepIndex ? ' current' : ''}">${STEP_LABELS[s]}</div>`).join('')}</div>`;
+          <div class="track">${STEPS.map((s, i) => `<div class="${i <= stepIndex ? 'done' : ''}${i === stepIndex ? ' current' : ''}">${labels[s]}</div>`).join('')}</div>`;
+        const when = order.scheduled_date
+          ? `${pickup ? 'Pickup' : 'Delivery'} · ${new Date(`${order.scheduled_date}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })} · ${SLOT_LABELS[order.time_slot] || ''}`
+          : '';
 
         const items = (order.order_items || []).map(item => {
           const flav = Array.isArray(item.customization)
@@ -510,8 +519,9 @@
           <article class="order">
             <div class="order-top">
               <div><h3>${escapeHtml(order.order_number)}</h3><span class="caption">${escapeHtml(date)}</span></div>
-              <span class="status ${status === 'delivered' ? 'delivered' : ''}${status === 'cancelled' ? 'cancelled' : ''}">${escapeHtml(STEP_LABELS[status] || status)}</span>
+              <span class="status ${status === 'delivered' ? 'delivered' : ''}${status === 'cancelled' ? 'cancelled' : ''}">${escapeHtml(labels[status] || status)}</span>
             </div>
+            ${when ? `<p class="order-when caption">${escapeHtml(when)}</p>` : ''}
             ${track}
             <ul class="order-items">${items}</ul>
             <div class="order-foot"><span>${notes.join(' · ')}</span><span>Total<strong>${qar(order.total)}</strong></span></div>

@@ -161,6 +161,8 @@
     .order-number { font-family: var(--serif); font-size: 1.5rem; }
 
     .order-time { color: var(--text-muted); font-size: .72rem; margin-top: 2px; }
+    .order-when { display: inline-block; margin-top: 8px; padding: 4px 10px; font-family: var(--mono); font-size: .72rem; letter-spacing: .04em; background: #1A2D28; color: #F5EDD9; }
+    .order-when.is-pickup { background: #3D030A; }
 
     .status {
       font-size: .6rem;
@@ -346,6 +348,22 @@
       delivered: 'Delivered'
     };
 
+    // Pickup orders use the same steps with pickup wording.
+    const PICKUP_STATUS_LABELS = { out_for_delivery: 'Ready for pickup', delivered: 'Collected' };
+    const PICKUP_ACTION_LABELS = { out_for_delivery: 'Ready for pickup', delivered: 'Collected' };
+    const SLOT_LABELS = { '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM' };
+    const isPickup = order => order.fulfillment_type === 'pickup';
+    const statusLabel = order => (isPickup(order) && PICKUP_STATUS_LABELS[order.status]) || STATUS_LABELS[order.status] || order.status;
+    const actionLabel = (order, status) => (isPickup(order) && PICKUP_ACTION_LABELS[status]) || ACTION_LABELS[status];
+
+    function scheduleLabel(order) {
+      if (!order.scheduled_date) return '';
+      const date = new Date(`${order.scheduled_date}T12:00:00Z`).toLocaleDateString('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC'
+      });
+      return `${date} · ${SLOT_LABELS[order.time_slot] || order.time_slot || ''}`;
+    }
+
     const FILTERS = [
       { key: 'active', label: 'To do', match: o => !isShopSale(o) && !['delivered', 'cancelled'].includes(o.status) },
       { key: 'delivered', label: 'Delivered', match: o => !isShopSale(o) && o.status === 'delivered' },
@@ -426,7 +444,7 @@
 
       const { data, error } = await adminSupabase
         .from('orders')
-        .select('id, order_number, created_at, status, source, customer_name, customer_phone, customer_email, delivery_area, delivery_address, notes, subtotal, delivery_fee, points_used, points_discount, points_earned, total, payment_method, order_items(product_name, variant_name, quantity, total_price, customization)')
+        .select('*, order_items(product_name, variant_name, quantity, total_price, customization)')
         .order('created_at', { ascending: false })
         .limit(300);
 
@@ -457,7 +475,7 @@
         return `<div class="actions"><span class="final-note">Paid in the shop</span></div>`;
       }
       if (order.status === 'delivered') {
-        return `<div class="actions"><span class="final-note">Delivered${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span></div>`;
+        return `<div class="actions"><span class="final-note">${isPickup(order) ? 'Collected' : 'Delivered'}${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span></div>`;
       }
       if (order.status === 'cancelled') {
         return `<div class="actions"><span class="final-note">Cancelled${Number(order.points_used) > 0 ? ' · points returned to the customer' : ''}</span></div>`;
@@ -468,10 +486,10 @@
       const buttons = [];
 
       if (next) {
-        buttons.push(`<button type="button" class="action primary" data-id="${order.id}" data-status="${next}">${ACTION_LABELS[next]}</button>`);
+        buttons.push(`<button type="button" class="action primary" data-id="${order.id}" data-status="${next}">${actionLabel(order, next)}</button>`);
       }
       if (next !== 'delivered') {
-        buttons.push(`<button type="button" class="action" data-id="${order.id}" data-status="delivered">Delivered</button>`);
+        buttons.push(`<button type="button" class="action" data-id="${order.id}" data-status="delivered">${actionLabel(order, 'delivered')}</button>`);
       }
       buttons.push(`<button type="button" class="action danger" data-id="${order.id}" data-status="cancelled">Cancel order</button>`);
 
@@ -499,8 +517,9 @@
             <div>
               <div class="order-number">${escapeHtml(order.order_number)}</div>
               <div class="order-time">${escapeHtml(formatTime(order.created_at))}</div>
+              ${scheduleLabel(order) ? `<div class="order-when ${isPickup(order) ? 'is-pickup' : ''}">${isPickup(order) ? 'Pickup' : 'Delivery'} · ${escapeHtml(scheduleLabel(order))}</div>` : ''}
             </div>
-            <span class="status ${escapeHtml(order.status)}">${isShopSale(order) && order.status === 'delivered' ? 'Shop sale' : escapeHtml(STATUS_LABELS[order.status] || order.status)}</span>
+            <span class="status ${escapeHtml(order.status)}">${isShopSale(order) && order.status === 'delivered' ? 'Shop sale' : escapeHtml(statusLabel(order))}</span>
           </div>
 
           <div class="order-grid">
@@ -517,7 +536,8 @@
               </div>
 
               ${isShopSale(order) ? `<div class="block-label" style="margin-top:16px;">Sold in</div>
-              <div class="block">The QAVERA shop</div>` : `<div class="block-label" style="margin-top:16px;">Deliver to</div>
+              <div class="block">The QAVERA shop</div>` : isPickup(order) ? `<div class="block-label" style="margin-top:16px;">Pickup</div>
+              <div class="block">Customer collects from the shop</div>` : `<div class="block-label" style="margin-top:16px;">Deliver to</div>
               <div class="block address">${escapeHtml(order.delivery_area)}
 ${escapeHtml(order.delivery_address)}</div>`}
               ${order.notes ? `<div class="block muted" style="margin-top:6px;">Notes: ${escapeHtml(order.notes)}</div>` : ''}
@@ -529,8 +549,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="totals">
                 <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
                 ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
-                ${isShopSale(order) ? '' : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
-                <div class="grand"><span>Total · ${escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method)}</span><span>${qar(order.total)}</span></div>
+                ${isShopSale(order) ? '' : isPickup(order) ? `<div><span>Pickup</span><span>Free</span></div>` : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
+                <div class="grand"><span>Total · ${escapeHtml(isPickup(order) ? String(PAYMENT_LABELS[order.payment_method] || order.payment_method).replace('delivery', 'pickup') : (PAYMENT_LABELS[order.payment_method] || order.payment_method))}</span><span>${qar(order.total)}</span></div>
               </div>
             </div>
           </div>
@@ -543,6 +563,11 @@ ${escapeHtml(order.delivery_address)}</div>`}
       renderFilters();
       const filter = FILTERS.find(f => f.key === activeFilter);
       const visible = orders.filter(o => filter.match(o));
+      // To do: soonest delivery / pickup first.
+      if (activeFilter === 'active') {
+        visible.sort((a, b) => String(a.scheduled_date || '9999') .localeCompare(String(b.scheduled_date || '9999'))
+          || String(a.time_slot || '').localeCompare(String(b.time_slot || '')));
+      }
 
       if (!visible.length) {
         content.innerHTML = `<div class="notice"><h2>Nothing here</h2><p>${activeFilter === 'active' ? 'No orders waiting. New orders will appear here.' : 'No orders in this list yet.'}</p></div>`;
