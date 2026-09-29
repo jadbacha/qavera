@@ -347,16 +347,22 @@
     };
 
     const FILTERS = [
-      { key: 'active', label: 'To do', match: s => !['delivered', 'cancelled'].includes(s) },
-      { key: 'delivered', label: 'Delivered', match: s => s === 'delivered' },
-      { key: 'cancelled', label: 'Cancelled', match: s => s === 'cancelled' },
+      { key: 'active', label: 'To do', match: o => !isShopSale(o) && !['delivered', 'cancelled'].includes(o.status) },
+      { key: 'delivered', label: 'Delivered', match: o => !isShopSale(o) && o.status === 'delivered' },
+      { key: 'cancelled', label: 'Cancelled', match: o => o.status === 'cancelled' },
+      { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
       { key: 'all', label: 'All', match: () => true }
     ];
 
     const PAYMENT_LABELS = {
       cash_on_delivery: 'Cash on delivery',
-      card_on_delivery: 'Card on delivery'
+      card_on_delivery: 'Card on delivery',
+      cash: 'Cash in shop',
+      card: 'Card in shop'
     };
+
+    // Sales made in the shop with the POS app.
+    const isShopSale = order => order.source === 'store';
 
     let orders = [];
     let activeFilter = 'active';
@@ -420,7 +426,7 @@
 
       const { data, error } = await adminSupabase
         .from('orders')
-        .select('id, order_number, created_at, status, customer_name, customer_phone, customer_email, delivery_area, delivery_address, notes, subtotal, delivery_fee, points_used, points_discount, points_earned, total, payment_method, order_items(product_name, variant_name, quantity, total_price, customization)')
+        .select('id, order_number, created_at, status, source, customer_name, customer_phone, customer_email, delivery_area, delivery_address, notes, subtotal, delivery_fee, points_used, points_discount, points_earned, total, payment_method, order_items(product_name, variant_name, quantity, total_price, customization)')
         .order('created_at', { ascending: false })
         .limit(300);
 
@@ -439,7 +445,7 @@
     function renderFilters() {
       filtersEl.hidden = false;
       filtersEl.innerHTML = FILTERS.map(filter => {
-        const count = orders.filter(o => filter.match(o.status)).length;
+        const count = orders.filter(o => filter.match(o)).length;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${count}</span>
         </button>`;
@@ -447,6 +453,9 @@
     }
 
     function renderActions(order) {
+      if (isShopSale(order) && order.status === 'delivered') {
+        return `<div class="actions"><span class="final-note">Paid in the shop</span></div>`;
+      }
       if (order.status === 'delivered') {
         return `<div class="actions"><span class="final-note">Delivered${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span></div>`;
       }
@@ -491,25 +500,26 @@
               <div class="order-number">${escapeHtml(order.order_number)}</div>
               <div class="order-time">${escapeHtml(formatTime(order.created_at))}</div>
             </div>
-            <span class="status ${escapeHtml(order.status)}">${escapeHtml(STATUS_LABELS[order.status] || order.status)}</span>
+            <span class="status ${escapeHtml(order.status)}">${isShopSale(order) && order.status === 'delivered' ? 'Shop sale' : escapeHtml(STATUS_LABELS[order.status] || order.status)}</span>
           </div>
 
           <div class="order-grid">
             <div>
               <div class="block-label">Customer</div>
               <div class="block">
-                ${escapeHtml(order.customer_name)}<br>
-                <a href="tel:+${digits}">${escapeHtml(order.customer_phone)}</a>
+                ${escapeHtml(order.customer_name)}
+                ${digits ? `<br><a href="tel:+${digits}">${escapeHtml(order.customer_phone)}</a>` : ''}
                 ${order.customer_email ? `<br><span class="muted">${escapeHtml(order.customer_email)}</span>` : ''}
-                <div class="contact-links">
+                ${digits ? `<div class="contact-links">
                   <a href="https://wa.me/${digits}" target="_blank" rel="noopener">WhatsApp</a>
                   <a href="tel:+${digits}">Call</a>
-                </div>
+                </div>` : ''}
               </div>
 
-              <div class="block-label" style="margin-top:16px;">Deliver to</div>
+              ${isShopSale(order) ? `<div class="block-label" style="margin-top:16px;">Sold in</div>
+              <div class="block">The QAVERA shop</div>` : `<div class="block-label" style="margin-top:16px;">Deliver to</div>
               <div class="block address">${escapeHtml(order.delivery_area)}
-${escapeHtml(order.delivery_address)}</div>
+${escapeHtml(order.delivery_address)}</div>`}
               ${order.notes ? `<div class="block muted" style="margin-top:6px;">Notes: ${escapeHtml(order.notes)}</div>` : ''}
             </div>
 
@@ -519,7 +529,7 @@ ${escapeHtml(order.delivery_address)}</div>
               <div class="totals">
                 <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
                 ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
-                <div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>
+                ${isShopSale(order) ? '' : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
                 <div class="grand"><span>Total · ${escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method)}</span><span>${qar(order.total)}</span></div>
               </div>
             </div>
@@ -532,7 +542,7 @@ ${escapeHtml(order.delivery_address)}</div>
     function render() {
       renderFilters();
       const filter = FILTERS.find(f => f.key === activeFilter);
-      const visible = orders.filter(o => filter.match(o.status));
+      const visible = orders.filter(o => filter.match(o));
 
       if (!visible.length) {
         content.innerHTML = `<div class="notice"><h2>Nothing here</h2><p>${activeFilter === 'active' ? 'No orders waiting. New orders will appear here.' : 'No orders in this list yet.'}</p></div>`;
