@@ -549,6 +549,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="totals">
                 <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
                 ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
+                ${Number(order.discount_amount) > 0 ? `<div><span>Shop discount${order.discount_reason ? ` · ${escapeHtml(order.discount_reason)}` : ''}</span><span>− ${qar(order.discount_amount)}</span></div>` : ''}
                 ${isShopSale(order) ? '' : isPickup(order) ? `<div><span>Pickup</span><span>Free</span></div>` : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
                 <div class="grand"><span>Total · ${escapeHtml(isPickup(order) ? String(PAYMENT_LABELS[order.payment_method] || order.payment_method).replace('delivery', 'pickup') : (PAYMENT_LABELS[order.payment_method] || order.payment_method))}</span><span>${qar(order.total)}</span></div>
               </div>
