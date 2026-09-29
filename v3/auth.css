@@ -1,0 +1,98 @@
+/* QAVERA v3 — sign in, create account, reset password */
+
+.auth {
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.auth-art { position: relative; overflow: hidden; }
+.auth-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.auth-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,14,14,.1), rgba(15,14,14,.85)); }
+.auth-quote { position: absolute; left: clamp(1.6rem, 4vw, 3.5rem); right: clamp(1.6rem, 4vw, 3.5rem); bottom: clamp(1.6rem, 4vw, 3.5rem); z-index: 1; }
+.auth-quote .caption { color: var(--sand); }
+.auth-quote p.display { font-size: clamp(2rem, 3.6vw, 3.4rem); margin-top: 1rem; }
+.auth-quote p.display em { color: var(--sand); }
+
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 6vw, 6rem);
+  background:
+    radial-gradient(70% 60% at 100% 0%, rgba(61,3,10,.45), transparent 60%),
+    var(--ink);
+}
+
+.auth-card { width: 100%; max-width: 440px; margin: 0 auto; }
+.auth-card .caption.kicker { color: var(--sand); }
+.auth-card h1 { font-size: clamp(2.8rem, 5vw, 4.2rem); margin: 1rem 0 .8rem; }
+.auth-card h1 em { color: var(--sand); }
+.auth-card .intro { color: var(--muted-dark); margin-bottom: 2rem; }
+
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid rgba(216,216,216,.22); margin-bottom: 2rem; }
+.auth-tabs button {
+  background: transparent;
+  border: 0;
+  padding: .9rem;
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(216,216,216,.6);
+  cursor: pointer;
+  transition: background .4s var(--ease), color .4s var(--ease);
+}
+.auth-tabs button[aria-selected="true"] { background: var(--sand); color: var(--ink); }
+
+.google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .8rem;
+  padding: 1rem;
+  background: var(--silver);
+  color: var(--ink);
+  border: 1px solid var(--silver);
+  font-family: var(--text);
+  font-weight: 500;
+  font-size: .9rem;
+  cursor: pointer;
+  transition: background .3s ease;
+}
+.google:hover { background: #fff; }
+.google svg { width: 18px; height: 18px; }
+
+.or { display: flex; align-items: center; gap: 1rem; margin: 1.6rem 0; color: rgba(216,216,216,.4); }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--line-dark); }
+
+.auth-form { display: grid; gap: 1.4rem; }
+.auth-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.auth-form .phone-row { display: grid; grid-template-columns: minmax(0, 11rem) 1fr; gap: 1rem; }
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 2.4rem; }
+.pw-toggle { position: absolute; right: 0; bottom: .45rem; background: none; border: 0; color: rgba(216,216,216,.55); cursor: pointer; width: 34px; height: 34px; display: grid; place-items: center; }
+.pw-toggle:hover { color: var(--sand); }
+.pw-toggle svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.4; }
+.pw-toggle .slash { display: none; }
+.pw-toggle.showing .slash { display: block; }
+
+.auth-foot { display: flex; justify-content: space-between; gap: 1rem; margin-top: .4rem; }
+.auth-foot .link { color: rgba(216,216,216,.7); font-size: .66rem; }
+
+.auth-message { min-height: 1.4em; font-size: .9rem; color: #e39a8e; margin-top: 1.2rem; }
+.auth-message.ok { color: var(--sand); }
+
+.hidden { display: none !important; }
+
+@media (max-width: 900px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth-art { min-height: 34vh; }
+  .auth-quote p.display { font-size: 2rem; }
+}
+
+@media (max-width: 480px) {
+  .auth-form .row, .auth-form .phone-row { grid-template-columns: 1fr; }
+}

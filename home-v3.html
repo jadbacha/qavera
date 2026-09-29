@@ -10,219 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="v3/qavera.css">
   <style>
-    /* =====================================================
-       QAVERA — brand palette
-    ===================================================== */
-    :root {
-      --ink: #0F0E0E;
-      --silver: #D8D8D8;
-      --forest: #1A2D28;
-      --sand: #C4A980;
-      --oxblood: #3D030A;
-
-      --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', serif;
-      --text: 'Instrument Sans', system-ui, sans-serif;
-      --mono: 'DM Mono', ui-monospace, monospace;
-
-      --gutter: clamp(16px, 4vw, 64px);
-      --ease: cubic-bezier(.2, .7, .1, 1);
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--ink);
-      color: var(--silver);
-      font-family: var(--text);
-      font-size: 16px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
-
-    img { display: block; max-width: 100%; }
-    a { color: inherit; }
-
-    ::selection { background: var(--sand); color: var(--ink); }
-
-    :focus-visible { outline: 1px solid var(--sand); outline-offset: 4px; }
-
-    /* ---------- Type helpers ---------- */
-    .caption {
-      font-family: var(--mono);
-      font-size: .72rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
-
-    .display {
-      font-family: var(--display);
-      font-weight: 400;
-      line-height: .98;
-      letter-spacing: -.01em;
-    }
-
-    .display em { font-style: italic; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: .8rem;
-      font-family: var(--text);
-      font-size: .8rem;
-      font-weight: 500;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      text-decoration: none;
-      padding: 1.05rem 1.7rem;
-      border: 1px solid currentColor;
-      transition: background .4s var(--ease), color .4s var(--ease), border-color .4s var(--ease);
-    }
-
-    .btn-solid { background: var(--sand); border-color: var(--sand); color: var(--ink); }
-    .btn-solid:hover { background: var(--silver); border-color: var(--silver); }
-    .btn-line { color: var(--silver); border-color: rgba(216,216,216,.4); }
-    .btn-line:hover { border-color: var(--sand); color: var(--sand); }
-    .btn-ink { background: var(--ink); border-color: var(--ink); color: var(--silver); }
-    .btn-ink:hover { background: transparent; color: var(--ink); }
-
-    .arrow { transition: transform .4s var(--ease); }
-    .btn:hover .arrow, .link:hover .arrow { transform: translateX(4px); }
-
-    .link {
-      display: inline-flex;
-      gap: .6rem;
-      font-family: var(--mono);
-      font-size: .74rem;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      text-decoration: none;
-      padding-bottom: .4rem;
-      border-bottom: 1px solid currentColor;
-    }
-
-    /* ---------- Reveal on scroll (only when JS runs) ---------- */
-    .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
-    .js .reveal.in { opacity: 1; transform: none; }
-    .js .reveal.d1 { transition-delay: .1s; }
-    .js .reveal.d2 { transition-delay: .2s; }
-    .js .reveal.d3 { transition-delay: .3s; }
-
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .js .reveal { opacity: 1; transform: none; transition: none; }
-      .marquee-track { animation: none !important; }
-      * { transition-duration: 0s !important; }
-    }
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-    .site-header {
-      position: fixed;
-      inset: 0 0 auto 0;
-      z-index: 50;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      padding: 1.3rem var(--gutter);
-      transition: background .5s var(--ease), padding .5s var(--ease), border-color .5s var(--ease);
-      border-bottom: 1px solid transparent;
-    }
-
-    .site-header.scrolled {
-      background: rgba(15,14,14,.92);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      padding-top: .8rem;
-      padding-bottom: .8rem;
-      border-color: rgba(196,169,128,.18);
-    }
-
-    .nav-left { display: flex; gap: 2rem; }
-
-    .nav-left a, .nav-right a {
-      font-family: var(--mono);
-      font-size: .72rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      text-decoration: none;
-      color: var(--silver);
-      transition: color .3s ease;
-    }
-
-    .nav-left a:hover, .nav-right a:hover { color: var(--sand); }
-
-    .brand img { height: 30px; width: auto; }
-
-    .nav-right { display: flex; justify-content: flex-end; align-items: center; gap: 1.6rem; }
-
-    .icon-link { display: inline-flex; align-items: center; gap: .45rem; }
-
-    .icon-link svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.3; }
-
-    .cart-count {
-      min-width: 1.3rem;
-      height: 1.3rem;
-      padding: 0 .3rem;
-      border-radius: 1rem;
-      background: var(--sand);
-      color: var(--ink);
-      font-size: .66rem;
-      display: inline-grid;
-      place-items: center;
-      letter-spacing: 0;
-    }
-
-    .menu-toggle {
-      display: none;
-      background: none;
-      border: 0;
-      color: var(--silver);
-      cursor: pointer;
-      width: 44px;
-      height: 44px;
-      margin-left: -10px;
-    }
-
-    .menu-toggle span { display: block; width: 22px; height: 1px; background: currentColor; margin: 6px auto; transition: transform .4s var(--ease); }
-
-    .menu-open .menu-toggle span:first-child { transform: translateY(3.5px) rotate(45deg); }
-    .menu-open .menu-toggle span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
-
-    .mobile-menu {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-      background: var(--ink);
-      padding: 7rem var(--gutter) 3rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity .5s var(--ease), visibility .5s;
-    }
-
-    .menu-open .mobile-menu { opacity: 1; visibility: visible; }
-
-    .mobile-menu nav { display: flex; flex-direction: column; gap: .4rem; }
-
-    .mobile-menu nav a {
-      font-family: var(--display);
-      font-size: 2.6rem;
-      line-height: 1.2;
-      text-decoration: none;
-      color: var(--silver);
-    }
-
-    .mobile-menu nav a em { color: var(--sand); }
-
-    .mobile-menu .caption { color: rgba(216,216,216,.55); }
-
     /* =====================================================
        HERO
     ===================================================== */
@@ -453,43 +242,11 @@
 
     .flavour .caption { font-size: .66rem; color: rgba(15,14,14,.55); align-self: flex-start; }
 
+    a.flavour { text-decoration: none; color: inherit; }
+    .flavour .fl-meta { font-size: .6rem; color: rgba(15,14,14,.5); margin-top: .5rem; align-self: center; }
     .flavour h4 { font-family: var(--display); font-style: italic; font-weight: 400; font-size: 1.2rem; line-height: 1.2; margin-top: 1.2rem; }
 
-    /* A painted bonbon, drawn with CSS: glossy dome + hand-painted stroke + highlight */
-    .bonbon {
-      --a: var(--oxblood);
-      --b: var(--sand);
-      --paint: none;
-      position: relative;
-      width: clamp(64px, 7vw, 96px);
-      aspect-ratio: 1;
-      margin-top: 1.4rem;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 32% 26%, rgba(255,255,255,.75) 0 5%, rgba(255,255,255,.2) 11%, transparent 22%),
-        var(--paint),
-        radial-gradient(circle at 40% 35%, var(--b), var(--a) 70%);
-      box-shadow:
-        inset -10px -12px 22px rgba(0,0,0,.45),
-        inset 6px 6px 14px rgba(255,255,255,.12),
-        0 14px 20px -12px rgba(0,0,0,.6);
-      transition: transform .8s var(--ease);
-    }
-
     .flavour:hover .bonbon { transform: rotate(-14deg) scale(1.06); }
-
-    .p1 { --a: #5a2a12; --b: #c77b2b; --paint: radial-gradient(circle at 65% 70%, #f0d9a6 0 12%, transparent 13%), radial-gradient(circle at 30% 70%, #f0d9a6 0 6%, transparent 7%); }
-    .p2 { --a: #3b1d10; --b: #a4643a; --paint: repeating-linear-gradient(115deg, transparent 0 12px, rgba(240,220,190,.75) 12px 14px); }
-    .p3 { --a: #5e0715; --b: #d03a52; --paint: radial-gradient(circle at 70% 40%, #f6c2cb 0 9%, transparent 10%), radial-gradient(circle at 45% 70%, #f6c2cb 0 6%, transparent 7%), radial-gradient(circle at 25% 45%, #f6c2cb 0 4%, transparent 5%); }
-    .p4 { --a: #1f3a1e; --b: #7fa04a; --paint: linear-gradient(35deg, transparent 44%, #d8c38a 44% 52%, transparent 52%); }
-    .p5 { --a: #8e7d63; --b: #f2ead9; --paint: radial-gradient(circle at 60% 60%, #c4553a 0 14%, transparent 15%); }
-    .p6 { --a: #a4480b; --b: #f5a623; --paint: conic-gradient(from 20deg at 50% 50%, transparent 0 40deg, rgba(255,230,120,.8) 40deg 60deg, transparent 60deg 160deg, rgba(255,230,120,.8) 160deg 180deg, transparent 180deg 280deg, rgba(255,230,120,.8) 280deg 300deg, transparent 300deg); }
-    .p7 { --a: #2c1a0d; --b: #7a5230; --paint: radial-gradient(circle at 55% 45%, transparent 0 18%, rgba(196,169,128,.9) 18% 22%, transparent 22% 30%, rgba(196,169,128,.9) 30% 33%, transparent 33%); }
-    .p8 { --a: #4a2a14; --b: #b98553; --paint: repeating-radial-gradient(circle at 70% 70%, transparent 0 6px, rgba(60,30,10,.55) 6px 8px); }
-    .p9 { --a: #0f2622; --b: #2f6d60; --paint: linear-gradient(-30deg, transparent 38%, #c4a980 38% 45%, transparent 45% 58%, #c4a980 58% 62%, transparent 62%); }
-    .p10 { --a: #7a0b22; --b: #ff5d7a; --paint: radial-gradient(circle at 35% 65%, #fff 0 5%, transparent 6%), radial-gradient(circle at 62% 38%, #fff 0 4%, transparent 5%), radial-gradient(circle at 70% 70%, #fff 0 3%, transparent 4%); }
-    .p11 { --a: #5d7a24; --b: #d9e8a0; --paint: repeating-linear-gradient(0deg, transparent 0 9px, rgba(255,255,255,.55) 9px 10px); }
-    .p12 { --a: #1a120c; --b: #5a4130; --paint: radial-gradient(ellipse at 50% 50%, transparent 0 28%, rgba(216,216,216,.85) 28% 31%, transparent 31%); }
 
     /* =====================================================
        BUILD YOUR BOX
@@ -700,45 +457,13 @@
     .story .link { color: var(--oxblood); }
 
     /* =====================================================
-       FOOTER
-    ===================================================== */
-    footer { background: var(--ink); padding: clamp(4rem, 8vw, 6rem) var(--gutter) 2rem; }
-
-    .footer-top {
-      display: grid;
-      grid-template-columns: 1.4fr repeat(3, 1fr);
-      gap: 2.5rem;
-      padding-bottom: 3.5rem;
-      border-bottom: 1px solid rgba(196,169,128,.2);
-    }
-
-    .footer-brand img { height: 42px; width: auto; margin-bottom: 1.4rem; }
-
-    .footer-brand p { font-family: var(--display); font-style: italic; font-size: 1.35rem; line-height: 1.35; max-width: 18rem; color: rgba(216,216,216,.8); }
-
-    .footer-col h4 { font-family: var(--mono); font-weight: 400; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--sand); margin-bottom: 1.2rem; }
-
-    .footer-col a { display: block; text-decoration: none; color: rgba(216,216,216,.72); padding: .3rem 0; font-size: .95rem; transition: color .3s ease; }
-
-    .footer-col a:hover { color: var(--sand); }
-
-    .footer-bottom { display: flex; justify-content: space-between; gap: 1rem; padding-top: 1.6rem; color: rgba(216,216,216,.4); }
-
-    /* =====================================================
        RESPONSIVE
     ===================================================== */
     @media (max-width: 1100px) {
       .flavours { grid-template-columns: repeat(4, 1fr); }
-      .footer-top { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 860px) {
-      .site-header { grid-template-columns: auto 1fr auto; }
-      .nav-left { display: none; }
-      .menu-toggle { display: block; }
-      .brand { justify-self: center; }
-      .nav-right .hide-sm { display: none; }
-      .nav-right { gap: 1.1rem; }
 
       .hero { grid-template-columns: 1fr; padding-top: 7rem; padding-bottom: 5rem; min-height: auto; }
       .hero-art { justify-self: stretch; width: 100%; max-width: 440px; margin: 0 auto; }
@@ -748,8 +473,6 @@
 
       .rooms { grid-template-columns: 1fr; }
       .room-ink { border-right: 0; border-bottom: 1px solid rgba(196,169,128,.18); }
-
-      .section-head { flex-direction: column; align-items: flex-start; }
 
       .build { grid-template-columns: 1fr; }
 
@@ -772,60 +495,15 @@
       .flavours { grid-template-columns: repeat(2, 1fr); }
       .flavour { padding: 1.4rem .8rem 1.2rem; }
       .hero-actions .btn, .build .btn, .house .actions .btn { flex: 1 1 100%; justify-content: center; }
-      .footer-top { grid-template-columns: 1fr 1fr; }
-      .footer-brand { grid-column: 1 / -1; }
-      .footer-bottom { flex-direction: column; }
       .plaque { flex-direction: column; gap: .3rem; }
     }
   </style>
 </head>
 
-<body>
+<body class="v3-overlay-header" data-page="home">
+  <script src="v3/qavera.js"></script>
 
-  <!-- =====================================================
-       HEADER
-  ===================================================== -->
-  <header class="site-header" id="siteHeader">
-    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
-      <span></span><span></span>
-    </button>
-
-    <nav class="nav-left" aria-label="Main">
-      <a href="#collections">Collections</a>
-      <a href="#flavours">Flavours</a>
-      <a href="#build">Build a box</a>
-      <a href="ourstory.html">Story</a>
-    </nav>
-
-    <a class="brand" href="home-v3.html" aria-label="QAVERA home">
-      <img src="Qavera without artisan.png" alt="QAVERA">
-    </a>
-
-    <div class="nav-right">
-      <a class="hide-sm" href="contactus.html">Contact</a>
-      <a class="icon-link" href="account.html" aria-label="Your account">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>
-      </a>
-      <a class="icon-link" href="checkout.html" id="cartLink" aria-label="Your cart">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
-        <span class="cart-count" id="cartCount">0</span>
-      </a>
-    </div>
-  </header>
-
-  <div class="mobile-menu" id="mobileMenu">
-    <nav aria-label="Mobile">
-      <a href="#collections">The <em>Collections</em></a>
-      <a href="#flavours">Flavours</a>
-      <a href="#build">Build a box</a>
-      <a href="shop.html">Shop all</a>
-      <a href="ourstory.html">Our story</a>
-      <a href="contactus.html">Contact</a>
-    </nav>
-    <p class="caption">Hand-painted chocolate · Crafted in Qatar</p>
-  </div>
-
-  <main>
+  <main class="v3-main">
 
     <!-- =====================================================
          HERO
@@ -859,8 +537,8 @@
     ===================================================== -->
     <div class="marquee" aria-hidden="true">
       <div class="marquee-track">
-        <span>Carmelitto Di Qavera</span><span>Karak</span><span>Raspberrina</span><span>Pistachio Royal</span><span>Cheesecake</span><span>Mango Passion</span><span>Majdoulah</span><span>Noccelle Di Qavera</span><span>Dallah</span><span>Strawbelle</span><span>Coco Lima</span><span>Jouz</span>
-        <span>Carmelitto Di Qavera</span><span>Karak</span><span>Raspberrina</span><span>Pistachio Royal</span><span>Cheesecake</span><span>Mango Passion</span><span>Majdoulah</span><span>Noccelle Di Qavera</span><span>Dallah</span><span>Strawbelle</span><span>Coco Lima</span><span>Jouz</span>
+        <span>Carmelitto Di QAVERA</span><span>Noccelle Di QAVERA</span><span>Pistachio royal</span><span>Coco Lima</span><span>Manga Di QAVERA</span><span>Fragola Di QAVERA</span><span>Mouhalabia caramel</span><span>Cheesecake</span><span>Nocciolla coffee</span><span>Raspberry Dunkel</span><span>Mango passion</span><span>Strawbelle</span>
+        <span>Carmelitto Di QAVERA</span><span>Noccelle Di QAVERA</span><span>Pistachio royal</span><span>Coco Lima</span><span>Manga Di QAVERA</span><span>Fragola Di QAVERA</span><span>Mouhalabia caramel</span><span>Cheesecake</span><span>Nocciolla coffee</span><span>Raspberry Dunkel</span><span>Mango passion</span><span>Strawbelle</span>
       </div>
     </div>
 
@@ -876,7 +554,7 @@
          COLLECTIONS
     ===================================================== -->
     <section class="rooms" id="collections" aria-label="Collections">
-      <a href="premium.html" class="room room-ink">
+      <a href="premium-v3.html" class="room room-ink">
         <div class="room-head caption"><span>Room I — Ink</span><span>Nº 02</span></div>
         <div class="canvas reveal">
           <div class="canvas-inner">
@@ -894,7 +572,7 @@
         <span class="link">Discover Premium <span class="arrow">→</span></span>
       </a>
 
-      <a href="luxury.html" class="room room-forest">
+      <a href="luxury-v3.html" class="room room-forest">
         <div class="room-head caption"><span>Room II — Forest</span><span>Nº 03</span></div>
         <div class="canvas reveal d1">
           <div class="canvas-inner">
@@ -920,24 +598,24 @@
       <div class="section-head">
         <div>
           <p class="caption reveal">The catalogue</p>
-          <h2 class="display reveal d1">Twelve <em>flavours</em>,<br>twelve paintings.</h2>
+          <h2 class="display reveal d1">Twelve <em>flavours</em>,<br>twelve colours.</h2>
         </div>
-        <p class="reveal d2">Our flavour index, illustrated. The real bonbons are painted by hand, so no two are exactly alike.</p>
+        <p class="reveal d2">Six in the Premium Box, six in the Luxury Box. Each shell colour tells you the flavour inside. Illustrated here; the real bonbons are painted by hand, so no two are alike.</p>
       </div>
 
       <div class="flavours">
-        <div class="flavour reveal"><span class="caption">Nº 01</span><div class="bonbon p1"></div><h4>Carmelitto Di Qavera</h4></div>
-        <div class="flavour reveal d1"><span class="caption">Nº 02</span><div class="bonbon p2"></div><h4>Karak</h4></div>
-        <div class="flavour reveal d2"><span class="caption">Nº 03</span><div class="bonbon p3"></div><h4>Raspberrina</h4></div>
-        <div class="flavour reveal d3"><span class="caption">Nº 04</span><div class="bonbon p4"></div><h4>Pistachio Royal</h4></div>
-        <div class="flavour reveal"><span class="caption">Nº 05</span><div class="bonbon p5"></div><h4>Cheesecake</h4></div>
-        <div class="flavour reveal d1"><span class="caption">Nº 06</span><div class="bonbon p6"></div><h4>Mango Passion</h4></div>
-        <div class="flavour reveal d2"><span class="caption">Nº 07</span><div class="bonbon p7"></div><h4>Majdoulah</h4></div>
-        <div class="flavour reveal d3"><span class="caption">Nº 08</span><div class="bonbon p8"></div><h4>Noccelle Di Qavera</h4></div>
-        <div class="flavour reveal"><span class="caption">Nº 09</span><div class="bonbon p9"></div><h4>Dallah</h4></div>
-        <div class="flavour reveal d1"><span class="caption">Nº 10</span><div class="bonbon p10"></div><h4>Strawbelle</h4></div>
-        <div class="flavour reveal d2"><span class="caption">Nº 11</span><div class="bonbon p11"></div><h4>Coco Lima</h4></div>
-        <div class="flavour reveal d3"><span class="caption">Nº 12</span><div class="bonbon p12"></div><h4>Jouz</h4></div>
+        <a class="flavour reveal" href="premium-v3.html"><span class="caption">Nº 01</span><div class="bonbon" style="--a:rgb(55, 33, 21);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Carmelitto Di QAVERA</h4><span class="fl-meta caption">Premium · Brown shell</span></a>
+        <a class="flavour reveal d1" href="premium-v3.html"><span class="caption">Nº 02</span><div class="bonbon" style="--a:rgb(14, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Noccelle Di QAVERA</h4><span class="fl-meta caption">Premium · Black shell</span></a>
+        <a class="flavour reveal d2" href="premium-v3.html"><span class="caption">Nº 03</span><div class="bonbon" style="--a:rgb(42, 57, 26);--b:#5E7F3A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Pistachio royal</h4><span class="fl-meta caption">Premium · Green shell</span></a>
+        <a class="flavour reveal d3" href="premium-v3.html"><span class="caption">Nº 04</span><div class="bonbon" style="--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Coco Lima</h4><span class="fl-meta caption">Premium · White shell</span></a>
+        <a class="flavour reveal" href="premium-v3.html"><span class="caption">Nº 05</span><div class="bonbon" style="--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Manga Di QAVERA</h4><span class="fl-meta caption">Premium · Yellow shell</span></a>
+        <a class="flavour reveal d1" href="premium-v3.html"><span class="caption">Nº 06</span><div class="bonbon" style="--a:rgb(83, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Fragola Di QAVERA</h4><span class="fl-meta caption">Premium · Red shell</span></a>
+        <a class="flavour reveal d2" href="luxury-v3.html"><span class="caption">Nº 07</span><div class="bonbon" style="--a:rgb(27, 50, 76);--b:#3D6FA8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mouhalabia caramel</h4><span class="fl-meta caption">Luxury · Blue shell</span></a>
+        <a class="flavour reveal d3" href="luxury-v3.html"><span class="caption">Nº 08</span><div class="bonbon" style="--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Cheesecake</h4><span class="fl-meta caption">Luxury · White shell</span></a>
+        <a class="flavour reveal" href="luxury-v3.html"><span class="caption">Nº 09</span><div class="bonbon" style="--a:rgb(14, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Nocciolla coffee</h4><span class="fl-meta caption">Luxury · Black shell</span></a>
+        <a class="flavour reveal d1" href="luxury-v3.html"><span class="caption">Nº 10</span><div class="bonbon" style="--a:rgb(50, 14, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Raspberry Dunkel</h4><span class="fl-meta caption">Luxury · Burgundy shell</span></a>
+        <a class="flavour reveal d2" href="luxury-v3.html"><span class="caption">Nº 11</span><div class="bonbon" style="--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mango passion</h4><span class="fl-meta caption">Luxury · Yellow shell</span></a>
+        <a class="flavour reveal d3" href="luxury-v3.html"><span class="caption">Nº 12</span><div class="bonbon" style="--a:rgb(83, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Strawbelle</h4><span class="fl-meta caption">Luxury · Red shell</span></a>
       </div>
     </section>
 
@@ -950,12 +628,12 @@
         <h2 class="display reveal d1">Build your<br><em>own</em> box.</h2>
         <ol class="steps reveal d2">
           <li><div><strong>Choose your box</strong><span>Premium or Luxury, in 12, 25 or 48 pieces.</span></div></li>
-          <li><div><strong>Pick every flavour</strong><span>Mix Karak with Pistachio Royal, or fill it with your favourite.</span></div></li>
+          <li><div><strong>Pick every flavour</strong><span>Mix Coco Lima with Pistachio royal, or fill it with your favourite.</span></div></li>
           <li><div><strong>We paint and fill it by hand</strong><span>Then deliver it anywhere in Qatar.</span></div></li>
         </ol>
         <div class="hero-actions reveal d3">
-          <a href="premium.html" class="btn btn-solid">Build a Premium box <span class="arrow">→</span></a>
-          <a href="luxury.html" class="btn btn-line">Build a Luxury box</a>
+          <a href="premium-v3.html" class="btn btn-solid">Build a Premium box <span class="arrow">→</span></a>
+          <a href="luxury-v3.html" class="btn btn-line">Build a Luxury box</a>
         </div>
       </div>
 
@@ -985,25 +663,25 @@
       </div>
 
       <ul class="menu-list">
-        <li class="reveal"><a href="assorted.html">
+        <li class="reveal"><a href="assorted-v3.html">
           <span class="caption">Nº 04</span>
           <h3>Assorted</h3>
           <p>Hazelnut and almond mendiants, crispy feuilletine, gianduja crispy rice and speculoos ganache.</p>
           <span class="price">QAR 190<small>500 G</small></span>
         </a></li>
-        <li class="reveal"><a href="slabs.html">
+        <li class="reveal"><a href="slabs-v3.html">
           <span class="caption">Nº 05</span>
           <h3>Slabs</h3>
           <p>White chocolate with almond and raspberry, dark with hazelnut and cashew, milk with mixed nuts.</p>
           <span class="price">QAR 50<small>100 G</small></span>
         </a></li>
-        <li class="reveal"><a href="spreads.html">
+        <li class="reveal"><a href="spreads-v3.html">
           <span class="caption">Nº 06</span>
           <h3>Spreads</h3>
           <p>Hazelnut, pistachio and Lotus.</p>
           <span class="price">QAR 60<small>280 ML</small></span>
         </a></li>
-        <li class="reveal"><a href="bites.html">
+        <li class="reveal"><a href="bites-v3.html">
           <span class="caption">Nº 07</span>
           <h3>Bites</h3>
           <p>Almond florentines, pretzels and Pringles, dipped in chocolate.</p>
@@ -1025,7 +703,7 @@
         <h2 class="display reveal d1">Objects for<br>the <em>table</em>.</h2>
         <p class="reveal d2">Bowls and trays from the QAVERA Home collection, made to present chocolate beautifully — at home, or as a gift. Order directly on WhatsApp.</p>
         <div class="actions reveal d3">
-          <a href="home-collection.html" class="btn btn-solid">Explore The Home <span class="arrow">→</span></a>
+          <a href="home-collection-v3.html" class="btn btn-solid">Explore The Home <span class="arrow">→</span></a>
           <a href="https://wa.me/97450968968" target="_blank" rel="noopener" class="btn btn-line">Order on WhatsApp</a>
         </div>
       </div>
@@ -1040,14 +718,14 @@
         <p class="big reveal d1">100<small>points</small></p>
         <h3 class="reveal d1">for every QAR 1,000.</h3>
         <p class="reveal d2">Points are added to your account when your order is delivered. Every 100 points is QAR 10 off a future order.</p>
-        <a href="login.html" class="link reveal d3">Create your account <span class="arrow">→</span></a>
+        <a href="login-v3.html" class="link reveal d3">Create your account <span class="arrow">→</span></a>
       </div>
       <div class="reward">
         <p class="caption reveal">Keep the box</p>
         <p class="big reveal d1">15%<small>off</small></p>
         <h3 class="reveal d1">your refill.</h3>
         <p class="reveal d2">Bring your empty QAVERA box back for a refill and enjoy 15% off your next collection. Indulge again, reuse beautifully.</p>
-        <a href="contactus.html" class="link reveal d3">Arrange a refill <span class="arrow">→</span></a>
+        <a href="contactus-v3.html" class="link reveal d3">Arrange a refill <span class="arrow">→</span></a>
       </div>
     </section>
 
@@ -1062,94 +740,18 @@
         <p class="caption reveal">The QAVERA story</p>
         <h2 class="display reveal d1">Made by hand.<br><em>Made to remember.</em></h2>
         <p class="reveal d2">QAVERA was founded on the idea that chocolate should be more than a treat — it should be an experience. We believe chocolate goes far beyond the traditional shades of brown, black and white, opening a world of colour, art and flavour.</p>
-        <a href="ourstory.html" class="link reveal d3">Read our story <span class="arrow">→</span></a>
+        <a href="ourstory-v3.html" class="link reveal d3">Read our story <span class="arrow">→</span></a>
       </div>
     </section>
 
   </main>
 
-  <!-- =====================================================
-       FOOTER
-  ===================================================== -->
-  <footer>
-    <div class="footer-top">
-      <div class="footer-brand">
-        <img src="Qavera without artisan.png" alt="QAVERA">
-        <p>Hand-painted chocolate, crafted in Qatar.</p>
-      </div>
-      <div class="footer-col">
-        <h4>Shop</h4>
-        <a href="premium.html">Premium Box</a>
-        <a href="luxury.html">Luxury Box</a>
-        <a href="assorted.html">Assorted</a>
-        <a href="slabs.html">Slabs</a>
-        <a href="spreads.html">Spreads</a>
-        <a href="bites.html">Bites</a>
-        <a href="home-collection.html">The Home</a>
-      </div>
-      <div class="footer-col">
-        <h4>House</h4>
-        <a href="ourstory.html">Our story</a>
-        <a href="account.html">Your account</a>
-        <a href="contactus.html">Contact us</a>
-      </div>
-      <div class="footer-col">
-        <h4>Connect</h4>
-        <a href="https://www.instagram.com/qaverachocolate" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://wa.me/97450968968" target="_blank" rel="noopener">WhatsApp</a>
-        <a href="mailto:info@qavera.qa">info@qavera.qa</a>
-        <a href="https://maps.app.goo.gl/232khX7N1295W4LY9" target="_blank" rel="noopener">Location</a>
-      </div>
-    </div>
-    <div class="footer-bottom caption">
-      <span>© <span id="year">2026</span> QAVERA Chocolate</span>
-      <span>Qatar</span>
-    </div>
-  </footer>
-
   <script>
-    document.documentElement.classList.add('js');
-
-    // Header background after scrolling
-    const header = document.getElementById('siteHeader');
-    const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    // Mobile menu
-    const menuToggle = document.getElementById('menuToggle');
-    const setMenu = open => {
-      document.body.classList.toggle('menu-open', open);
-      menuToggle.setAttribute('aria-expanded', String(open));
-      menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-      document.body.style.overflow = open ? 'hidden' : '';
-    };
-    menuToggle.addEventListener('click', () => setMenu(!document.body.classList.contains('menu-open')));
-    document.querySelectorAll('#mobileMenu a').forEach(a => a.addEventListener('click', () => setMenu(false)));
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') setMenu(false); });
-
-    // Reveal on scroll
-    const revealObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('in');
-          revealObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-    // Cart count (same cart the rest of the site uses)
-    try {
-      const cart = JSON.parse(localStorage.getItem('qaveraCart') || '[]');
-      const count = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-      document.getElementById('cartCount').textContent = count;
-    } catch (_) { /* storage unavailable: keep 0 */ }
-
     // Build-your-box demo: fill a box with painted bonbons
     const boxGrid = document.getElementById('boxGrid');
     const boxLabel = document.getElementById('boxLabel');
     const layouts = { 12: 4, 25: 5, 48: 8 };
+    const FLAVOUR_STYLES = ["--a:rgb(55, 33, 21);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(14, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(42, 57, 26);--b:#5E7F3A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(83, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(27, 50, 76);--b:#3D6FA8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(14, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(50, 14, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(83, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"];
 
     function fillBox(size) {
       boxGrid.style.setProperty('--cols', layouts[size]);
@@ -1158,7 +760,8 @@
         const cell = document.createElement('div');
         cell.className = 'cell';
         const bonbon = document.createElement('div');
-        bonbon.className = `bonbon p${(i * 5) % 12 + 1}`;
+        bonbon.className = 'bonbon';
+        bonbon.setAttribute('style', FLAVOUR_STYLES[(i * 5) % FLAVOUR_STYLES.length]);
         bonbon.style.animationDelay = `${i * 18}ms`;
         cell.appendChild(bonbon);
         boxGrid.appendChild(cell);
@@ -1174,7 +777,6 @@
     });
     fillBox(12);
 
-    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
