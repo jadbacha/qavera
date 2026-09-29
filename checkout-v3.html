@@ -438,7 +438,7 @@
       orderItems.innerHTML = '';
 
       if (cart.length === 0) {
-        orderItems.innerHTML = `<p class="empty-cart">Your box is empty. <a href="shop-v3.html">Explore the collection</a>.</p>`;
+        orderItems.innerHTML = `<p class="empty-cart">Your cart is empty. <a href="shop-v3.html">Explore the collection</a>.</p>`;
 
         subtotalElement.textContent = 'QAR 0';
         pointsBalanceElement.textContent = `${USER_POINTS} points`;
@@ -492,7 +492,7 @@
       if (USER_POINTS < MIN_REDEEMABLE_POINTS) {
         pointsNote.textContent = `You can use points from ${MIN_REDEEMABLE_POINTS} (QAR 10 off). You have ${USER_POINTS}. You earn 100 points for every QAR 1,000 when an order is delivered.`;
       } else if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) {
-        pointsNote.textContent = 'Add items to your box to use your points.';
+        pointsNote.textContent = 'Add items to your cart to use your points.';
       } else {
         pointsNote.textContent = `Use ${maxRedeemablePoints} points for QAR ${maxRedeemablePoints / 10} off this order. Points are used in blocks of 100.`;
       }
