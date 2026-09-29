@@ -1,0 +1,4 @@
+# Cloudflare Pages: always check for a newer version of pages, styles and
+# scripts, so phones never keep showing an old design after an update.
+/*
+  Cache-Control: no-cache
