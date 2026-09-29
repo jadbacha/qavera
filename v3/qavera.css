@@ -4,6 +4,9 @@
    Type: Bodoni Moda (display), Instrument Sans (text), DM Mono (captions)
 ========================================================= */
 
+/* Jost Light: the phone menu (loaded on every page through this file). */
+@import url('https://fonts.googleapis.com/css2?family=Jost:wght@300;400&display=swap');
+
 :root {
   --ink: #0F0E0E;
   --ink-2: #171515;
@@ -382,6 +385,29 @@ body.v3-overlay-header .v3-header:not(.scrolled) {
 .v3-mobile-group-panel > div > a:first-child { margin-top: .4rem; }
 .v3-mobile-group-panel > div > a:last-child { margin-bottom: .6rem; }
 .v3-mobile-menu nav .v3-mobile-group a { font-size: clamp(1.4rem, 6vw, 1.8rem); line-height: 1.4; padding-left: 1rem; border-left: 1px solid rgba(196,169,128,.3); }
+
+/* Phone menu: Jost Light, one item per row with space and a fine line between. */
+.v3-mobile-menu nav a,
+.v3-mobile-group-toggle {
+  font-family: 'Jost', var(--text);
+  font-weight: 300;
+  font-size: clamp(1.3rem, 5.4vw, 1.55rem);
+  letter-spacing: .03em;
+  line-height: 1.2;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(216,216,216,.1);
+}
+.v3-mobile-menu nav a:hover, .v3-mobile-menu nav a[aria-current="page"],
+.v3-mobile-group.open .v3-mobile-group-toggle, .v3-mobile-group.is-current .v3-mobile-group-toggle { font-style: normal; }
+.v3-mobile-menu nav .v3-mobile-group a {
+  font-size: clamp(1.1rem, 4.6vw, 1.25rem);
+  line-height: 1.2;
+  padding: .7rem 0 .7rem 1rem;
+  border-bottom: 0;
+  color: rgba(216,216,216,.8);
+}
+.v3-mobile-group-panel > div > a:first-child { margin-top: .7rem; }
+.v3-mobile-group-panel > div > a:last-child { margin-bottom: .9rem; }
 
 .v3-mobile-menu-foot { display: flex; flex-direction: column; gap: .8rem; color: rgba(216,216,216,.55); margin-top: 2rem; }
 .v3-mobile-menu-foot a { color: var(--sand); text-decoration: none; }
