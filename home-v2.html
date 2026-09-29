@@ -3063,9 +3063,10 @@ section.v2-hero .hero-content h1.hero-title em { font-size: clamp(2.3rem, 5.4vw,
   object-fit: cover;
   transition: opacity .7s ease, transform 1.2s ease;
 }
-.v2-img-hover { opacity: 0; }
+/* Hover photos are landscape with white backgrounds: show them whole, no zoom. */
+.v2-img-hover { opacity: 0; object-fit: contain !important; }
 .v2-box:hover .v2-img-hover { opacity: 1; }
-.v2-box:hover .v2-box-image img { transform: scale(1.04); }
+.v2-box:hover .v2-img-front { opacity: 0; }
 .v2-box-info {
   display: flex;
   justify-content: space-between;
