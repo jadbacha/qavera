@@ -2,7 +2,7 @@
 // orders table (events: Insert + Update).
 //
 //   New order                 -> confirmation to the customer + notice to QAVERA
-//   status -> out_for_delivery -> "on its way" email to the customer
+//   status -> out_for_delivery -> "on its way" email (pickup orders: "ready for pickup")
 //   status -> delivered        -> "delivered" email to the customer (with points earned)
 //   Shop sales (source = 'store', from the POS) are ignored.
 //
@@ -35,6 +35,28 @@ function escapeHtml(value: unknown): string {
 function qar(value: unknown): string {
   const amount = Number(value || 0);
   return `QAR ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+}
+
+// Delivery or pickup, with the chosen date and time slot.
+const SLOT_LABELS: Record<string, string> = {
+  "12:00-16:00": "12 PM – 4 PM",
+  "18:00-23:00": "6 PM – 11 PM",
+};
+const SHOP_ADDRESS = "QAVERA shop, Zone 55, Street 162, Building 44";
+
+const isPickup = (order: Record<string, any>) => order.fulfillment_type === "pickup";
+
+function scheduleText(order: Record<string, any>): string {
+  if (!order.scheduled_date) return "";
+  const date = new Date(`${order.scheduled_date}T12:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "long", day: "numeric", month: "long", timeZone: "UTC",
+  });
+  return `${date} · ${SLOT_LABELS[order.time_slot] || order.time_slot || ""}`.trim();
+}
+
+function paymentLabel(order: Record<string, any>): string {
+  const label = PAYMENT_LABELS[order.payment_method] || order.payment_method;
+  return isPickup(order) ? label.replace("delivery", "pickup").replace("Delivery", "Pickup") : label;
 }
 
 function firstName(fullName: string): string {
@@ -127,13 +149,15 @@ function orderSummaryHtml(order: Record<string, any>, items: OrderItem[]): strin
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
       ${row("Subtotal", qar(order.subtotal))}
       ${Number(order.points_discount) > 0 ? row(`Points (${Number(order.points_used)})`, `− ${qar(order.points_discount)}`) : ""}
-      ${row("Delivery", qar(order.delivery_fee))}
+      ${isPickup(order) ? row("Pickup", "Free") : row("Delivery", qar(order.delivery_fee))}
       ${row("Total", qar(order.total), true)}
-      ${row("Payment", escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method))}
+      ${row("Payment", escapeHtml(paymentLabel(order)))}
     </table>
     <div style="margin-top:22px;padding:16px 18px;background:#F5EDD9;">
-      <div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">Delivery address</div>
-      <div style="white-space:pre-line;">${escapeHtml(order.delivery_area)}\n${escapeHtml(order.delivery_address)}</div>
+      ${scheduleText(order) ? `<div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">${isPickup(order) ? "Pickup" : "Delivery"} date &amp; time</div>
+      <div style="margin-bottom:14px;"><strong>${escapeHtml(scheduleText(order))}</strong></div>` : ""}
+      <div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">${isPickup(order) ? "Pickup from" : "Delivery address"}</div>
+      <div style="white-space:pre-line;">${isPickup(order) ? escapeHtml(SHOP_ADDRESS) : `${escapeHtml(order.delivery_area)}\n${escapeHtml(order.delivery_address)}`}</div>
       ${order.notes ? `<div style="margin-top:8px;color:#6B5F45;">Notes: ${escapeHtml(order.notes)}</div>` : ""}
     </div>`;
 }
@@ -162,12 +186,15 @@ async function sendEmail(to: string, subject: string, text: string, html: string
 async function handleNewOrder(order: Record<string, any>) {
   const items = await loadItems(order.id);
   const shopInbox = Deno.env.get("CONTACT_TO_EMAIL")!;
-  const payment = PAYMENT_LABELS[order.payment_method] || order.payment_method;
+  const payment = paymentLabel(order);
+  const when = scheduleText(order);
   const tasks: Promise<void>[] = [];
 
   // 1. Notice to QAVERA (plain text, easy to read on a phone).
   const shopText = [
     `New order ${order.order_number}`,
+    "",
+    `${isPickup(order) ? "PICKUP" : "DELIVERY"}: ${when || "no date chosen"}`,
     "",
     `Customer: ${order.customer_name}`,
     `Phone:    ${order.customer_phone}`,
@@ -178,13 +205,11 @@ async function handleNewOrder(order: Record<string, any>) {
     "",
     `Subtotal: ${qar(order.subtotal)}`,
     Number(order.points_discount) > 0 ? `Points:   -${qar(order.points_discount)} (${order.points_used} points)` : null,
-    `Delivery: ${qar(order.delivery_fee)}`,
+    isPickup(order) ? "Pickup:   free" : `Delivery: ${qar(order.delivery_fee)}`,
     `TOTAL:    ${qar(order.total)}`,
     `Payment:  ${payment}`,
     "",
-    "Deliver to:",
-    order.delivery_area,
-    order.delivery_address,
+    ...(isPickup(order) ? ["Customer collects from the shop."] : ["Deliver to:", order.delivery_area, order.delivery_address]),
     order.notes ? `\nNotes: ${order.notes}` : null,
     "",
     `Manage orders: ${SITE_URL}/admin.html`,
@@ -192,7 +217,7 @@ async function handleNewOrder(order: Record<string, any>) {
 
   tasks.push(sendEmail(
     shopInbox,
-    `New order ${order.order_number} — ${order.customer_name} — ${qar(order.total)}`,
+    `New order ${order.order_number} — ${isPickup(order) ? "Pickup" : "Delivery"} ${when} — ${order.customer_name} — ${qar(order.total)}`,
     shopText,
     null,
     order.customer_email || undefined,
@@ -204,24 +229,24 @@ async function handleNewOrder(order: Record<string, any>) {
       "Order received",
       "Thank you for your order",
       `<p style="margin:0;text-align:center;">Hello ${escapeHtml(firstName(order.customer_name))}, we have received your order
-        <strong>${escapeHtml(order.order_number)}</strong>. We will contact you shortly to confirm your delivery.</p>
+        <strong>${escapeHtml(order.order_number)}</strong>. We will contact you shortly to confirm your ${isPickup(order) ? "pickup" : "delivery"}.</p>
        ${orderSummaryHtml(order, items)}`,
     );
     const text = [
       `Hello ${firstName(order.customer_name)},`,
       "",
-      `Thank you for your order ${order.order_number}. We will contact you shortly to confirm your delivery.`,
+      `Thank you for your order ${order.order_number}. We will contact you shortly to confirm your ${isPickup(order) ? "pickup" : "delivery"}.`,
+      "",
+      when ? `${isPickup(order) ? "Pickup" : "Delivery"}: ${when}` : null,
       "",
       itemsText(items),
       "",
       `Total: ${qar(order.total)} (${payment})`,
       "",
-      "Deliver to:",
-      order.delivery_area,
-      order.delivery_address,
+      ...(isPickup(order) ? ["Pickup from:", SHOP_ADDRESS] : ["Deliver to:", order.delivery_area, order.delivery_address]),
       "",
       "QAVERA",
-    ].join("\n");
+    ].filter((line) => line !== null).join("\n");
     tasks.push(sendEmail(order.customer_email, `Your QAVERA order ${order.order_number}`, text, html, shopInbox));
   }
 
@@ -233,7 +258,22 @@ async function handleStatusChange(order: Record<string, any>) {
   const shopInbox = Deno.env.get("CONTACT_TO_EMAIL")!;
   const name = firstName(order.customer_name);
 
-  if (order.status === "out_for_delivery") {
+  if (order.status === "out_for_delivery" && isPickup(order)) {
+    const html = layout(
+      "Ready for pickup",
+      "Your order is ready",
+      `<p style="margin:0;text-align:center;">Hello ${escapeHtml(name)}, your order
+        <strong>${escapeHtml(order.order_number)}</strong> is ready to collect${scheduleText(order) ? ` on <strong>${escapeHtml(scheduleText(order))}</strong>` : ""}.</p>
+       <p style="margin:14px 0 0;text-align:center;">${escapeHtml(SHOP_ADDRESS)}</p>
+       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
+         ${row("Total", qar(order.total), true)}
+         ${row("Payment", escapeHtml(paymentLabel(order)))}
+       </table>`,
+    );
+    const text = `Hello ${name},\n\nYour order ${order.order_number} is ready to collect` +
+      (scheduleText(order) ? ` on ${scheduleText(order)}` : "") + `.\n${SHOP_ADDRESS}\n\nTotal: ${qar(order.total)}\n\nQAVERA`;
+    await sendEmail(order.customer_email, `Your QAVERA order ${order.order_number} is ready for pickup`, text, html, shopInbox);
+  } else if (order.status === "out_for_delivery") {
     const html = layout(
       "On its way",
       "Your order is on its way",
@@ -255,16 +295,16 @@ async function handleStatusChange(order: Record<string, any>) {
       ? `You earned <strong>${points} QAVERA points</strong> with this order.`
       : "";
     const html = layout(
-      "Delivered",
+      isPickup(order) ? "Collected" : "Delivered",
       "Enjoy your QAVERA",
       `<p style="margin:0;text-align:center;">Hello ${escapeHtml(name)}, your order
-        <strong>${escapeHtml(order.order_number)}</strong> has been delivered. Thank you for choosing QAVERA.</p>
+        <strong>${escapeHtml(order.order_number)}</strong> has been ${isPickup(order) ? "collected" : "delivered"}. Thank you for choosing QAVERA.</p>
        ${pointsLine ? `<p style="margin:16px 0 0;text-align:center;">${pointsLine}<br>
          <a href="${SITE_URL}/account.html" style="color:#9A7A2E;">See your points</a></p>` : ""}`,
     );
-    const text = `Hello ${name},\n\nYour order ${order.order_number} has been delivered. Thank you for choosing QAVERA.\n` +
+    const text = `Hello ${name},\n\nYour order ${order.order_number} has been ${isPickup(order) ? "collected" : "delivered"}. Thank you for choosing QAVERA.\n` +
       (points > 0 ? `\nYou earned ${points} QAVERA points with this order.\n` : "") + "\nQAVERA";
-    await sendEmail(order.customer_email, `Your QAVERA order ${order.order_number} has been delivered`, text, html, shopInbox);
+    await sendEmail(order.customer_email, `Your QAVERA order ${order.order_number} has been ${isPickup(order) ? "collected" : "delivered"}`, text, html, shopInbox);
   }
 }
 
