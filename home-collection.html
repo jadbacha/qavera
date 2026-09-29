@@ -24,9 +24,10 @@
     .piece { display: flex; flex-direction: column; }
     .piece:nth-child(3n + 2) { margin-top: clamp(2rem, 6vw, 5rem); }
 
-    .piece-image { position: relative; overflow: hidden; aspect-ratio: 4 / 5; background: #e9e2d6; }
+    /* The photos are landscape (3:2): keep their shape so nothing is cut off. */
+    .piece-image { position: relative; overflow: hidden; aspect-ratio: 3 / 2; background: #e9e2d6; }
     .piece-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
-    .piece:hover .piece-image img { transform: scale(1.05); }
+    .piece:hover .piece-image img { transform: scale(1.03); }
 
     .piece-no {
       position: absolute;
