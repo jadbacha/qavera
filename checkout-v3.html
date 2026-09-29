@@ -38,6 +38,8 @@
     .check { display: flex; align-items: center; gap: .7rem; cursor: pointer; font-size: .92rem; color: var(--muted-dark); }
     .check input { width: 18px; height: 18px; accent-color: var(--sand); cursor: pointer; }
     .check input:disabled { cursor: not-allowed; }
+    .check:has(input:disabled) { opacity: .45; cursor: not-allowed; }
+    #fullName { text-transform: capitalize; }
 
     .points { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; padding: 1.4rem; border: 1px solid rgba(196,169,128,.35); }
     .points .big { font-family: var(--display); font-size: 2.6rem; line-height: 1; color: var(--sand); }
@@ -194,7 +196,7 @@
             <div class="big"><span id="pointsBalance">0 points</span><small>Your balance</small></div>
             <div>
               <label class="check"><input type="checkbox" id="usePoints"><span>Use my points for this order</span></label>
-              <p class="note">100 points = QAR 10 off. Points are used in blocks of 100.</p>
+              <p class="note" id="pointsNote">100 points = QAR 10 off. Points are used in blocks of 100.</p>
             </div>
           </div>
         </div>
@@ -484,6 +486,16 @@
       const maxRedeemablePoints = Math.floor(Math.min(USER_POINTS, subtotal * 10) / MIN_REDEEMABLE_POINTS) * MIN_REDEEMABLE_POINTS;
       usePointsCheckbox.disabled = maxRedeemablePoints < MIN_REDEEMABLE_POINTS;
       if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) usePointsCheckbox.checked = false;
+
+      // Explain why the option is locked, or what it is worth.
+      const pointsNote = document.getElementById('pointsNote');
+      if (USER_POINTS < MIN_REDEEMABLE_POINTS) {
+        pointsNote.textContent = `You can use points from ${MIN_REDEEMABLE_POINTS} (QAR 10 off). You have ${USER_POINTS}. You earn 100 points for every QAR 1,000 when an order is delivered.`;
+      } else if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) {
+        pointsNote.textContent = 'Add items to your box to use your points.';
+      } else {
+        pointsNote.textContent = `Use ${maxRedeemablePoints} points for QAR ${maxRedeemablePoints / 10} off this order. Points are used in blocks of 100.`;
+      }
 
       if (!usePointsCheckbox.checked || subtotal <= 0) {
         pointsDiscountRow.style.display = 'none';
@@ -805,6 +817,7 @@
     });
 
     document.getElementById('countryCode').addEventListener('change', updatePhoneLimits);
+    document.getElementById('fullName').addEventListener('blur', function () { this.value = titleCaseName(this.value); });
 
     document.getElementById('confirmOrder').addEventListener('click', async function () {
       if (!validateCheckout()) return;
