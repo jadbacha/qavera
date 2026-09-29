@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>QAVERA — Orders</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* QAVERA v3 palette */
+      --beige: #D8D8D8;
+      --beige-light: #E6E5E3;
+      --beige-mid: #CFCECC;
+      --black: #0F0E0E;
+      --gold: #C4A980;
+      --gold-light: #C4A980;
+      --gold-dark: #3D030A;
+      --text-dark: #0F0E0E;
+      --text-muted: rgba(15,14,14,.66);
+      --border: rgba(15,14,14,.16);
+      --serif: 'Bodoni Moda', Georgia, serif;
+      --sans: 'Instrument Sans', system-ui, sans-serif;
+      --mono: 'DM Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--beige);
+      color: var(--text-dark);
+      font-family: var(--sans);
+      font-weight: 400;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--black);
+      color: var(--beige);
+      padding: 18px 16px;
+    }
+
+    .header-inner {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+      letter-spacing: .3em;
+      color: var(--gold);
+      text-decoration: none;
+    }
+
+    .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    .ghost-button {
+      background: transparent;
+      border: 1px solid rgba(201,168,76,.45);
+      color: var(--gold-light);
+      font-family: var(--sans);
+      font-size: .65rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+
+    .ghost-button:hover { border-color: var(--gold); }
+
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 16px 60px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 2.4rem;
+      margin-bottom: 4px;
+    }
+
+    .subtitle { color: var(--text-muted); font-size: .8rem; margin-bottom: 24px; }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .filter {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--sans);
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+
+    .filter.active {
+      background: var(--black);
+      border-color: var(--black);
+      color: var(--gold-light);
+    }
+
+    .filter .count { opacity: .7; margin-left: 4px; }
+
+    .notice {
+      border: 1px dashed rgba(26,23,19,.2);
+      background: rgba(235,224,196,.3);
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .85rem;
+      line-height: 1.7;
+    }
+
+    .notice h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 1.6rem;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+
+    .notice a { color: var(--gold-dark); }
+
+    .order-list { display: grid; gap: 16px; }
+
+    .order {
+      background: var(--beige-light);
+      border: 1px solid var(--border);
+      padding: 22px;
+    }
+
+    .order.is-new { border-left: 3px solid var(--gold); }
+
+    .order-top {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px 16px;
+      margin-bottom: 14px;
+    }
+
+    .order-number { font-family: var(--serif); font-size: 1.5rem; }
+
+    .order-time { color: var(--text-muted); font-size: .72rem; margin-top: 2px; }
+
+    .status {
+      font-size: .6rem;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 5px 10px;
+      border: 1px solid rgba(201,168,76,.5);
+      color: var(--gold-dark);
+      white-space: nowrap;
+    }
+
+    .status.pending { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .status.delivered { background: var(--black); border-color: var(--black); color: var(--gold-light); }
+    .status.cancelled { color: var(--text-muted); border-color: var(--border); text-decoration: line-through; }
+
+    .order-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px 28px;
+    }
+
+    @media (max-width: 680px) {
+      .order-grid { grid-template-columns: 1fr; }
+    }
+
+    .block-label {
+      color: var(--gold-dark);
+      font-size: .6rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .block { font-size: .85rem; line-height: 1.7; }
+
+    .block .muted { color: var(--text-muted); }
+
+    .block a { color: var(--text-dark); }
+
+    .contact-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+
+    .contact-links a {
+      color: var(--gold-dark);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(154,122,46,.4);
+    }
+
+    .address { white-space: pre-line; }
+
+    .items { list-style: none; }
+
+    .items li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: .85rem;
+    }
+
+    .items li > span:last-child { white-space: nowrap; }
+
+    .custom-box {
+      display: block;
+      margin: 8px 0 4px;
+      padding: 10px 12px;
+      max-width: 260px;
+      background: rgba(201,168,76,.12);
+      border-left: 2px solid var(--gold);
+      font-size: .78rem;
+      white-space: normal;
+    }
+
+    .flavor-row { display: flex; justify-content: space-between; gap: 18px; line-height: 1.7; }
+
+    .flavor-row strong { font-weight: 500; }
+
+    .custom-label {
+      display: block;
+      color: var(--gold-dark);
+      font-size: .6rem;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .totals { margin-top: 8px; font-size: .8rem; }
+
+    .totals div { display: flex; justify-content: space-between; padding: 2px 0; color: var(--text-muted); }
+
+    .totals .grand { color: var(--text-dark); font-weight: 500; font-size: .9rem; padding-top: 4px; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .action {
+      font-family: var(--sans);
+      font-size: .65rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      padding: 11px 16px;
+      cursor: pointer;
+      border: 1px solid var(--black);
+      background: transparent;
+      color: var(--black);
+    }
+
+    .action.primary { background: var(--black); color: var(--gold-light); }
+
+    .action.danger { border-color: rgba(26,23,19,.25); color: var(--text-muted); margin-left: auto; }
+
+    .action.danger.armed { background: #7a2e1f; border-color: #7a2e1f; color: #fff; }
+
+    .action:disabled { opacity: .5; cursor: wait; }
+
+    .order-message { width: 100%; font-size: .75rem; color: #7a2e1f; }
+
+    .final-note { color: var(--text-muted); font-size: .75rem; }
+
+    /* v3 details */
+    .ghost-button, .filter, .block-label, .status, .action, .order-time, .subtitle, .contact-links a, .final-note { font-family: var(--mono); }
+    .brand { font-family: var(--serif); letter-spacing: .28em; }
+    h1 { font-weight: 400; }
+    .order-number { font-weight: 400; }
+    .status.pending { background: var(--black); border-color: var(--black); color: var(--gold); }
+    .status.delivered { background: #1A2D28; border-color: #1A2D28; color: var(--beige); }
+    .custom-box { background: rgba(61,3,10,.07); border-left-color: var(--gold-dark); }
+    .order.is-new { border-left-color: var(--gold); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <a class="brand" href="home-v3.html">QAVERA</a>
+      <div class="header-actions">
+        <button class="ghost-button" id="refreshButton" type="button">Refresh</button>
+        <button class="ghost-button" id="logoutButton" type="button">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h1>Orders</h1>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <div class="filters" id="filters" hidden></div>
+    <div id="content"></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const adminSupabase = window.supabase.createClient(
+      'https://rhwajaceuhpfwughlgpd.supabase.co',
+      'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0'
+    );
+
+    const STATUS_LABELS = {
+      pending: 'New',
+      confirmed: 'Confirmed',
+      preparing: 'Preparing',
+      out_for_delivery: 'Out for delivery',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled'
+    };
+
+    // The normal order of steps; the primary button moves an order one step forward.
+    const FLOW = ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered'];
+
+    const ACTION_LABELS = {
+      confirmed: 'Confirm',
+      preparing: 'Preparing',
+      out_for_delivery: 'Out for delivery',
+      delivered: 'Delivered'
+    };
+
+    const FILTERS = [
+      { key: 'active', label: 'To do', match: s => !['delivered', 'cancelled'].includes(s) },
+      { key: 'delivered', label: 'Delivered', match: s => s === 'delivered' },
+      { key: 'cancelled', label: 'Cancelled', match: s => s === 'cancelled' },
+      { key: 'all', label: 'All', match: () => true }
+    ];
+
+    const PAYMENT_LABELS = {
+      cash_on_delivery: 'Cash on delivery',
+      card_on_delivery: 'Card on delivery'
+    };
+
+    let orders = [];
+    let activeFilter = 'active';
+    let isAdmin = false;
+
+    const content = document.getElementById('content');
+    const subtitle = document.getElementById('subtitle');
+    const filtersEl = document.getElementById('filters');
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[ch]);
+    }
+
+    function qar(value) {
+      const amount = Number(value || 0);
+      return `QAR ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
+    }
+
+    function formatTime(value) {
+      if (!value) return '';
+      return new Date(value).toLocaleString('en-GB', {
+        timeZone: 'Asia/Qatar',
+        weekday: 'short', day: 'numeric', month: 'short',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function showNotice(title, text) {
+      filtersEl.hidden = true;
+      content.innerHTML = `<div class="notice"><h2>${escapeHtml(title)}</h2><p>${text}</p></div>`;
+    }
+
+    async function init() {
+      const { data: { session } } = await adminSupabase.auth.getSession();
+
+      if (!session) {
+        window.location.replace('login-v3.html?next=admin-v3.html');
+        return;
+      }
+
+      const { data: allowed, error } = await adminSupabase.rpc('is_admin');
+
+      if (error || !allowed) {
+        subtitle.textContent = '';
+        showNotice('Not available', 'This page is only for QAVERA staff. <a href="home-v3.html">Back to the shop</a>');
+        return;
+      }
+
+      isAdmin = true;
+      await loadOrders();
+
+      // Keep the list fresh while the page is open.
+      setInterval(() => { if (!document.hidden) loadOrders(); }, 60000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) loadOrders(); });
+    }
+
+    async function loadOrders() {
+      if (!isAdmin) return;
+
+      const { data, error } = await adminSupabase
+        .from('orders')
+        .select('id, order_number, created_at, status, customer_name, customer_phone, customer_email, delivery_area, delivery_address, notes, subtotal, delivery_fee, points_used, points_discount, points_earned, total, payment_method, order_items(product_name, variant_name, quantity, total_price, customization)')
+        .order('created_at', { ascending: false })
+        .limit(300);
+
+      if (error) {
+        console.error('Could not load orders:', error);
+        showNotice('Could not load orders', escapeHtml(error.message));
+        return;
+      }
+
+      orders = data || [];
+      const updated = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
+      subtitle.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · updated ${updated}`;
+      render();
+    }
+
+    function renderFilters() {
+      filtersEl.hidden = false;
+      filtersEl.innerHTML = FILTERS.map(filter => {
+        const count = orders.filter(o => filter.match(o.status)).length;
+        return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
+          ${filter.label}<span class="count">${count}</span>
+        </button>`;
+      }).join('');
+    }
+
+    function renderActions(order) {
+      if (order.status === 'delivered') {
+        return `<div class="actions"><span class="final-note">Delivered${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span></div>`;
+      }
+      if (order.status === 'cancelled') {
+        return `<div class="actions"><span class="final-note">Cancelled${Number(order.points_used) > 0 ? ' · points returned to the customer' : ''}</span></div>`;
+      }
+
+      const index = FLOW.indexOf(order.status);
+      const next = FLOW[index + 1];
+      const buttons = [];
+
+      if (next) {
+        buttons.push(`<button type="button" class="action primary" data-id="${order.id}" data-status="${next}">${ACTION_LABELS[next]}</button>`);
+      }
+      if (next !== 'delivered') {
+        buttons.push(`<button type="button" class="action" data-id="${order.id}" data-status="delivered">Delivered</button>`);
+      }
+      buttons.push(`<button type="button" class="action danger" data-id="${order.id}" data-status="cancelled">Cancel order</button>`);
+
+      return `<div class="actions">${buttons.join('')}<div class="order-message" id="msg-${order.id}"></div></div>`;
+    }
+
+    function renderOrder(order) {
+      const digits = String(order.customer_phone || '').replace(/\D/g, '');
+
+      const items = (order.order_items || []).map(item => {
+        const flavors = Array.isArray(item.customization)
+          ? item.customization.filter(f => Number(f.quantity) > 0)
+              .map(f => `<span class="flavor-row"><span>${escapeHtml(f.name)}</span><strong>${Number(f.quantity)}</strong></span>`).join('')
+          : '';
+        return `<li>
+          <span>${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)} × ${Number(item.quantity)}
+            ${flavors ? `<span class="custom-box"><span class="custom-label">Customized · per box</span>${flavors}</span>` : ''}</span>
+          <span>${qar(item.total_price)}</span>
+        </li>`;
+      }).join('');
+
+      return `
+        <article class="order ${order.status === 'pending' ? 'is-new' : ''}">
+          <div class="order-top">
+            <div>
+              <div class="order-number">${escapeHtml(order.order_number)}</div>
+              <div class="order-time">${escapeHtml(formatTime(order.created_at))}</div>
+            </div>
+            <span class="status ${escapeHtml(order.status)}">${escapeHtml(STATUS_LABELS[order.status] || order.status)}</span>
+          </div>
+
+          <div class="order-grid">
+            <div>
+              <div class="block-label">Customer</div>
+              <div class="block">
+                ${escapeHtml(order.customer_name)}<br>
+                <a href="tel:+${digits}">${escapeHtml(order.customer_phone)}</a>
+                ${order.customer_email ? `<br><span class="muted">${escapeHtml(order.customer_email)}</span>` : ''}
+                <div class="contact-links">
+                  <a href="https://wa.me/${digits}" target="_blank" rel="noopener">WhatsApp</a>
+                  <a href="tel:+${digits}">Call</a>
+                </div>
+              </div>
+
+              <div class="block-label" style="margin-top:16px;">Deliver to</div>
+              <div class="block address">${escapeHtml(order.delivery_area)}
+${escapeHtml(order.delivery_address)}</div>
+              ${order.notes ? `<div class="block muted" style="margin-top:6px;">Notes: ${escapeHtml(order.notes)}</div>` : ''}
+            </div>
+
+            <div>
+              <div class="block-label">Items</div>
+              <ul class="items">${items}</ul>
+              <div class="totals">
+                <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
+                ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
+                <div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>
+                <div class="grand"><span>Total · ${escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method)}</span><span>${qar(order.total)}</span></div>
+              </div>
+            </div>
+          </div>
+
+          ${renderActions(order)}
+        </article>`;
+    }
+
+    function render() {
+      renderFilters();
+      const filter = FILTERS.find(f => f.key === activeFilter);
+      const visible = orders.filter(o => filter.match(o.status));
+
+      if (!visible.length) {
+        content.innerHTML = `<div class="notice"><h2>Nothing here</h2><p>${activeFilter === 'active' ? 'No orders waiting. New orders will appear here.' : 'No orders in this list yet.'}</p></div>`;
+        return;
+      }
+
+      content.innerHTML = `<div class="order-list">${visible.map(renderOrder).join('')}</div>`;
+    }
+
+    async function setStatus(button) {
+      const orderId = button.dataset.id;
+      const status = button.dataset.status;
+      const message = document.getElementById(`msg-${orderId}`);
+
+      // Cancelling needs a second tap so it can't happen by accident.
+      if (status === 'cancelled' && !button.classList.contains('armed')) {
+        button.classList.add('armed');
+        button.textContent = 'Tap again to cancel';
+        setTimeout(() => {
+          if (button.isConnected) {
+            button.classList.remove('armed');
+            button.textContent = 'Cancel order';
+          }
+        }, 4000);
+        return;
+      }
+
+      button.closest('.actions').querySelectorAll('button').forEach(b => { b.disabled = true; });
+      if (message) message.textContent = '';
+
+      const { error } = await adminSupabase.rpc('admin_set_order_status', {
+        p_order_id: orderId,
+        p_status: status
+      });
+
+      if (error) {
+        console.error('Could not update order:', error);
+        if (message) message.textContent = error.message || 'Could not update this order.';
+        button.closest('.actions').querySelectorAll('button').forEach(b => { b.disabled = false; });
+        return;
+      }
+
+      await loadOrders();
+    }
+
+    filtersEl.addEventListener('click', event => {
+      const button = event.target.closest('.filter');
+      if (!button) return;
+      activeFilter = button.dataset.filter;
+      render();
+    });
+
+    content.addEventListener('click', event => {
+      const button = event.target.closest('.action');
+      if (button) setStatus(button);
+    });
+
+    document.getElementById('refreshButton').addEventListener('click', loadOrders);
+
+    document.getElementById('logoutButton').addEventListener('click', async () => {
+      await adminSupabase.auth.signOut();
+      window.location.replace('login-v3.html?next=admin-v3.html');
+    });
+
+    init();
+  </script>
+</body>
+</html>
