@@ -160,6 +160,7 @@
     // Any older checkout handoff copy is now out of date.
     try { sessionStorage.removeItem('qaveraCheckoutCart'); } catch (_) {}
     renderCart();
+    window.dispatchEvent(new CustomEvent('qavera:cart'));
   }
 
   // A stable painted-bonbon style for items without a photo.

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — QAVERA</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3/qavera.css">
+  <link rel="stylesheet" href="v3/auth.css">
+</head>
+<body data-page="account" data-no-footer>
+  <script src="v3/qavera.js"></script>
+
+  <main class="v3-main">
+    <section class="auth">
+      <div class="auth-art">
+        <img src="bonbon design.webp" alt="Hand-painted QAVERA bonbons">
+        <div class="auth-quote">
+          <p class="caption">QAVERA account</p>
+          <p class="display">Your orders, your points,<br>your <em>favourite</em> flavours.</p>
+        </div>
+      </div>
+
+      <div class="auth-panel">
+        <div class="auth-card">
+          <p class="caption kicker" id="authKicker">Welcome back</p>
+          <h1 class="display" id="authTitle">Sign <em>in</em>.</h1>
+          <p class="intro" id="authIntro">Sign in to check out faster, follow your orders and collect QAVERA Points.</p>
+
+          <div class="auth-tabs" role="tablist" aria-label="Account">
+            <button type="button" role="tab" id="tabLogin" aria-selected="true">Sign in</button>
+            <button type="button" role="tab" id="tabSignup" aria-selected="false">Create account</button>
+          </div>
+
+          <button type="button" class="google" id="googleLogin">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.6 3.9-5.4 3.9-3.3 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.8 3.4 14.6 2.4 12 2.4 6.7 2.4 2.4 6.7 2.4 12s4.3 9.6 9.6 9.6c5.5 0 9.2-3.9 9.2-9.4 0-.6-.1-1.1-.2-1.6H12z"/></svg>
+            Continue with Google
+          </button>
+
+          <p class="or caption">or with email</p>
+
+          <form class="auth-form" id="loginForm" novalidate>
+            <div class="hidden" id="signupFields">
+              <div class="row">
+                <div class="v3-field"><label for="firstName">First name</label><input type="text" id="firstName" autocomplete="given-name" placeholder="First name"></div>
+                <div class="v3-field"><label for="lastName">Last name</label><input type="text" id="lastName" autocomplete="family-name" placeholder="Last name"></div>
+              </div>
+              <div class="phone-row" style="margin-top:1.4rem">
+                <div class="v3-field">
+                  <label for="countryCode">Code</label>
+                  <select id="countryCode" aria-label="Country code">
+                <option value="+93">Afghanistan (+93)</option>
+                <option value="+355">Albania (+355)</option>
+                <option value="+213">Algeria (+213)</option>
+                <option value="+1">American Samoa (+1)</option>
+                <option value="+376">Andorra (+376)</option>
+                <option value="+244">Angola (+244)</option>
+                <option value="+1">Anguilla (+1)</option>
+                <option value="+1">Antigua and Barbuda (+1)</option>
+                <option value="+54">Argentina (+54)</option>
+                <option value="+374">Armenia (+374)</option>
+                <option value="+297">Aruba (+297)</option>
+                <option value="+61">Australia (+61)</option>
+                <option value="+43">Austria (+43)</option>
+                <option value="+994">Azerbaijan (+994)</option>
+                <option value="+1">Bahamas (+1)</option>
+                <option value="+973">Bahrain (+973)</option>
+                <option value="+880">Bangladesh (+880)</option>
+                <option value="+1">Barbados (+1)</option>
+                <option value="+375">Belarus (+375)</option>
+                <option value="+32">Belgium (+32)</option>
+                <option value="+501">Belize (+501)</option>
+                <option value="+229">Benin (+229)</option>
+                <option value="+1">Bermuda (+1)</option>
+                <option value="+975">Bhutan (+975)</option>
+                <option value="+591">Bolivia (+591)</option>
+                <option value="+387">Bosnia and Herzegovina (+387)</option>
+                <option value="+267">Botswana (+267)</option>
+                <option value="+55">Brazil (+55)</option>
+                <option value="+1">British Virgin Islands (+1)</option>
+                <option value="+673">Brunei (+673)</option>
+                <option value="+359">Bulgaria (+359)</option>
+                <option value="+226">Burkina Faso (+226)</option>
+                <option value="+257">Burundi (+257)</option>
+                <option value="+855">Cambodia (+855)</option>
+                <option value="+237">Cameroon (+237)</option>
+                <option value="+1">Canada (+1)</option>
+                <option value="+238">Cape Verde (+238)</option>
+                <option value="+1">Cayman Islands (+1)</option>
+                <option value="+236">Central African Republic (+236)</option>
+                <option value="+235">Chad (+235)</option>
+                <option value="+56">Chile (+56)</option>
+                <option value="+86">China (+86)</option>
+                <option value="+57">Colombia (+57)</option>
+                <option value="+269">Comoros (+269)</option>
+                <option value="+242">Congo (+242)</option>
+                <option value="+682">Cook Islands (+682)</option>
+                <option value="+506">Costa Rica (+506)</option>
+                <option value="+385">Croatia (+385)</option>
+                <option value="+53">Cuba (+53)</option>
+                <option value="+357">Cyprus (+357)</option>
+                <option value="+420">Czech Republic (+420)</option>
+                <option value="+45">Denmark (+45)</option>
+                <option value="+253">Djibouti (+253)</option>
+                <option value="+1">Dominica (+1)</option>
+                <option value="+1">Dominican Republic (+1)</option>
+                <option value="+593">Ecuador (+593)</option>
+                <option value="+20">Egypt (+20)</option>
+                <option value="+503">El Salvador (+503)</option>
+                <option value="+240">Equatorial Guinea (+240)</option>
+                <option value="+291">Eritrea (+291)</option>
+                <option value="+372">Estonia (+372)</option>
+                <option value="+268">Eswatini (+268)</option>
+                <option value="+251">Ethiopia (+251)</option>
+                <option value="+500">Falkland Islands (+500)</option>
+                <option value="+298">Faroe Islands (+298)</option>
+                <option value="+679">Fiji (+679)</option>
+                <option value="+358">Finland (+358)</option>
+                <option value="+33">France (+33)</option>
+                <option value="+594">French Guiana (+594)</option>
+                <option value="+689">French Polynesia (+689)</option>
+                <option value="+241">Gabon (+241)</option>
+                <option value="+220">Gambia (+220)</option>
+                <option value="+995">Georgia (+995)</option>
+                <option value="+49">Germany (+49)</option>
+                <option value="+233">Ghana (+233)</option>
+                <option value="+350">Gibraltar (+350)</option>
+                <option value="+30">Greece (+30)</option>
+                <option value="+299">Greenland (+299)</option>
+                <option value="+1">Grenada (+1)</option>
+                <option value="+590">Guadeloupe (+590)</option>
+                <option value="+1">Guam (+1)</option>
+                <option value="+502">Guatemala (+502)</option>
+                <option value="+44">Guernsey (+44)</option>
+                <option value="+224">Guinea (+224)</option>
+                <option value="+245">Guinea-Bissau (+245)</option>
+                <option value="+592">Guyana (+592)</option>
+                <option value="+509">Haiti (+509)</option>
+                <option value="+504">Honduras (+504)</option>
+                <option value="+852">Hong Kong (+852)</option>
+                <option value="+36">Hungary (+36)</option>
+                <option value="+354">Iceland (+354)</option>
+                <option value="+91">India (+91)</option>
+                <option value="+62">Indonesia (+62)</option>
+                <option value="+98">Iran (+98)</option>
+                <option value="+964">Iraq (+964)</option>
+                <option value="+353">Ireland (+353)</option>
+                <option value="+44">Isle of Man (+44)</option>
+                <option value="+972">Israel (+972)</option>
+                <option value="+39">Italy (+39)</option>
+                <option value="+225">Ivory Coast (+225)</option>
+                <option value="+1">Jamaica (+1)</option>
+                <option value="+81">Japan (+81)</option>
+                <option value="+44">Jersey (+44)</option>
+                <option value="+962">Jordan (+962)</option>
+                <option value="+7">Kazakhstan (+7)</option>
+                <option value="+254">Kenya (+254)</option>
+                <option value="+686">Kiribati (+686)</option>
+                <option value="+383">Kosovo (+383)</option>
+                <option value="+965">Kuwait (+965)</option>
+                <option value="+996">Kyrgyzstan (+996)</option>
+                <option value="+856">Laos (+856)</option>
+                <option value="+371">Latvia (+371)</option>
+                <option value="+961">Lebanon (+961)</option>
+                <option value="+266">Lesotho (+266)</option>
+                <option value="+231">Liberia (+231)</option>
+                <option value="+218">Libya (+218)</option>
+                <option value="+423">Liechtenstein (+423)</option>
+                <option value="+370">Lithuania (+370)</option>
+                <option value="+352">Luxembourg (+352)</option>
+                <option value="+853">Macau (+853)</option>
+                <option value="+261">Madagascar (+261)</option>
+                <option value="+265">Malawi (+265)</option>
+                <option value="+60">Malaysia (+60)</option>
+                <option value="+960">Maldives (+960)</option>
+                <option value="+223">Mali (+223)</option>
+                <option value="+356">Malta (+356)</option>
+                <option value="+692">Marshall Islands (+692)</option>
+                <option value="+596">Martinique (+596)</option>
+                <option value="+222">Mauritania (+222)</option>
+                <option value="+230">Mauritius (+230)</option>
+                <option value="+262">Mayotte (+262)</option>
+                <option value="+52">Mexico (+52)</option>
+                <option value="+691">Micronesia (+691)</option>
+                <option value="+373">Moldova (+373)</option>
+                <option value="+377">Monaco (+377)</option>
+                <option value="+976">Mongolia (+976)</option>
+                <option value="+382">Montenegro (+382)</option>
+                <option value="+1">Montserrat (+1)</option>
+                <option value="+212">Morocco (+212)</option>
+                <option value="+258">Mozambique (+258)</option>
+                <option value="+95">Myanmar (+95)</option>
+                <option value="+264">Namibia (+264)</option>
+                <option value="+674">Nauru (+674)</option>
+                <option value="+977">Nepal (+977)</option>
+                <option value="+31">Netherlands (+31)</option>
+                <option value="+687">New Caledonia (+687)</option>
+                <option value="+64">New Zealand (+64)</option>
+                <option value="+505">Nicaragua (+505)</option>
+                <option value="+227">Niger (+227)</option>
+                <option value="+234">Nigeria (+234)</option>
+                <option value="+683">Niue (+683)</option>
+                <option value="+850">North Korea (+850)</option>
+                <option value="+389">North Macedonia (+389)</option>
+                <option value="+1">Northern Mariana Islands (+1)</option>
+                <option value="+47">Norway (+47)</option>
+                <option value="+968">Oman (+968)</option>
+                <option value="+92">Pakistan (+92)</option>
+                <option value="+680">Palau (+680)</option>
+                <option value="+970">Palestine (+970)</option>
+                <option value="+507">Panama (+507)</option>
+                <option value="+675">Papua New Guinea (+675)</option>
+                <option value="+595">Paraguay (+595)</option>
+                <option value="+51">Peru (+51)</option>
+                <option value="+63">Philippines (+63)</option>
+                <option value="+48">Poland (+48)</option>
+                <option value="+351">Portugal (+351)</option>
+                <option value="+1">Puerto Rico (+1)</option>
+                <option value="+974" selected>Qatar (+974)</option>
+                <option value="+262">Reunion (+262)</option>
+                <option value="+40">Romania (+40)</option>
+                <option value="+7">Russia (+7)</option>
+                <option value="+250">Rwanda (+250)</option>
+                <option value="+290">Saint Helena (+290)</option>
+                <option value="+1">Saint Kitts and Nevis (+1)</option>
+                <option value="+1">Saint Lucia (+1)</option>
+                <option value="+1">Saint Vincent and the Grenadines (+1)</option>
+                <option value="+685">Samoa (+685)</option>
+                <option value="+378">San Marino (+378)</option>
+                <option value="+239">Sao Tome and Principe (+239)</option>
+                <option value="+966">Saudi Arabia (+966)</option>
+                <option value="+221">Senegal (+221)</option>
+                <option value="+381">Serbia (+381)</option>
+                <option value="+248">Seychelles (+248)</option>
+                <option value="+232">Sierra Leone (+232)</option>
+                <option value="+65">Singapore (+65)</option>
+                <option value="+1">Sint Maarten (+1)</option>
+                <option value="+421">Slovakia (+421)</option>
+                <option value="+386">Slovenia (+386)</option>
+                <option value="+677">Solomon Islands (+677)</option>
+                <option value="+252">Somalia (+252)</option>
+                <option value="+27">South Africa (+27)</option>
+                <option value="+82">South Korea (+82)</option>
+                <option value="+211">South Sudan (+211)</option>
+                <option value="+34">Spain (+34)</option>
+                <option value="+94">Sri Lanka (+94)</option>
+                <option value="+249">Sudan (+249)</option>
+                <option value="+597">Suriname (+597)</option>
+                <option value="+46">Sweden (+46)</option>
+                <option value="+41">Switzerland (+41)</option>
+                <option value="+963">Syria (+963)</option>
+                <option value="+886">Taiwan (+886)</option>
+                <option value="+992">Tajikistan (+992)</option>
+                <option value="+255">Tanzania (+255)</option>
+                <option value="+66">Thailand (+66)</option>
+                <option value="+670">Timor-Leste (+670)</option>
+                <option value="+228">Togo (+228)</option>
+                <option value="+690">Tokelau (+690)</option>
+                <option value="+676">Tonga (+676)</option>
+                <option value="+1">Trinidad and Tobago (+1)</option>
+                <option value="+216">Tunisia (+216)</option>
+                <option value="+90">Turkey (+90)</option>
+                <option value="+993">Turkmenistan (+993)</option>
+                <option value="+1">Turks and Caicos Islands (+1)</option>
+                <option value="+688">Tuvalu (+688)</option>
+                <option value="+256">Uganda (+256)</option>
+                <option value="+380">Ukraine (+380)</option>
+                <option value="+971">United Arab Emirates (+971)</option>
+                <option value="+44">United Kingdom (+44)</option>
+                <option value="+1">United States (+1)</option>
+                <option value="+598">Uruguay (+598)</option>
+                <option value="+1">US Virgin Islands (+1)</option>
+                <option value="+998">Uzbekistan (+998)</option>
+                <option value="+678">Vanuatu (+678)</option>
+                <option value="+39">Vatican City (+39)</option>
+                <option value="+58">Venezuela (+58)</option>
+                <option value="+84">Vietnam (+84)</option>
+                <option value="+681">Wallis and Futuna (+681)</option>
+                <option value="+212">Western Sahara (+212)</option>
+                <option value="+967">Yemen (+967)</option>
+                <option value="+260">Zambia (+260)</option>
+                <option value="+263">Zimbabwe (+263)</option>
+                  </select>
+                </div>
+                <div class="v3-field"><label for="phone">Phone</label><input type="tel" id="phone" autocomplete="tel-national" inputmode="tel" placeholder="Phone number"></div>
+              </div>
+            </div>
+
+            <div class="v3-field">
+              <label for="email">Email</label>
+              <input type="email" id="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="v3-field">
+              <label for="password">Password</label>
+              <div class="pw-wrap">
+                <input type="password" id="password" autocomplete="current-password" placeholder="Your password" required>
+                <button type="button" class="pw-toggle" data-toggle="password" aria-label="Show password">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/><path class="slash" d="M4 4l16 16"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="v3-field hidden" id="confirmField">
+              <label for="confirmPassword">Confirm password</label>
+              <div class="pw-wrap">
+                <input type="password" id="confirmPassword" autocomplete="new-password" placeholder="Confirm your password">
+                <button type="button" class="pw-toggle" data-toggle="confirmPassword" aria-label="Show password">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.8"/><path class="slash" d="M4 4l16 16"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-solid btn-block" id="submitButton">Sign in <span class="arrow">→</span></button>
+
+            <div class="auth-foot">
+              <button type="button" class="link" id="forgotLink">Forgot password?</button>
+              <a class="link" href="home-v3.html">Back to the shop</a>
+            </div>
+          </form>
+
+          <p class="auth-message" id="message" role="alert"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseClient = window.supabase.createClient(
+      'https://rhwajaceuhpfwughlgpd.supabase.co',
+      'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0'
+    );
+
+    const $ = id => document.getElementById(id);
+    const form = $('loginForm');
+    const emailInput = $('email');
+    const passwordInput = $('password');
+    const message = $('message');
+    let mode = 'login';
+
+    // Where to go after signing in: ?next=checkout-v3.html (only pages on this site).
+    const nextParam = new URLSearchParams(location.search).get('next') || '';
+    const nextPage = /^[a-z0-9-]+\.html$/i.test(nextParam) ? nextParam : 'home-v3.html';
+    const goNext = () => window.location.replace(`${window.location.origin}/${nextPage}`);
+    const loginUrl = `${window.location.origin}/login-v3.html${nextParam ? `?next=${encodeURIComponent(nextPage)}` : ''}`;
+
+    function showMessage(text, ok = false) {
+      message.textContent = text;
+      message.classList.toggle('ok', ok);
+    }
+
+    document.querySelectorAll('.pw-toggle').forEach(button => {
+      button.addEventListener('click', () => {
+        const input = $(button.dataset.toggle);
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        button.classList.toggle('showing', !showing);
+        button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      });
+    });
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      showMessage('');
+      const signup = mode === 'signup';
+      $('tabLogin').setAttribute('aria-selected', String(!signup));
+      $('tabSignup').setAttribute('aria-selected', String(signup));
+      $('authKicker').textContent = signup ? 'New to QAVERA' : 'Welcome back';
+      $('authTitle').innerHTML = signup ? 'Create an <em>account</em>.' : 'Sign <em>in</em>.';
+      $('authIntro').textContent = signup
+        ? 'Save your details for faster checkout, follow your orders and earn QAVERA Points.'
+        : 'Sign in to check out faster, follow your orders and collect QAVERA Points.';
+      $('submitButton').innerHTML = `${signup ? 'Create account' : 'Sign in'} <span class="arrow">→</span>`;
+      $('signupFields').classList.toggle('hidden', !signup);
+      $('confirmField').classList.toggle('hidden', !signup);
+      $('forgotLink').classList.toggle('hidden', signup);
+      passwordInput.autocomplete = signup ? 'new-password' : 'current-password';
+    }
+
+    $('tabLogin').addEventListener('click', () => setMode('login'));
+    $('tabSignup').addEventListener('click', () => setMode('signup'));
+    if (location.hash === '#signup') setMode('signup');
+
+    $('phone').addEventListener('input', event => {
+      event.target.value = event.target.value.replace(/[^\d ]/g, '');
+    });
+
+    // Google OAuth
+    $('googleLogin').addEventListener('click', async () => {
+      showMessage('');
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: loginUrl }
+      });
+      if (error) showMessage(error.message);
+    });
+
+    const capitalizeName = value => value
+      .trim()
+      .toLowerCase()
+      .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, separator, letter) => separator + letter.toUpperCase());
+
+    // Email/password sign in and account creation
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      showMessage('');
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showMessage('Please enter your email and password.');
+        return;
+      }
+
+      const submit = $('submitButton');
+      const restore = submit.innerHTML;
+      submit.disabled = true;
+      submit.textContent = mode === 'signup' ? 'Creating account…' : 'Signing in…';
+
+      try {
+        if (mode === 'signup') {
+          const firstName = capitalizeName($('firstName').value);
+          const lastName = capitalizeName($('lastName').value);
+          $('firstName').value = firstName;
+          $('lastName').value = lastName;
+          const code = $('countryCode').value;
+          const phone = $('phone').value.replace(/\D/g, '').replace(/^0+/, '');
+
+          if (!firstName || !lastName || !phone) {
+            showMessage('Please fill in your first name, last name and phone number.');
+            return;
+          }
+          if (password.length < 6) {
+            showMessage('Your password must be at least 6 characters.');
+            return;
+          }
+          if (password !== $('confirmPassword').value) {
+            showMessage('Passwords do not match.');
+            return;
+          }
+
+          const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: loginUrl,
+              data: {
+                full_name: `${firstName} ${lastName}`,
+                first_name: firstName,
+                last_name: lastName,
+                phone,
+                phone_country_code: code,
+                phone_full: `${code} ${phone}`
+              }
+            }
+          });
+
+          if (error) {
+            showMessage(error.message);
+            return;
+          }
+          if (data.session) {
+            goNext();
+          } else {
+            showMessage('Account created. Check your email to confirm your account, then sign in.', true);
+            setMode('login');
+            showMessage('Account created. Check your email to confirm your account, then sign in.', true);
+          }
+        } else {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            showMessage(error.message.toLowerCase().includes('invalid login credentials')
+              ? 'Invalid email or password. If you just created this account, confirm your email first.'
+              : error.message);
+            return;
+          }
+          if (data.session) goNext();
+        }
+      } finally {
+        submit.disabled = false;
+        if (!submit.textContent.endsWith('→')) submit.innerHTML = restore;
+      }
+    });
+
+    // Password reset
+    $('forgotLink').addEventListener('click', async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        showMessage('Enter your email first, then tap "Forgot password?".');
+        emailInput.focus();
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password-v3.html`
+      });
+      if (error) showMessage(error.message);
+      else showMessage('Password reset instructions have been sent to your email.', true);
+    });
+
+    // Already signed in (or just back from Google): continue.
+    supabaseClient.auth.getSession().then(({ data }) => {
+      if (data.session) goNext();
+    });
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) goNext();
+    });
+  </script>
+</body>
+</html>
