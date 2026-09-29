@@ -39,6 +39,7 @@
   document.documentElement.classList.add('v3-js');
 
   const current = key => (key === page ? ' aria-current="page"' : '');
+  const PANTRY = ['assorted', 'slabs', 'spreads', 'bites'];
   const icon = {
     user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
     bag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
@@ -86,6 +87,16 @@
         <a href="${PAGES.shop}"${current('shop')}>Shop</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury</a>
+        <div class="v3-drop${PANTRY.includes(page) ? ' is-current' : ''}">
+          <button type="button" class="v3-drop-toggle" aria-expanded="false" aria-controls="v3PantryMenu">Pantry<span aria-hidden="true">▾</span></button>
+          <div class="v3-drop-panel" id="v3PantryMenu">
+            <a href="${PAGES.assorted}"${current('assorted')}><span>Assorted</span><small>500 G · QAR 190</small></a>
+            <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 50</small></a>
+            <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>280 ML · QAR 60</small></a>
+            <a href="${PAGES.bites}"${current('bites')}><span>Bites</span><small>50 G · QAR 25</small></a>
+            <a class="v3-drop-all" href="${PAGES.shop}#pantry">View the pantry →</a>
+          </div>
+        </div>
         <a href="${PAGES.homeCollection}"${current('homeCollection')}>The Home</a>
         <a href="${PAGES.story}"${current('story')}>Story</a>
       </nav>
@@ -106,6 +117,13 @@
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium Box</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury Box</a>
+        <div class="v3-mobile-group">
+          <span class="caption">The pantry</span>
+          <a href="${PAGES.assorted}"${current('assorted')}>Assorted</a>
+          <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
+          <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
+          <a href="${PAGES.bites}"${current('bites')}>Bites</a>
+        </div>
         <a href="${PAGES.homeCollection}"${current('homeCollection')}>The Home</a>
         <a href="${PAGES.story}"${current('story')}>Our story</a>
         <a href="${PAGES.contact}"${current('contact')}>Contact</a>
@@ -121,6 +139,17 @@
   const onScroll = () => header.classList.toggle('scrolled', window.scrollY > 40);
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  document.querySelectorAll('.v3-drop').forEach(drop => {
+    const toggle = drop.querySelector('.v3-drop-toggle');
+    const setOpen = open => { drop.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); };
+    toggle.addEventListener('click', () => setOpen(!drop.classList.contains('open')));
+    drop.addEventListener('mouseenter', () => setOpen(true));
+    drop.addEventListener('mouseleave', () => setOpen(false));
+    drop.addEventListener('focusout', event => { if (!drop.contains(event.relatedTarget)) setOpen(false); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') setOpen(false); });
+    document.addEventListener('click', event => { if (!drop.contains(event.target)) setOpen(false); });
+  });
 
   const menuToggle = document.getElementById('v3MenuToggle');
   const mobileMenu = document.getElementById('v3MobileMenu');
