@@ -227,7 +227,7 @@
       const detail = item.variant_name || item.size || '';
       const thumb = item.image
         ? `<div class="v3-cart-thumb"><img src="${escapeHtml(item.image)}" alt=""></div>`
-        : `<div class="v3-cart-thumb painted"><div class="bonbon ${paintFor(item.product_name || item.name)}"></div></div>`;
+        : `<div class="v3-cart-thumb painted"><div class="bonbon ${/^p\d{1,2}$/.test(item.paint || '') ? item.paint : paintFor(item.product_name || item.name)}"></div></div>`;
       return `
         <div class="v3-cart-item">
           ${thumb}

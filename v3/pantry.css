@@ -1,0 +1,88 @@
+/* QAVERA v3 — pantry product pages (Assorted, Slabs, Spreads, Bites) */
+
+.pantry-head { display: grid; grid-template-columns: 1.3fr .7fr; gap: 3rem; align-items: end; }
+.pantry-facts { display: grid; }
+.pantry-facts div { display: flex; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid var(--line-dark); }
+.pantry-facts .caption { color: rgba(216,216,216,.5); }
+
+.products { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(1rem, 2vw, 1.6rem); }
+
+.product {
+  display: flex;
+  flex-direction: column;
+  background: #e6e5e3;
+  border: 1px solid var(--line-light);
+  transition: transform .8s var(--ease), box-shadow .8s var(--ease);
+}
+
+.product:hover { transform: translateY(-4px); box-shadow: 0 30px 50px -35px rgba(15,14,14,.55); }
+
+.product-visual {
+  position: relative;
+  aspect-ratio: 5 / 4;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 70% at 50% 45%, rgba(196,169,128,.18), transparent 70%),
+    var(--ink);
+}
+
+.product-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.product-visual .bonbon { width: clamp(90px, 11vw, 132px); transition: transform 1s var(--ease); }
+.product:hover .product-visual .bonbon { transform: rotate(-12deg) scale(1.06); }
+
+.product-visual .caption { position: absolute; left: 1rem; top: 1rem; color: rgba(216,216,216,.55); }
+.product-visual .soon { top: auto; left: auto; right: 1rem; bottom: 1rem; color: rgba(216,216,216,.35); font-size: .6rem; }
+
+.product-body { display: flex; flex-direction: column; flex: 1; padding: 1.6rem 1.5rem 1.5rem; color: var(--ink); }
+.product-body h3 { font-family: var(--display); font-weight: 400; font-size: clamp(1.6rem, 2.2vw, 2rem); line-height: 1.08; }
+.product-body h3 em { color: var(--oxblood); }
+.product-body p { color: var(--muted-light); font-size: .95rem; margin: .8rem 0 1.4rem; }
+
+.product-meta { display: flex; justify-content: space-between; align-items: baseline; padding: .9rem 0; border-top: 1px solid var(--line-light); margin-top: auto; }
+.product-meta .caption { color: var(--muted-light); }
+.product-price { font-family: var(--display); font-size: 1.5rem; }
+
+.product-actions { display: grid; grid-template-columns: auto 1fr; gap: .6rem; }
+
+.product-actions .v3-qty { border-color: rgba(15,14,14,.3); }
+.product-actions .v3-qty button { color: var(--ink); width: 40px; height: 48px; }
+.product-actions .v3-qty button:hover { color: var(--oxblood); }
+.product-actions .v3-qty span { color: var(--ink); }
+
+.product-actions .btn { padding-left: 1rem; padding-right: 1rem; }
+.product-actions .btn.added { background: var(--forest); border-color: var(--forest); color: var(--silver); }
+
+.more { background: var(--ink); }
+.more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; }
+.more-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.8rem;
+  border: 1px solid var(--line-dark);
+  text-decoration: none;
+  color: var(--silver);
+  transition: border-color .5s var(--ease), background .5s var(--ease);
+}
+.more-card:hover { border-color: rgba(196,169,128,.5); background: rgba(196,169,128,.04); }
+.more-card h3 { font-family: var(--display); font-weight: 400; font-size: 2rem; line-height: 1; }
+.more-card:hover h3 { font-style: italic; color: var(--sand); }
+.more-card .caption { color: var(--sand); display: block; margin-top: .6rem; }
+.more-card .bonbon { width: 54px; flex-shrink: 0; }
+
+@media (max-width: 1000px) {
+  .products { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .pantry-head { grid-template-columns: 1fr; }
+  .more-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .products { grid-template-columns: 1fr; }
+}
