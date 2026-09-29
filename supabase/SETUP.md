@@ -66,3 +66,25 @@ Out for delivery → Delivered) and Cancel. Customers see the status under **My 
 - `delivered` gives the customer points (100 per QAR 1,000 of products).
 - `cancelled` returns any points they spent and takes back any points the order earned.
   Don't move a cancelled order back to another status.
+
+## 5. Shop till (QAVERA POS app)
+
+The POS app lives in the `qavera-pos` repository. It uses this same database.
+
+1. Run `008_store_pos.sql` in the SQL Editor (adds shop sales and the `staff` role).
+2. Update the `order-notify` function with the latest `supabase/functions/order-notify/index.ts`
+   (**Edge Functions → order-notify → Code**, paste, **Deploy**), so shop sales send no emails.
+3. Give people access to the till. They first create an account on the website, then:
+   ```sql
+   update public.profiles set role = 'staff' where lower(email) = lower('their@email.com');
+   ```
+   Use `'admin'` instead of `'staff'` for an owner. Staff can only sell; admins can also cancel
+   shop sales and use qavera.qa/admin.html. To remove access, set the role back to `'customer'`.
+
+Shop sales appear in admin.html under **Shop sales**. They are paid on the spot, have no
+customer account, and never earn or use points. Prices always come from the database, so
+change them on the website side (products / product_variants), not in the till.
+
+The Mac installer is built by GitHub: **qavera-pos → Actions → Build Mac app → latest run →
+Artifacts → QAVERA-POS-mac**. Use the `arm64` file on Apple-silicon Macs (M1 or newer) and
+the other one on Intel Macs. The first time, open it with right-click → **Open**.
