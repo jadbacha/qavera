@@ -1,1 +1,19 @@
 /  /home.html  200
+
+# Old test addresses from before the v3 design became the default
+/account-v3.html  /account.html  301
+/admin-v3.html  /admin.html  301
+/assorted-v3.html  /assorted.html  301
+/bites-v3.html  /bites.html  301
+/checkout-v3.html  /checkout.html  301
+/contactus-v3.html  /contactus.html  301
+/home-collection-v3.html  /home-collection.html  301
+/home-v3.html  /home.html  301
+/login-v3.html  /login.html  301
+/luxury-v3.html  /luxury.html  301
+/ourstory-v3.html  /ourstory.html  301
+/premium-v3.html  /premium.html  301
+/reset-password-v3.html  /reset-password.html  301
+/shop-v3.html  /shop.html  301
+/slabs-v3.html  /slabs.html  301
+/spreads-v3.html  /spreads.html  301

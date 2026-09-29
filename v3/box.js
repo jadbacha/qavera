@@ -1,5 +1,5 @@
 /* QAVERA v3 — signature box pages (Premium, Luxury).
-   The page defines BOX before loading this file (see premium-v3.html).
+   The page defines BOX before loading this file (see premium.html).
    Sizes/prices come from Supabase (products + product_variants); the numbers
    in BOX are only a fallback while loading. Cart items match what checkout
    and create_qavera_order expect: variant_id + optional flavors. */
