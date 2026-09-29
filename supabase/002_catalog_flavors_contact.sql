@@ -20,7 +20,7 @@ insert into qavera_new_products values
   ('Almond Mandiant',                           'almond-mandiant',                           'assorted', '500 G',                 190, null),
   ('Crispy Feuilletine',                        'crispy-feuilletine',                        'assorted', '500 G',                 190, null),
   ('Chocolate Gianduja Crispy Rice',            'chocolate-gianduja-crispy-rice',            'assorted', '500 G',                 190, null),
-  ('Specullos with Chocolate Ganache',          'specullos-with-chocolate-ganache',          'assorted', '500 G',                 190, null),
+  ('Speculoos with Chocolate Ganache',          'specullos-with-chocolate-ganache',          'assorted', '500 G',                 190, null),
   ('Mix Assorted',                              'mix-assorted',                              'assorted', '500 G',                 190, null),
   ('Almond Florentine with Chocolate',          'almond-florentine-with-chocolate',          'bites',    '50 G',                   25, null),
   ('Pretzels with Chocolate',                   'pretzels-with-chocolate',                   'bites',    '50 G',                   25, null),
