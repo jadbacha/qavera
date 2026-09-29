@@ -89,8 +89,8 @@
 
 @media (max-width: 900px) {
   .auth { grid-template-columns: 1fr; }
-  .auth-art { min-height: 34vh; }
-  .auth-quote p.display { font-size: 2rem; }
+  /* Phones and tablets: no picture, straight to the form. */
+  .auth-art { display: none; }
 }
 
 @media (max-width: 480px) {
