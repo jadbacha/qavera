@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="v3/qavera.css">
   <link rel="stylesheet" href="v3/auth.css">
+  <style>#firstName, #lastName { text-transform: capitalize; }</style>
 </head>
 <body data-page="account" data-no-footer>
   <script src="v3/qavera.js"></script>
@@ -385,6 +386,13 @@
     $('tabSignup').addEventListener('click', () => setMode('signup'));
     if (location.hash === '#signup') setMode('signup');
 
+    const capitalizeName = value => value
+      .trim()
+      .toLowerCase()
+      .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, separator, letter) => separator + letter.toUpperCase());
+
+    ['firstName', 'lastName'].forEach(id => $(id).addEventListener('blur', event => { event.target.value = capitalizeName(event.target.value); }));
+
     $('phone').addEventListener('input', event => {
       event.target.value = event.target.value.replace(/[^\d ]/g, '');
     });
@@ -398,11 +406,6 @@
       });
       if (error) showMessage(error.message);
     });
-
-    const capitalizeName = value => value
-      .trim()
-      .toLowerCase()
-      .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, separator, letter) => separator + letter.toUpperCase());
 
     // Email/password sign in and account creation
     form.addEventListener('submit', async event => {
