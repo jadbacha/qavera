@@ -117,12 +117,16 @@
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium Box</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury Box</a>
-        <div class="v3-mobile-group">
-          <span class="caption">The pantry</span>
-          <a href="${PAGES.assorted}"${current('assorted')}>Wrapped Chocolate</a>
-          <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
-          <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
-          <a href="${PAGES.bites}"${current('bites')}>Bites</a>
+        <div class="v3-mobile-group${PANTRY.includes(page) ? ' is-current' : ''}">
+          <button type="button" class="v3-mobile-group-toggle" aria-expanded="false" aria-controls="v3MobilePantry">Pantry<span aria-hidden="true">+</span></button>
+          <div class="v3-mobile-group-panel" id="v3MobilePantry">
+            <div>
+              <a href="${PAGES.assorted}"${current('assorted')}>Wrapped Chocolate</a>
+              <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
+              <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
+              <a href="${PAGES.bites}"${current('bites')}>Bites</a>
+            </div>
+          </div>
         </div>
         <a href="${PAGES.homeCollection}"${current('homeCollection')}>The Home</a>
         <a href="${PAGES.story}"${current('story')}>Our story</a>
@@ -153,12 +157,23 @@
 
   const menuToggle = document.getElementById('v3MenuToggle');
   const mobileMenu = document.getElementById('v3MobileMenu');
+
+  // Pantry sub-menu in the phone menu: closed until tapped.
+  const mobileGroup = mobileMenu.querySelector('.v3-mobile-group');
+  const mobileGroupToggle = mobileGroup.querySelector('.v3-mobile-group-toggle');
+  const setGroup = open => {
+    mobileGroup.classList.toggle('open', open);
+    mobileGroupToggle.setAttribute('aria-expanded', String(open));
+  };
+  mobileGroupToggle.addEventListener('click', () => setGroup(!mobileGroup.classList.contains('open')));
+
   const setMenu = open => {
     body.classList.toggle('v3-menu-open', open);
     body.classList.toggle('v3-lock', open);
     menuToggle.setAttribute('aria-expanded', String(open));
     menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     mobileMenu.setAttribute('aria-hidden', String(!open));
+    if (!open) setGroup(false);
   };
   menuToggle.addEventListener('click', () => setMenu(!body.classList.contains('v3-menu-open')));
   mobileMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setMenu(false)));
@@ -203,7 +218,7 @@
     <div class="v3-cart-backdrop" id="v3CartBackdrop"></div>
     <aside class="v3-cart" id="v3Cart" role="dialog" aria-modal="true" aria-labelledby="v3CartTitle" aria-hidden="true">
       <div class="v3-cart-head">
-        <h2 id="v3CartTitle">Your <em>box</em></h2>
+        <h2 id="v3CartTitle">Your <em>cart</em></h2>
         <button class="v3-cart-close" id="v3CartClose" type="button" aria-label="Close cart">${icon.close}</button>
       </div>
       <div class="v3-cart-items" id="v3CartItems"></div>
@@ -239,7 +254,7 @@
       cartItemsEl.innerHTML = `
         <div class="v3-cart-empty">
           <div class="bonbon p9" style="margin:0 auto"></div>
-          <p class="display">Your box is <em>empty</em>.</p>
+          <p class="display">Your cart is <em>empty</em>.</p>
           <p>Start with a Premium or Luxury box, or something from the pantry.</p>
           <a class="btn btn-line" href="${PAGES.shop}">Explore the collection</a>
         </div>`;
@@ -345,7 +360,7 @@
       else cart.push({ ...item, quantity });
       writeCart(cart);
       if (open) openCart();
-      else toast(`${item.display_name || item.product_name || item.name} added to your box`);
+      else toast(`${item.display_name || item.product_name || item.name} added to your cart`);
     },
     open: openCart,
     close: closeCart,

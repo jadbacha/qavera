@@ -40,7 +40,7 @@
             <span data-qty>1</span>
             <button type="button" data-step="1" aria-label="One more">+</button>
           </div>
-          <button type="button" class="btn btn-ink" data-add>Add to box</button>
+          <button type="button" class="btn btn-ink" data-add>Add to cart</button>
         </div>
       </div>
     </article>`).join('');
@@ -76,7 +76,7 @@
     addButton.textContent = 'Added ✓';
     addButton.classList.add('added');
     setTimeout(() => {
-      addButton.textContent = 'Add to box';
+      addButton.textContent = 'Add to cart';
       addButton.classList.remove('added');
     }, 1800);
   });
