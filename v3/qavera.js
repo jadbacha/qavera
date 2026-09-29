@@ -56,7 +56,7 @@
     body.insertAdjacentHTML('afterbegin', `
       <div class="v3-loader" id="v3Loader" aria-hidden="true">
         <div class="v3-loader-inner">
-          <img src="Qavera without artisan.png" alt="">
+          <img src="v3/loader-logo.webp" alt="">
           <div class="v3-loader-line"></div>
           <span class="caption">Hand-painted chocolate</span>
         </div>
@@ -71,8 +71,8 @@
       try { sessionStorage.setItem('qaveraV3Intro', '1'); } catch (_) {}
       setTimeout(() => loader.remove(), 1000);
     };
-    window.addEventListener('load', () => setTimeout(hide, Math.max(0, 1600 - (Date.now() - started))));
-    setTimeout(hide, 4000); // never keep people waiting
+    window.addEventListener('load', () => setTimeout(hide, Math.max(0, 3000 - (Date.now() - started))));
+    setTimeout(hide, 5000); // never keep people waiting
   }
 
   // ---------------------------------------------------------
