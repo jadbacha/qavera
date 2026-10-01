@@ -25,7 +25,7 @@
         ${p.image
           ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.display.replace(/<[^>]+>/g, ''))}" loading="lazy">`
           : `<div class="bonbon ${p.paint}"></div><span class="soon caption">Photo coming soon</span>`}
-        <span class="caption">Nº ${String(i + 1).padStart(2, '0')}</span>
+        ${p.image ? '' : `<span class="caption">Nº ${String(i + 1).padStart(2, '0')}</span>`}
       </div>
       <div class="product-body">
         <h3>${p.display}</h3>
