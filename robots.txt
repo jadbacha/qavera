@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /account.html
+Disallow: /checkout.html
+Disallow: /login.html
+Disallow: /reset-password.html
+
+Sitemap: https://www.qavera.qa/sitemap.xml
