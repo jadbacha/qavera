@@ -81,6 +81,23 @@
     }, 1800);
   });
 
+  // Sold out: products an admin marked out of stock keep their card, with no Add to cart.
+  fetch('https://rhwajaceuhpfwughlgpd.supabase.co/rest/v1/products?select=name&active=eq.true&in_stock=eq.false', {
+    headers: { apikey: 'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0' }
+  })
+    .then(response => (response.ok ? response.json() : []))
+    .then(rows => {
+      const soldOut = new Set((rows || []).map(row => String(row.name).trim().toLowerCase()));
+      document.querySelectorAll('#products .product').forEach(card => {
+        const p = PRODUCTS[Number(card.dataset.index)];
+        if (!soldOut.has(p.name.trim().toLowerCase())) return;
+        card.classList.add('sold-out');
+        card.querySelector('.product-visual').insertAdjacentHTML('beforeend', '<span class="sold-out-tag">Sold out</span>');
+        card.querySelector('.product-actions').innerHTML = '<button type="button" class="btn btn-ink" disabled>Sold out</button>';
+      });
+    })
+    .catch(() => { /* offline or not set up yet: everything stays on sale */ });
+
   document.getElementById('moreGrid').innerHTML = RANGES
     .filter(r => r.key !== PAGE_KEY)
     .map((r, i) => `

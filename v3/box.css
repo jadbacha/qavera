@@ -136,3 +136,7 @@
   .other-box { grid-template-columns: 1fr; }
   .gallery-thumbs button { width: 64px; height: 64px; }
 }
+
+/* Sold out (set by an admin) */
+#addToBox.is-sold-out { opacity: .45; cursor: not-allowed; }
+.sold-out-note { font-size: .85rem; color: #e39a8e; margin-top: .8rem; }

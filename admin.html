@@ -301,6 +301,21 @@
     .status.delivered { background: #1A2D28; border-color: #1A2D28; color: var(--beige); }
     .custom-box { background: rgba(61,3,10,.07); border-left-color: var(--gold-dark); }
     .order.is-new { border-left-color: var(--gold); }
+
+    /* Stock tab */
+    .stock-intro { margin: 0 0 18px; color: var(--muted, #6f6a64); font-size: 14px; line-height: 1.5; }
+    .stock-message { color: #b00020; font-size: 14px; min-height: 1em; margin-bottom: 8px; }
+    .stock-group { margin-bottom: 26px; }
+    .stock-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,.08); }
+    .stock-name { font-size: 15px; }
+    .stock-state { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2e7d32; }
+    .stock-row.is-out .stock-name { opacity: .55; text-decoration: line-through; }
+    .stock-row.is-out .stock-state { color: #b00020; }
+    .stock-row .action { margin: 0; white-space: nowrap; }
+    @media (max-width: 560px) {
+      .stock-row { grid-template-columns: 1fr auto; }
+      .stock-row .action { grid-column: 1 / -1; justify-self: start; }
+    }
   </style>
 </head>
 <body>
@@ -369,7 +384,19 @@
       { key: 'delivered', label: 'Delivered', match: o => !isShopSale(o) && o.status === 'delivered' },
       { key: 'cancelled', label: 'Cancelled', match: o => o.status === 'cancelled' },
       { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
-      { key: 'all', label: 'All', match: () => true }
+      { key: 'all', label: 'All', match: () => true },
+      { key: 'stock', label: 'Stock', match: () => false }
+    ];
+
+    // Products on sale, for the Stock tab. null = could not load (SQL 015 not run yet).
+    let products = [];
+    const STOCK_GROUPS = [
+      { label: 'Boxes', match: p => !p.category },
+      { label: 'Wrapped Chocolate', match: p => p.category === 'assorted' },
+      { label: 'Slabs', match: p => p.category === 'slabs' },
+      { label: 'Spreads', match: p => p.category === 'spreads' },
+      { label: 'Bites', match: p => p.category === 'bites' },
+      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'bites'].includes(p.category) }
     ];
 
     const PAYMENT_LABELS = {
@@ -442,6 +469,9 @@
     async function loadOrders() {
       if (!isAdmin) return;
 
+      const productsRequest = adminSupabase
+        .from('products').select('id, name, category, in_stock').eq('active', true).order('name');
+
       const { data, error } = await adminSupabase
         .from('orders')
         .select('*, order_items(product_name, variant_name, quantity, total_price, customization)')
@@ -455,6 +485,8 @@
       }
 
       orders = data || [];
+      const productsResult = await productsRequest;
+      products = productsResult.error ? null : (productsResult.data || []);
       const updated = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
       subtitle.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · updated ${updated}`;
       render();
@@ -463,9 +495,12 @@
     function renderFilters() {
       filtersEl.hidden = false;
       filtersEl.innerHTML = FILTERS.map(filter => {
-        const count = orders.filter(o => filter.match(o)).length;
+        const count = filter.key === 'stock'
+          ? (products || []).filter(p => p.in_stock === false).length
+          : orders.filter(o => filter.match(o)).length;
+        const countLabel = filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
-          ${filter.label}<span class="count">${count}</span>
+          ${filter.label}<span class="count">${countLabel}</span>
         </button>`;
       }).join('');
     }
@@ -560,8 +595,52 @@ ${escapeHtml(order.delivery_address)}</div>`}
         </article>`;
     }
 
+    function renderStock() {
+      if (!products) {
+        content.innerHTML = `<div class="notice"><h2>Stock is not set up yet</h2><p>Run <strong>015_out_of_stock.sql</strong> in Supabase, then refresh this page.</p></div>`;
+        return;
+      }
+      const groups = STOCK_GROUPS.map(group => {
+        const list = products.filter(group.match);
+        if (!list.length) return '';
+        return `<section class="stock-group">
+          <div class="block-label">${group.label}</div>
+          ${list.map(p => `<div class="stock-row ${p.in_stock === false ? 'is-out' : ''}">
+            <span class="stock-name">${escapeHtml(p.name)}</span>
+            <span class="stock-state">${p.in_stock === false ? 'Sold out' : 'In stock'}</span>
+            <button type="button" class="action ${p.in_stock === false ? 'primary' : ''} stock-toggle" data-product="${p.id}" data-in-stock="${p.in_stock === false ? 'true' : 'false'}">
+              ${p.in_stock === false ? 'Back in stock' : 'Mark sold out'}
+            </button>
+          </div>`).join('')}
+        </section>`;
+      }).join('');
+      content.innerHTML = `<p class="stock-intro">Sold-out products stay on the website with a "Sold out" label and can't be ordered. The shop till shows them greyed out.</p>
+        <div class="stock-message" id="stockMessage" role="alert"></div>${groups}`;
+    }
+
+    async function setStock(button) {
+      const message = document.getElementById('stockMessage');
+      button.disabled = true;
+      if (message) message.textContent = '';
+      const { error } = await adminSupabase.rpc('admin_set_product_stock', {
+        p_product_id: button.dataset.product,
+        p_in_stock: button.dataset.inStock === 'true'
+      });
+      if (error) {
+        console.error('Could not change stock:', error);
+        if (message) message.textContent = error.message || 'Could not change stock.';
+        button.disabled = false;
+        return;
+      }
+      await loadOrders();
+    }
+
     function render() {
       renderFilters();
+      if (activeFilter === 'stock') {
+        renderStock();
+        return;
+      }
       const filter = FILTERS.find(f => f.key === activeFilter);
       const visible = orders.filter(o => filter.match(o));
       // To do: soonest delivery / pickup first.
@@ -622,6 +701,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
     });
 
     content.addEventListener('click', event => {
+      const stockButton = event.target.closest('.stock-toggle');
+      if (stockButton) { setStock(stockButton); return; }
       const button = event.target.closest('.action');
       if (button) setStatus(button);
     });
