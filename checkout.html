@@ -507,7 +507,7 @@
       scheduledDateInput.max = qatarDate(30);
 
       document.getElementById('whenNote').textContent = hasBox
-        ? 'Premium and Luxury boxes are made to order, so the earliest date is tomorrow.'
+        ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
         : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
 
       document.querySelectorAll('input[name="timeSlot"]').forEach(input => {
@@ -907,7 +907,7 @@
         hasError = true;
       } else if (dateValue < scheduledDateInput.min) {
         dateError.textContent = cartHasBox()
-          ? 'Premium and Luxury boxes are made to order, so the earliest date is tomorrow.'
+          ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
           : 'Today is fully booked now. Please choose another day.';
         dateError.classList.add('show');
         hasError = true;
