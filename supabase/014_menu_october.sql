@@ -5,7 +5,7 @@
 --                 is now milk chocolate; "Milk Chocolate with Mix Nuts" is hidden.
 --   Bites:        QAR 25 -> QAR 20
 --   Wrapped:      Mandiant -> Mendiant, "Chocolate Gianduja Crispy Rice" ->
---                 "Chocolate Gianduja"; Speculoos and Mix Assorted are hidden.
+--                 "Chocolate Gianduja"; Speculoos is hidden.
 -- Hidden products are not deleted, so past orders keep their details.
 -- Paste into Supabase SQL Editor and click Run. Safe to run more than once.
 
@@ -57,8 +57,7 @@ update public.products set name = 'Chocolate Gianduja' where lower(name) = 'choc
 update public.products
 set active = false
 where lower(name) in ('speculoos with chocolate ganache',
-                      'specullos with chocolate ganache',
-                      'mix assorted');
+                      'specullos with chocolate ganache');
 
 commit;
 
