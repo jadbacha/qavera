@@ -86,3 +86,21 @@
 @media (max-width: 600px) {
   .products { grid-template-columns: 1fr; }
 }
+
+/* Sold out (set by an admin) */
+.product.sold-out .product-visual > :not(.sold-out-tag) { opacity: .45; filter: grayscale(.6); }
+.product.sold-out .product-actions .btn { width: 100%; opacity: .5; cursor: not-allowed; }
+.sold-out-tag {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: .55rem 1.1rem;
+  background: var(--ink);
+  color: var(--sand);
+  font-family: var(--mono);
+  font-size: .7rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.product.sold-out .product-actions { grid-template-columns: 1fr; }

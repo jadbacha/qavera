@@ -189,14 +189,25 @@
       </div>
     </article>`).join('');
 
+  // ---------- sold out (set by an admin) ----------
+  function markSoldOut() {
+    const button = el('addToBox');
+    button.disabled = true;
+    button.classList.add('is-sold-out');
+    button.textContent = 'Sold out';
+    button.closest('.buy-row').insertAdjacentHTML('afterend',
+      `<p class="sold-out-note">The ${escapeHtml(BOX.displayName)} is sold out for now. Please check back soon.</p>`);
+  }
+
   // ---------- live sizes and prices from Supabase ----------
   async function loadFromSupabase() {
     try {
       const { data: product, error } = await sb
-        .from('products').select('id, name').ilike('name', BOX.dbName).eq('active', true).maybeSingle();
+        .from('products').select('*').ilike('name', BOX.dbName).eq('active', true).maybeSingle();
       if (error || !product) return;
       state.productId = product.id;
       state.productName = product.name;
+      if (product.in_stock === false) markSoldOut();
 
       const { data: variants, error: vError } = await sb
         .from('product_variants').select('id, name, price, active').eq('product_id', product.id).eq('active', true);
