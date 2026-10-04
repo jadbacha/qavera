@@ -64,6 +64,7 @@
     .choice strong em { font-style: normal; font-family: var(--mono); font-size: .75rem; color: var(--sand); }
     .choice span { font-size: .85rem; color: rgba(216,216,216,.55); }
     .choice input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
+    .choice label.is-closed { opacity: .4; cursor: not-allowed; }
     .pickup-note { display: none; margin-bottom: 1.8rem; padding: 1.2rem; border: 1px solid var(--line-dark); background: rgba(216,216,216,.03); font-size: .92rem; color: var(--muted-dark); }
     .pickup-note strong { display: block; color: var(--silver); font-weight: 500; margin-bottom: .3rem; }
     body.is-pickup .pickup-note { display: block; }
@@ -222,7 +223,7 @@
 
         <div class="co-step">
           <div class="co-step-head"><span class="num">02</span><h2 id="whenTitle">Delivery date &amp; time</h2></div>
-          <p class="when-note">Every order is prepared by hand, so the earliest date is tomorrow.</p>
+          <p class="when-note" id="whenNote">Same-day orders are welcome: order at least 1 hour before your time starts.</p>
           <div class="when-fields">
             <div class="v3-field">
               <label for="scheduledDate" id="dateLabel">Delivery date *</label>
@@ -231,8 +232,8 @@
             </div>
             <div>
               <div class="choice slots" role="radiogroup" aria-label="Time">
-                <label><input type="radio" name="timeSlot" value="12:00-16:00"><strong>12 PM – 4 PM</strong><span>Afternoon</span></label>
-                <label><input type="radio" name="timeSlot" value="18:00-23:00"><strong>6 PM – 11 PM</strong><span>Evening</span></label>
+                <label><input type="radio" name="timeSlot" value="12:00-16:00"><strong>12 PM – 4 PM</strong><span data-open="Afternoon">Afternoon</span></label>
+                <label><input type="radio" name="timeSlot" value="18:00-23:00"><strong>6 PM – 11 PM</strong><span data-open="Evening">Evening</span></label>
               </div>
               <div class="required-error" id="timeSlotError">Please choose a time.</div>
             </div>
@@ -460,7 +461,8 @@
     const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
     const deliveryFee = () => (isPickup() ? 0 : DELIVERY_FEE);
 
-    // Dates are counted in Qatar time: earliest tomorrow, latest 30 days ahead.
+    // Dates are counted in Qatar time, up to 30 days ahead. Same day is allowed,
+    // except for Premium / Luxury boxes (made to order: from tomorrow).
     function qatarDate(offsetDays) {
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
       const date = new Date(`${today}T12:00:00Z`);
@@ -477,6 +479,47 @@
     const scheduledDateInput = document.getElementById('scheduledDate');
     scheduledDateInput.min = qatarDate(1);
     scheduledDateInput.max = qatarDate(30);
+
+    // Today's slots close 1 hour before they start (the database checks this too).
+    const SLOT_CUTOFF_MINUTES = { '12:00-16:00': 11 * 60, '18:00-23:00': 17 * 60 };
+
+    function qatarMinutesNow() {
+      const [h, m] = new Date().toLocaleTimeString('en-GB', {
+        timeZone: 'Asia/Qatar', hour12: false, hour: '2-digit', minute: '2-digit'
+      }).split(':').map(Number);
+      return (h % 24) * 60 + m;
+    }
+
+    function cartHasBox() {
+      return cart.some(item =>
+        ['premium', 'luxury'].includes(String(item.product_name || '').trim().toLowerCase())
+        || /^(premium|luxury)-box-/.test(String(item.id || '')));
+    }
+
+    function slotOpen(slot, date) {
+      return date !== qatarDate(0) || qatarMinutesNow() < SLOT_CUTOFF_MINUTES[slot];
+    }
+
+    function applyDateRules() {
+      const hasBox = cartHasBox();
+      const todayOpen = !hasBox && Object.keys(SLOT_CUTOFF_MINUTES).some(slot => slotOpen(slot, qatarDate(0)));
+      scheduledDateInput.min = todayOpen ? qatarDate(0) : qatarDate(1);
+      scheduledDateInput.max = qatarDate(30);
+
+      document.getElementById('whenNote').textContent = hasBox
+        ? 'Premium and Luxury boxes are made to order, so the earliest date is tomorrow.'
+        : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
+
+      document.querySelectorAll('input[name="timeSlot"]').forEach(input => {
+        const open = slotOpen(input.value, scheduledDateInput.value);
+        const label = input.closest('label');
+        const note = label.querySelector('span');
+        input.disabled = !open;
+        label.classList.toggle('is-closed', !open);
+        note.textContent = open ? note.dataset.open : 'Closed for today';
+        if (!open && input.checked) input.checked = false;
+      });
+    }
     const POINTS_PER_QAR_SPENT = 0.1; // 100 points per QAR 1,000 spent
     const QAR_PER_100_POINTS = 10;
     const MIN_REDEEMABLE_POINTS = 100;
@@ -507,6 +550,7 @@
 
     function renderOrder() {
       orderItems.innerHTML = '';
+      applyDateRules();
 
       if (cart.length === 0) {
         orderItems.innerHTML = `<p class="empty-cart">Your cart is empty. <a href="shop.html">Explore the collection</a>.</p>`;
@@ -854,6 +898,7 @@
         ) || hasError;
       }
 
+      applyDateRules();
       const dateError = document.getElementById('scheduledDateError');
       const dateValue = scheduledDateInput.value;
       if (!dateValue) {
@@ -861,7 +906,9 @@
         dateError.classList.add('show');
         hasError = true;
       } else if (dateValue < scheduledDateInput.min) {
-        dateError.textContent = 'The earliest date is tomorrow, as every order is prepared by hand.';
+        dateError.textContent = cartHasBox()
+          ? 'Premium and Luxury boxes are made to order, so the earliest date is tomorrow.'
+          : 'Today is fully booked now. Please choose another day.';
         dateError.classList.add('show');
         hasError = true;
       } else if (dateValue > scheduledDateInput.max) {
@@ -925,7 +972,12 @@
     }
 
     document.querySelectorAll('input[name="fulfillment"]').forEach(input => input.addEventListener('change', applyFulfillment));
-    scheduledDateInput.addEventListener('change', () => document.getElementById('scheduledDateError').classList.remove('show'));
+    scheduledDateInput.addEventListener('change', () => {
+      document.getElementById('scheduledDateError').classList.remove('show');
+      applyDateRules();
+    });
+    // Close today's slots on time while the page stays open.
+    setInterval(applyDateRules, 60000);
     document.querySelectorAll('input[name="timeSlot"]').forEach(input =>
       input.addEventListener('change', () => document.getElementById('timeSlotError').classList.remove('show')));
 
