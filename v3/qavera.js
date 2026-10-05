@@ -24,7 +24,9 @@
     contact: 'contactus.html',
     account: 'account.html',
     login: 'login.html',
-    checkout: 'checkout.html'
+    checkout: 'checkout.html',
+    terms: 'terms.html',
+    privacy: 'privacy.html'
   };
 
   const WHATSAPP = 'https://wa.me/97450968968';
@@ -398,6 +400,8 @@
               <a href="${PAGES.story}">Our story</a>
               <a href="${PAGES.account}">Your account</a>
               <a href="${PAGES.contact}">Contact us</a>
+              <a href="${PAGES.terms}">Terms &amp; refunds</a>
+              <a href="${PAGES.privacy}">Privacy</a>
             </div>
             <div class="v3-footer-col">
               <h4>Connect</h4>
