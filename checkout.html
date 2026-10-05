@@ -69,6 +69,8 @@
     .pickup-note strong { display: block; color: var(--silver); font-weight: 500; margin-bottom: .3rem; }
     body.is-pickup .pickup-note { display: block; }
     body.is-pickup .delivery-only { display: none !important; }
+    .terms-note { margin-top: .9rem; text-align: center; font-size: .78rem; color: rgba(216,216,216,.5); }
+    .terms-note a { color: rgba(216,216,216,.75); }
     .when-note { font-size: .85rem; color: rgba(216,216,216,.55); margin: -.6rem 0 1.4rem; }
     .when-fields { display: grid; gap: 1.6rem; }
     .when-fields input[type="date"] { color-scheme: dark; max-width: 20rem; }
@@ -126,7 +128,7 @@
   </style>
 </head>
 <body data-page="checkout" data-no-loader>
-  <script src="v3/qavera.js?v=20261004"></script>
+  <script src="v3/qavera.js?v=20261006b"></script>
 
   <main class="v3-main">
     <header class="co-head">
@@ -274,6 +276,7 @@
         <div class="summary-total"><span>Total</span><span id="total">QAR 20</span></div>
         <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
         <p class="secure caption"><span>Signed in</span><span>·</span><span id="payWhen">Pay on delivery</span></p>
+        <p class="terms-note">By placing your order you agree to our <a href="terms.html" target="_blank">Terms &amp; refund policy</a>.</p>
       </aside>
     </div>
   </main>

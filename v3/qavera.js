@@ -19,13 +19,14 @@
     assorted: 'assorted.html',
     slabs: 'slabs.html',
     spreads: 'spreads.html',
-    bites: 'bites.html',
     homeCollection: 'home-collection.html',
     story: 'ourstory.html',
     contact: 'contactus.html',
     account: 'account.html',
     login: 'login.html',
-    checkout: 'checkout.html'
+    checkout: 'checkout.html',
+    terms: 'terms.html',
+    privacy: 'privacy.html'
   };
 
   const WHATSAPP = 'https://wa.me/97450968968';
@@ -39,7 +40,7 @@
   document.documentElement.classList.add('v3-js');
 
   const current = key => (key === page ? ' aria-current="page"' : '');
-  const PANTRY = ['assorted', 'slabs', 'spreads', 'bites'];
+  const PANTRY = ['assorted', 'slabs', 'spreads'];
   const icon = {
     user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
     bag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
@@ -93,7 +94,6 @@
             <a href="${PAGES.assorted}"${current('assorted')}><span>Wrapped Chocolate</span><small>500 G · QAR 190</small></a>
             <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 60</small></a>
             <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>260 G · QAR 50</small></a>
-            <a href="${PAGES.bites}"${current('bites')}><span>Bites</span><small>100 G · QAR 20</small></a>
             <a class="v3-drop-all" href="${PAGES.shop}#pantry">View the pantry →</a>
           </div>
         </div>
@@ -124,7 +124,6 @@
               <a href="${PAGES.assorted}"${current('assorted')}>Wrapped Chocolate</a>
               <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
               <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
-              <a href="${PAGES.bites}"${current('bites')}>Bites</a>
             </div>
           </div>
         </div>
@@ -394,7 +393,6 @@
               <a href="${PAGES.assorted}">Wrapped Chocolate</a>
               <a href="${PAGES.slabs}">Slabs</a>
               <a href="${PAGES.spreads}">Spreads</a>
-              <a href="${PAGES.bites}">Bites</a>
               <a href="${PAGES.homeCollection}">The Home</a>
             </div>
             <div class="v3-footer-col">
@@ -402,6 +400,8 @@
               <a href="${PAGES.story}">Our story</a>
               <a href="${PAGES.account}">Your account</a>
               <a href="${PAGES.contact}">Contact us</a>
+              <a href="${PAGES.terms}">Terms &amp; refunds</a>
+              <a href="${PAGES.privacy}">Privacy</a>
             </div>
             <div class="v3-footer-col">
               <h4>Connect</h4>

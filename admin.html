@@ -395,8 +395,7 @@
       { label: 'Wrapped Chocolate', match: p => p.category === 'assorted' },
       { label: 'Slabs', match: p => p.category === 'slabs' },
       { label: 'Spreads', match: p => p.category === 'spreads' },
-      { label: 'Bites', match: p => p.category === 'bites' },
-      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'bites'].includes(p.category) }
+      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads'].includes(p.category) }
     ];
 
     const PAYMENT_LABELS = {

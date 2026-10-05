@@ -4,7 +4,7 @@
 /account-v3.html  /account.html  301
 /admin-v3.html  /admin.html  301
 /assorted-v3.html  /assorted.html  301
-/bites-v3.html  /bites.html  301
+/bites-v3.html  /shop.html  301
 /checkout-v3.html  /checkout.html  301
 /contactus-v3.html  /contactus.html  301
 /home-collection-v3.html  /home-collection.html  301
@@ -17,3 +17,8 @@
 /shop-v3.html  /shop.html  301
 /slabs-v3.html  /slabs.html  301
 /spreads-v3.html  /spreads.html  301
+
+# Bites are no longer sold
+/bites.html  /shop.html  301
+/bites  /shop.html  301
+/bites-old.html  /shop.html  301
