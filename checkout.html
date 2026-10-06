@@ -503,15 +503,23 @@
       return date !== qatarDate(0) || qatarMinutesNow() < SLOT_CUTOFF_MINUTES[slot];
     }
 
+    // Opening: no deliveries or pickups before this date (the database checks it too).
+    // Once the date has passed it has no effect, so nothing needs to be undone.
+    const FIRST_DELIVERY_DATE = '2026-10-10';
+    const OPENING_NOTE = 'Our first deliveries and pickups are on Saturday 10 October. Please choose 10 October or later.';
+
     function applyDateRules() {
       const hasBox = cartHasBox();
       const todayOpen = !hasBox && Object.keys(SLOT_CUTOFF_MINUTES).some(slot => slotOpen(slot, qatarDate(0)));
-      scheduledDateInput.min = todayOpen ? qatarDate(0) : qatarDate(1);
+      const normalMin = todayOpen ? qatarDate(0) : qatarDate(1);
+      scheduledDateInput.min = normalMin < FIRST_DELIVERY_DATE ? FIRST_DELIVERY_DATE : normalMin;
       scheduledDateInput.max = qatarDate(30);
 
-      document.getElementById('whenNote').textContent = hasBox
-        ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
-        : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
+      document.getElementById('whenNote').textContent = normalMin < FIRST_DELIVERY_DATE
+        ? OPENING_NOTE
+        : hasBox
+          ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
+          : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
 
       document.querySelectorAll('input[name="timeSlot"]').forEach(input => {
         const open = slotOpen(input.value, scheduledDateInput.value);
@@ -909,7 +917,9 @@
         dateError.classList.add('show');
         hasError = true;
       } else if (dateValue < scheduledDateInput.min) {
-        dateError.textContent = cartHasBox()
+        dateError.textContent = dateValue < FIRST_DELIVERY_DATE
+          ? OPENING_NOTE
+          : cartHasBox()
           ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
           : 'Today is fully booked now. Please choose another day.';
         dateError.classList.add('show');
