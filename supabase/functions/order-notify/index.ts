@@ -124,7 +124,7 @@ function layout(label: string, title: string, bodyHtml: string): string {
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
              style="max-width:560px;background:#FAF5EA;border:1px solid rgba(26,23,19,.12);font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#1A1713;">
         <tr><td style="background:#0D0B08;padding:26px 32px;text-align:center;">
-          <div style="font-family:Georgia,serif;font-size:26px;letter-spacing:.3em;color:#C9A84C;">QAVERA</div>
+          <img src="https://www.qavera.qa/email-logo.png" width="220" height="49" alt="QAVERA" style="display:block;margin:0 auto;border:0;width:220px;height:auto;">
         </td></tr>
         <tr><td style="padding:34px 32px 10px;text-align:center;">
           <div style="color:#9A7A2E;font-size:11px;letter-spacing:.25em;text-transform:uppercase;">${label}</div>
