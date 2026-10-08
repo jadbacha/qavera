@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // Not signed in: go to sign in right away, before the page shows.
+    try {
+      if (!localStorage.getItem('sb-rhwajaceuhpfwughlgpd-auth-token')) {
+        location.replace('login.html?next=checkout.html');
+      }
+    } catch (_) {}
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checkout — QAVERA</title>
@@ -128,7 +136,7 @@
   </style>
 </head>
 <body data-page="checkout" data-no-loader>
-  <script src="v3/qavera.js?v=20261008"></script>
+  <script src="v3/qavera.js?v=20261008b"></script>
 
   <main class="v3-main">
     <header class="co-head">
