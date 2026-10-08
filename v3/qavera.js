@@ -85,7 +85,7 @@
         <span></span><span></span>
       </button>
       <nav class="v3-nav" aria-label="Main">
-        <a href="${PAGES.shop}"${current('shop')}>Shop</a>
+        <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury</a>
         <div class="v3-drop${PANTRY.includes(page) ? ' is-current' : ''}">
