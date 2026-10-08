@@ -332,8 +332,15 @@
   });
 
   // Hand the current cart to checkout (checkout reads this first).
-  document.getElementById('v3CheckoutButton').addEventListener('click', () => {
+  document.getElementById('v3CheckoutButton').addEventListener('click', event => {
     try { sessionStorage.setItem('qaveraCheckoutCart', JSON.stringify(readCart())); } catch (_) {}
+    // Not signed in: go straight to sign in, then on to checkout.
+    let signedIn = false;
+    try { signedIn = !!localStorage.getItem('sb-rhwajaceuhpfwughlgpd-auth-token'); } catch (_) {}
+    if (!signedIn) {
+      event.preventDefault();
+      window.location.href = `${PAGES.login}?next=${PAGES.checkout}`;
+    }
   });
 
   // Keep tabs in sync.
