@@ -93,7 +93,7 @@
           <div class="v3-drop-panel" id="v3PantryMenu">
             <a href="${PAGES.assorted}"${current('assorted')}><span>Wrapped Chocolate</span><small>500 G · QAR 190</small></a>
             <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 60</small></a>
-            <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>260 G · QAR 50</small></a>
+            <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>280 G · QAR 50</small></a>
             <a class="v3-drop-all" href="${PAGES.shop}#pantry">View the pantry →</a>
           </div>
         </div>
