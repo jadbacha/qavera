@@ -234,6 +234,107 @@
   const cartFootEl = document.getElementById('v3CartFoot');
   let lastFocus = null;
 
+  // ---------- suggestions ("You might also like" / "Pairs well with") ----------
+  const SUGGEST = {
+    pantry: [
+      { name: 'Hazelnut Spread', display: 'Hazelnut Spread', size: '280 G', price: 50, image: 'spread-hazelnut.webp', paint: 'p2', kind: 'spread' },
+      { name: 'Pistachio Spread', display: 'Pistachio Spread', size: '280 G', price: 50, image: 'spread-pistachio.webp', paint: 'p4', kind: 'spread' },
+      { name: 'Lotus Spread', display: 'Lotus Spread', size: '280 G', price: 50, image: 'spread-lotus.webp', paint: 'p6', kind: 'spread' },
+      { name: 'White Chocolate with Almond and Raspberry', display: 'White Chocolate Slab', size: '100 G', price: 60, image: 'slab-white-raspberry.webp', paint: 'p3', kind: 'slab' },
+      { name: 'Milk Chocolate with Hazelnuts', display: 'Milk Chocolate Slab', size: '100 G', price: 60, image: 'slab-milk-hazelnut.webp', paint: 'p12', kind: 'slab' }
+    ],
+    boxes: [
+      { name: 'Premium', display: 'The Premium Box', meta: '12, 25 or 48 pieces', from: 75, image: 'black box.jpg', href: PAGES.premium },
+      { name: 'Luxury', display: 'The Luxury Box', meta: '12, 25 or 48 pieces', from: 100, image: 'green box fitted.webp', href: PAGES.luxury }
+    ]
+  };
+  const pantryId = name => name.toLowerCase().replace(/\s+/g, '-');
+  const isBoxItem = item => ['premium', 'luxury'].includes(String(item.product_name || '').trim().toLowerCase())
+    || /^(premium|luxury)-box-/.test(String(item.id || ''));
+
+  // Products an admin marked sold out (loaded once; nothing is hidden if this fails).
+  let soldOut = new Set();
+  fetch('https://rhwajaceuhpfwughlgpd.supabase.co/rest/v1/products?select=name&active=eq.true&in_stock=eq.false', {
+    headers: { apikey: 'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0' }
+  })
+    .then(r => (r.ok ? r.json() : []))
+    .then(rows => {
+      soldOut = new Set((rows || []).map(r => String(r.name).trim().toLowerCase()));
+      renderCart();
+      document.querySelectorAll('[data-pairs]').forEach(el => renderPairs(el, el.dataset.pairs));
+    })
+    .catch(() => {});
+  const available = p => !soldOut.has(p.name.toLowerCase());
+
+  function addPantry(name) {
+    const p = SUGGEST.pantry.find(x => x.name === name);
+    if (!p) return;
+    window.QaveraCart.add({
+      id: pantryId(p.name), name: p.name, product_name: p.name, variant_name: p.size, size: p.size,
+      price: p.price, quantity: 1, image: p.image, paint: p.paint
+    }, { open: false });
+  }
+
+  function suggestionsFor(cart) {
+    const inCart = new Set(cart.map(i => String(i.product_name || i.name || '').toLowerCase()));
+    if (cart.some(isBoxItem)) {
+      const options = SUGGEST.pantry.filter(p => available(p) && !inCart.has(p.name.toLowerCase()));
+      const spread = options.find(p => p.kind === 'spread');
+      const slab = options.find(p => p.kind === 'slab');
+      return [spread, slab].filter(Boolean).concat(options.filter(p => p !== spread && p !== slab)).slice(0, 2);
+    }
+    return SUGGEST.boxes.filter(available);
+  }
+
+  function renderCartSuggestions(cart) {
+    const list = suggestionsFor(cart);
+    if (!list.length) return '';
+    return `
+      <div class="v3-suggest">
+        <p class="caption">You might also like</p>
+        ${list.map(p => `
+          <div class="v3-suggest-row">
+            <div class="v3-cart-thumb"><img src="${escapeHtml(p.image)}" alt=""></div>
+            <div>
+              <h4>${escapeHtml(p.display)}</h4>
+              <span class="caption">${p.href ? `From ${qar(p.from)}` : `${escapeHtml(p.size)} · ${qar(p.price)}`}</span>
+            </div>
+            ${p.href
+              ? `<a class="v3-suggest-add" href="${p.href}">View</a>`
+              : `<button type="button" class="v3-suggest-add" data-suggest-add="${escapeHtml(p.name)}">+ Add</button>`}
+          </div>`).join('')}
+      </div>`;
+  }
+
+  // "Pairs well with" grid on product pages: <div data-pairs="pantry"> or data-pairs="boxes">
+  function renderPairs(el, kind) {
+    const list = (kind === 'boxes' ? SUGGEST.boxes : SUGGEST.pantry).filter(available);
+    el.innerHTML = list.map(p => `
+      <article class="pair-card">
+        <a class="pair-visual" href="${p.href || (p.kind === 'spread' ? PAGES.spreads : PAGES.slabs)}"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.display)}" loading="lazy"></a>
+        <div class="pair-body">
+          <h3>${escapeHtml(p.display)}</h3>
+          <div class="pair-meta">
+            <span class="caption">${escapeHtml(p.href ? p.meta : p.size)}</span>
+            <span class="pair-price">${p.href ? `From ${qar(p.from)}` : qar(p.price)}</span>
+          </div>
+          ${p.href
+            ? `<a class="btn btn-ink pair-btn" href="${p.href}">Choose your box</a>`
+            : `<button type="button" class="btn btn-ink pair-btn" data-suggest-add="${escapeHtml(p.name)}">Add to cart</button>`}
+        </div>
+      </article>`).join('');
+  }
+
+  document.addEventListener('click', event => {
+    const add = event.target.closest('[data-suggest-add]');
+    if (!add) return;
+    addPantry(add.dataset.suggestAdd);
+    if (add.classList.contains('pair-btn')) {
+      add.textContent = 'Added ✓';
+      setTimeout(() => { add.textContent = 'Add to cart'; }, 1800);
+    }
+  });
+
   function renderCart() {
     const cart = readCart();
     const count = cart.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -290,7 +391,7 @@
             <button type="button" class="v3-cart-remove" data-cart-remove="${index}">Remove</button>
           </div>
         </div>`;
-    }).join('');
+    }).join('') + renderCartSuggestions(cart);
   }
 
   cartItemsEl.addEventListener('click', event => {
@@ -375,6 +476,7 @@
     toast
   };
   window.QaveraPages = PAGES;
+  document.querySelectorAll('[data-pairs]').forEach(el => renderPairs(el, el.dataset.pairs));
   window.QaveraFormat = { qar, escapeHtml };
 
   // ---------------------------------------------------------
