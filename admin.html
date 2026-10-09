@@ -119,6 +119,24 @@
 
     .filter .count { opacity: .7; margin-left: 4px; }
 
+    /* Day filter + print */
+    .day-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -8px 0 22px; }
+    .day-bar label { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); margin-right: 2px; }
+    .day-bar input { font: inherit; font-size: .85rem; padding: 7px 10px; border: 1px solid var(--border); background: transparent; color: inherit; }
+    .day-bar .print-button { margin-left: auto; background: var(--black); border-color: var(--black); color: var(--gold-light); }
+    .print-title { display: none; }
+
+    @media print {
+      @page { margin: 12mm; }
+      body { background: #fff !important; }
+      header, .subtitle, .filters, .day-bar, .actions, .contact-links { display: none !important; }
+      main { padding: 0 !important; max-width: none !important; }
+      main > h1 { display: none; }
+      .print-title { display: block; font-family: var(--serif, Georgia, serif); font-weight: 400; font-size: 20px; margin: 0 0 12px; }
+      .order-list { gap: 10px; }
+      .order { break-inside: avoid; page-break-inside: avoid; box-shadow: none !important; border: 1px solid #bbb !important; background: #fff !important; }
+    }
+
     .notice {
       border: 1px dashed rgba(26,23,19,.2);
       background: rgba(235,224,196,.3);
@@ -334,6 +352,15 @@
     <p class="subtitle" id="subtitle">Loading…</p>
 
     <div class="filters" id="filters" hidden></div>
+    <div class="day-bar" id="dayBar" hidden>
+      <label for="dayInput">Day</label>
+      <input type="date" id="dayInput">
+      <button type="button" class="filter" data-day="today">Today</button>
+      <button type="button" class="filter" data-day="tomorrow">Tomorrow</button>
+      <button type="button" class="filter" data-day="">All days</button>
+      <button type="button" class="filter print-button" id="printButton">Print these orders</button>
+    </div>
+    <h2 class="print-title" id="printTitle"></h2>
     <div id="content"></div>
   </main>
 
@@ -410,6 +437,20 @@
 
     let orders = [];
     let activeFilter = 'active';
+    let activeDay = ''; // '' = all days, otherwise YYYY-MM-DD (Qatar)
+
+    // Day an order belongs to: its delivery / pickup date, or for shop sales the day it was sold.
+    const qatarDay = value => new Date(value).toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
+    const orderDay = order => order.scheduled_date || qatarDay(order.created_at);
+    const dayMatch = order => !activeDay || orderDay(order) === activeDay;
+    function qatarDayOffset(days) {
+      const d = new Date(`${qatarDay(Date.now())}T12:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+    const dayLabel = day => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
+    });
     let isAdmin = false;
 
     const content = document.getElementById('content');
@@ -496,7 +537,7 @@
       filtersEl.innerHTML = FILTERS.map(filter => {
         const count = filter.key === 'stock'
           ? (products || []).filter(p => p.in_stock === false).length
-          : orders.filter(o => filter.match(o)).length;
+          : orders.filter(o => dayMatch(o) && filter.match(o)).length;
         const countLabel = filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${countLabel}</span>
@@ -634,14 +675,28 @@ ${escapeHtml(order.delivery_address)}</div>`}
       await loadOrders();
     }
 
+    function renderDayBar() {
+      const bar = document.getElementById('dayBar');
+      bar.hidden = activeFilter === 'stock';
+      document.getElementById('dayInput').value = activeDay;
+      bar.querySelectorAll('[data-day]').forEach(b => {
+        const target = b.dataset.day === 'today' ? qatarDayOffset(0) : b.dataset.day === 'tomorrow' ? qatarDayOffset(1) : '';
+        b.classList.toggle('active', target === activeDay);
+      });
+      const filter = FILTERS.find(f => f.key === activeFilter);
+      document.getElementById('printTitle').textContent =
+        `QAVERA · ${filter ? filter.label : ''} · ${activeDay ? dayLabel(activeDay) : 'All days'}`;
+    }
+
     function render() {
       renderFilters();
+      renderDayBar();
       if (activeFilter === 'stock') {
         renderStock();
         return;
       }
       const filter = FILTERS.find(f => f.key === activeFilter);
-      const visible = orders.filter(o => filter.match(o));
+      const visible = orders.filter(o => dayMatch(o) && filter.match(o));
       // To do: soonest delivery / pickup first.
       if (activeFilter === 'active') {
         visible.sort((a, b) => String(a.scheduled_date || '9999') .localeCompare(String(b.scheduled_date || '9999'))
@@ -649,7 +704,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
 
       if (!visible.length) {
-        content.innerHTML = `<div class="notice"><h2>Nothing here</h2><p>${activeFilter === 'active' ? 'No orders waiting. New orders will appear here.' : 'No orders in this list yet.'}</p></div>`;
+        content.innerHTML = `<div class="notice"><h2>Nothing here</h2><p>${activeDay ? `No orders in this list for ${escapeHtml(dayLabel(activeDay))}.` : activeFilter === 'active' ? 'No orders waiting. New orders will appear here.' : 'No orders in this list yet.'}</p></div>`;
         return;
       }
 
@@ -707,6 +762,19 @@ ${escapeHtml(order.delivery_address)}</div>`}
     });
 
     document.getElementById('refreshButton').addEventListener('click', loadOrders);
+
+    document.getElementById('dayInput').addEventListener('change', event => {
+      activeDay = event.target.value || '';
+      render();
+    });
+    document.getElementById('dayBar').addEventListener('click', event => {
+      const button = event.target.closest('[data-day]');
+      if (!button) return;
+      const key = button.dataset.day;
+      activeDay = key === 'today' ? qatarDayOffset(0) : key === 'tomorrow' ? qatarDayOffset(1) : '';
+      render();
+    });
+    document.getElementById('printButton').addEventListener('click', () => window.print());
 
     document.getElementById('logoutButton').addEventListener('click', async () => {
       await adminSupabase.auth.signOut();
