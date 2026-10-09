@@ -478,7 +478,15 @@
     let USER_POINTS = 0;
     pointsBalanceElement.textContent = '0 points';
     const DELIVERY_FEE = 20;
-    const SLOT_LABELS = { '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM' };
+    const SLOT_LABELS = {
+      '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
+      '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM'
+    };
+    // Delivery and pickup have their own times (the database checks this too).
+    const SLOTS = {
+      delivery: [{ value: '12:00-16:00', note: 'Afternoon' }, { value: '18:00-23:00', note: 'Evening' }],
+      pickup: [{ value: '10:00-14:00', note: 'Morning' }, { value: '16:00-21:00', note: 'Evening' }]
+    };
 
     const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
     const deliveryFee = () => (isPickup() ? 0 : DELIVERY_FEE);
@@ -503,7 +511,10 @@
     scheduledDateInput.max = qatarDate(30);
 
     // Today's slots close 1 hour before they start (the database checks this too).
-    const SLOT_CUTOFF_MINUTES = { '12:00-16:00': 11 * 60, '18:00-23:00': 17 * 60 };
+    const SLOT_CUTOFF_MINUTES = {
+      '12:00-16:00': 11 * 60, '18:00-23:00': 17 * 60,
+      '10:00-14:00': 9 * 60, '16:00-21:00': 15 * 60
+    };
 
     function qatarMinutesNow() {
       const [h, m] = new Date().toLocaleTimeString('en-GB', {
@@ -529,7 +540,8 @@
 
     function applyDateRules() {
       const hasBox = cartHasBox();
-      const todayOpen = !hasBox && Object.keys(SLOT_CUTOFF_MINUTES).some(slot => slotOpen(slot, qatarDate(0)));
+      const slots = SLOTS[isPickup() ? 'pickup' : 'delivery'];
+      const todayOpen = !hasBox && slots.some(slot => slotOpen(slot.value, qatarDate(0)));
       const normalMin = todayOpen ? qatarDate(0) : qatarDate(1);
       scheduledDateInput.min = normalMin < FIRST_DELIVERY_DATE ? FIRST_DELIVERY_DATE : normalMin;
       scheduledDateInput.max = qatarDate(30);
@@ -540,7 +552,14 @@
           ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
           : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
 
-      document.querySelectorAll('input[name="timeSlot"]').forEach(input => {
+      document.querySelectorAll('input[name="timeSlot"]').forEach((input, i) => {
+        const slot = slots[i];
+        if (input.value !== slot.value) {
+          input.checked = false;
+          input.value = slot.value;
+          input.closest('label').querySelector('strong').textContent = SLOT_LABELS[slot.value];
+          input.closest('label').querySelector('span').dataset.open = slot.note;
+        }
         const open = slotOpen(input.value, scheduledDateInput.value);
         const label = input.closest('label');
         const note = label.querySelector('span');
@@ -1000,6 +1019,7 @@
       document.querySelector('[data-pay-note="cash"]').textContent = pickup ? 'Pay when you collect your order.' : 'Pay when your order arrives.';
       document.querySelector('[data-pay-note="card"]').textContent = pickup ? 'Pay by card at the shop.' : 'Pay by card at your door.';
       ['areaError', 'addressError', 'buildingError', 'apartmentError'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+      applyDateRules();
       updatePointsDiscount(getTotals().subtotal);
     }
 
