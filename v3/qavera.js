@@ -422,6 +422,9 @@
             <span>© ${new Date().getFullYear()} QAVERA Chocolate</span>
             <span>Qatar</span>
           </div>
+          <div class="v3-footer-credit caption">
+            Designed by Jad Bacha, <a href="mailto:jadbacha2004.jb@gmail.com">jadbacha2004.jb@gmail.com</a>
+          </div>
         </footer>`);
     }
 
