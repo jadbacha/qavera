@@ -89,6 +89,7 @@
     .when-fields { display: grid; gap: 1.6rem; }
     .when-fields input[type="date"] { color-scheme: dark; max-width: 20rem; }
     .slots { margin-bottom: 0; }
+    .slots label[hidden] { display: none; }
 
     .summary { position: sticky; top: calc(var(--header-h) + 1.5rem); background: var(--ink-2); border: 1px solid rgba(196,169,128,.2); padding: clamp(1.4rem, 3vw, 2.2rem); }
     .summary-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1rem; }
@@ -480,13 +481,17 @@
     const DELIVERY_FEE = 20;
     const SLOT_LABELS = {
       '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
-      '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM'
+      '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM', '13:00-18:00': '1 PM – 6 PM'
     };
-    // Delivery and pickup have their own times (the database checks this too).
+    // Delivery and pickup have their own times; on Fridays pickup is 1 PM – 6 PM only
+    // (the database checks this too).
     const SLOTS = {
       delivery: [{ value: '12:00-16:00', note: 'Afternoon' }, { value: '18:00-23:00', note: 'Evening' }],
-      pickup: [{ value: '10:00-14:00', note: 'Morning' }, { value: '16:00-21:00', note: 'Evening' }]
+      pickup: [{ value: '10:00-14:00', note: 'Morning' }, { value: '16:00-21:00', note: 'Evening' }],
+      pickupFriday: [{ value: '13:00-18:00', note: 'Friday hours' }]
     };
+    const isFriday = date => !!date && new Date(`${date}T12:00:00Z`).getUTCDay() === 5;
+    const slotsFor = date => isPickup() ? (isFriday(date) ? SLOTS.pickupFriday : SLOTS.pickup) : SLOTS.delivery;
 
     const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
     const deliveryFee = () => (isPickup() ? 0 : DELIVERY_FEE);
@@ -513,7 +518,7 @@
     // Today's slots close 1 hour before they start (the database checks this too).
     const SLOT_CUTOFF_MINUTES = {
       '12:00-16:00': 11 * 60, '18:00-23:00': 17 * 60,
-      '10:00-14:00': 9 * 60, '16:00-21:00': 15 * 60
+      '10:00-14:00': 9 * 60, '16:00-21:00': 15 * 60, '13:00-18:00': 12 * 60
     };
 
     function qatarMinutesNow() {
@@ -540,8 +545,8 @@
 
     function applyDateRules() {
       const hasBox = cartHasBox();
-      const slots = SLOTS[isPickup() ? 'pickup' : 'delivery'];
-      const todayOpen = !hasBox && slots.some(slot => slotOpen(slot.value, qatarDate(0)));
+      const todayOpen = !hasBox && slotsFor(qatarDate(0)).some(slot => slotOpen(slot.value, qatarDate(0)));
+      const slots = slotsFor(scheduledDateInput.value);
       const normalMin = todayOpen ? qatarDate(0) : qatarDate(1);
       scheduledDateInput.min = normalMin < FIRST_DELIVERY_DATE ? FIRST_DELIVERY_DATE : normalMin;
       scheduledDateInput.max = qatarDate(30);
@@ -554,6 +559,12 @@
 
       document.querySelectorAll('input[name="timeSlot"]').forEach((input, i) => {
         const slot = slots[i];
+        input.closest('label').hidden = !slot;
+        if (!slot) {
+          input.checked = false;
+          input.disabled = true;
+          return;
+        }
         if (input.value !== slot.value) {
           input.checked = false;
           input.value = slot.value;

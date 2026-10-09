@@ -43,6 +43,7 @@ const SLOT_LABELS: Record<string, string> = {
   "18:00-23:00": "6 PM – 11 PM",
   "10:00-14:00": "10 AM – 2 PM",
   "16:00-21:00": "4 PM – 9 PM",
+  "13:00-18:00": "1 PM – 6 PM",
 };
 const SHOP_ADDRESS = "QAVERA shop, Zone 55, Street 162, Building 44";
 
