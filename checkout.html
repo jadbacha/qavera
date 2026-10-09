@@ -81,6 +81,8 @@
     .pickup-note strong { display: block; color: var(--silver); font-weight: 500; margin-bottom: .3rem; }
     body.is-pickup .pickup-note { display: block; }
     body.is-pickup .delivery-only { display: none !important; }
+    .urgent-note { margin: -.6rem 0 1.4rem; padding: .8rem 1rem; border: 1px solid rgba(196,169,128,.45); color: var(--silver); font-size: .9rem; }
+    .urgent-note a { color: var(--sand); font-weight: 500; white-space: nowrap; }
     .terms-note { margin-top: .9rem; text-align: center; font-size: .78rem; color: rgba(216,216,216,.5); }
     .terms-note a { color: rgba(216,216,216,.75); }
     .when-note { font-size: .85rem; color: rgba(216,216,216,.55); margin: -.6rem 0 1.4rem; }
@@ -238,6 +240,7 @@
         <div class="co-step">
           <div class="co-step-head"><span class="num">02</span><h2 id="whenTitle">Delivery date &amp; time</h2></div>
           <p class="when-note" id="whenNote">Same-day orders are welcome: order at least 1 hour before your time starts.</p>
+          <p class="urgent-note">For urgent deliveries, call us on <a href="tel:+97450968968">+974 5096 8968</a></p>
           <div class="when-fields">
             <div class="v3-field">
               <label for="scheduledDate" id="dateLabel">Delivery date *</label>
