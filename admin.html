@@ -395,7 +395,10 @@
     // Pickup orders use the same steps with pickup wording.
     const PICKUP_STATUS_LABELS = { out_for_delivery: 'Ready for pickup', delivered: 'Collected' };
     const PICKUP_ACTION_LABELS = { out_for_delivery: 'Ready for pickup', delivered: 'Collected' };
-    const SLOT_LABELS = { '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM' };
+    const SLOT_LABELS = {
+      '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
+      '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM'
+    };
     const isPickup = order => order.fulfillment_type === 'pickup';
     const statusLabel = order => (isPickup(order) && PICKUP_STATUS_LABELS[order.status]) || STATUS_LABELS[order.status] || order.status;
     const actionLabel = (order, status) => (isPickup(order) && PICKUP_ACTION_LABELS[status]) || ACTION_LABELS[status];
