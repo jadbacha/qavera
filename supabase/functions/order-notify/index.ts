@@ -300,13 +300,13 @@ async function handleStatusChange(order: Record<string, any>) {
       "On its way",
       "Your order is on its way",
       `<p style="margin:0;text-align:center;">Hello ${escapeHtml(name)}, your order
-        <strong>${escapeHtml(order.order_number)}</strong> is out for delivery and will reach you soon.</p>
+        <strong>${escapeHtml(order.order_number)}</strong> is out for delivery${order.is_gift ? ` to ${escapeHtml(order.gift_recipient_name)}` : " and will reach you soon"}.</p>
        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
          ${row("Total", qar(order.total), true)}
          ${row("Payment", escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method))}
        </table>`,
     );
-    const text = `Hello ${name},\n\nYour order ${order.order_number} is out for delivery and will reach you soon.\n\n` +
+    const text = `Hello ${name},\n\nYour order ${order.order_number} is out for delivery${order.is_gift ? ` to ${order.gift_recipient_name}` : " and will reach you soon"}.\n\n` +
       `Total: ${qar(order.total)}\n\nQAVERA`;
     await sendEmail(order.customer_email, `Your QAVERA order ${order.order_number} is on its way`, text, html, shopInbox);
   }
