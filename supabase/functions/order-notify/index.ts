@@ -152,6 +152,7 @@ function orderSummaryHtml(order: Record<string, any>, items: OrderItem[]): strin
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
       ${row("Subtotal", qar(order.subtotal))}
       ${Number(order.points_discount) > 0 ? row(`Points (${Number(order.points_used)})`, `− ${qar(order.points_discount)}`) : ""}
+      ${Number(order.discount_amount) > 0 ? row("Discount", `− ${qar(order.discount_amount)}`) : ""}
       ${isPickup(order) ? row("Pickup", "Free") : row("Delivery", qar(order.delivery_fee))}
       ${row("Total", qar(order.total), true)}
       ${row("Payment", escapeHtml(paymentLabel(order)))}
@@ -195,7 +196,7 @@ async function handleNewOrder(order: Record<string, any>) {
 
   // 1. Notice to QAVERA (plain text, easy to read on a phone).
   const shopText = [
-    `New order ${order.order_number}`,
+    `New order ${order.order_number}${order.source === "whatsapp" ? " (WhatsApp / phone, added by admin)" : ""}`,
     "",
     `${isPickup(order) ? "PICKUP" : "DELIVERY"}: ${when || "no date chosen"}`,
     "",
@@ -208,6 +209,7 @@ async function handleNewOrder(order: Record<string, any>) {
     "",
     `Subtotal: ${qar(order.subtotal)}`,
     Number(order.points_discount) > 0 ? `Points:   -${qar(order.points_discount)} (${order.points_used} points)` : null,
+    Number(order.discount_amount) > 0 ? `Discount: -${qar(order.discount_amount)}${order.discount_reason ? ` (${order.discount_reason})` : ""}` : null,
     isPickup(order) ? "Pickup:   free" : `Delivery: ${qar(order.delivery_fee)}`,
     `TOTAL:    ${qar(order.total)}`,
     `Payment:  ${payment}`,
