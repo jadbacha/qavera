@@ -353,6 +353,7 @@
     .no-totals { font-size: .9rem; display: grid; gap: 4px; max-width: 360px; margin-left: auto; width: 100%; }
     .no-totals div { display: flex; justify-content: space-between; }
     .no-totals .grand { font-weight: 600; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
+    .no-check { display: flex; align-items: center; gap: 8px; font-size: .9rem; cursor: pointer; }
     .no-message { font-size: .85rem; color: #7a2e1f; min-height: 1em; }
     .no-message.ok { color: #2e7d32; }
     .new-order [hidden] { display: none !important; }
@@ -361,6 +362,12 @@
       .no-add { grid-template-columns: 1fr 70px; }
       .no-add .action { grid-column: 1 / -1; }
     }
+    /* Gifts and Fawran */
+    .gift-tag { display: inline-block; margin: 8px 0 0 6px; padding: 4px 10px; font-family: var(--mono); font-size: .72rem; letter-spacing: .04em; background: var(--gold); color: var(--black); }
+    .pay-tag { display: inline-block; margin: 8px 0 0 6px; padding: 4px 10px; font-family: var(--mono); font-size: .72rem; letter-spacing: .04em; border: 1px solid #7a2e1f; color: #7a2e1f; }
+    .pay-tag.paid { border-color: #2e7d32; color: #2e7d32; }
+    .gift-card { margin-top: 6px; padding: 8px 10px; border-left: 3px solid var(--gold); background: rgba(196,169,128,.12); font-style: italic; white-space: pre-line; }
+    .action.paid-button { border-color: #2e7d32; color: #2e7d32; }
   </style>
 </head>
 <body>
@@ -461,6 +468,7 @@
     const PAYMENT_LABELS = {
       cash_on_delivery: 'Cash on delivery',
       card_on_delivery: 'Card on delivery',
+      fawran: 'Fawran',
       cash: 'Cash in shop',
       card: 'Card in shop'
     };
@@ -593,8 +601,12 @@
       if (isShopSale(order) && order.status === 'delivered') {
         return `<div class="actions"><span class="final-note">Paid in the shop</span></div>`;
       }
+      const fawranButton = order.payment_method !== 'fawran' ? ''
+        : order.payment_status === 'paid'
+        ? `<button type="button" class="action paid-button" data-paid="${order.id}" data-value="false">Fawran received ✓ (undo)</button>`
+        : `<button type="button" class="action primary" data-paid="${order.id}" data-value="true">Fawran received</button>`;
       if (order.status === 'delivered') {
-        return `<div class="actions"><span class="final-note">${isPickup(order) ? 'Collected' : 'Delivered'}${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span></div>`;
+        return `<div class="actions">${order.payment_status === 'paid' ? '' : fawranButton}<span class="final-note">${isPickup(order) ? 'Collected' : 'Delivered'}${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span><div class="order-message" id="msg-${order.id}"></div></div>`;
       }
       if (order.status === 'cancelled') {
         return `<div class="actions"><span class="final-note">Cancelled${Number(order.points_used) > 0 ? ' · points returned to the customer' : ''}</span></div>`;
@@ -602,7 +614,7 @@
 
       const index = FLOW.indexOf(order.status);
       const next = FLOW[index + 1];
-      const buttons = [];
+      const buttons = fawranButton ? [fawranButton] : [];
 
       if (next) {
         buttons.push(`<button type="button" class="action primary" data-id="${order.id}" data-status="${next}">${actionLabel(order, next)}</button>`);
@@ -636,14 +648,14 @@
             <div>
               <div class="order-number">${escapeHtml(order.order_number)}</div>
               <div class="order-time">${escapeHtml(formatTime(order.created_at))}</div>
-              ${scheduleLabel(order) ? `<div class="order-when ${isPickup(order) ? 'is-pickup' : ''}">${isPickup(order) ? 'Pickup' : 'Delivery'} · ${escapeHtml(scheduleLabel(order))}</div>` : ''}
+              ${scheduleLabel(order) ? `<div class="order-when ${isPickup(order) ? 'is-pickup' : ''}">${isPickup(order) ? 'Pickup' : 'Delivery'} · ${escapeHtml(scheduleLabel(order))}</div>` : ''}${order.is_gift ? '<span class="gift-tag">🎁 Gift</span>' : ''}${order.payment_method === 'fawran' ? `<span class="pay-tag ${order.payment_status === 'paid' ? 'paid' : ''}">${order.payment_status === 'paid' ? 'Fawran received' : 'Waiting for Fawran'}</span>` : ''}
             </div>
             <span class="status ${escapeHtml(order.status)}">${isShopSale(order) && order.status === 'delivered' ? 'Shop sale' : escapeHtml(statusLabel(order))}</span>
           </div>
 
           <div class="order-grid">
             <div>
-              <div class="block-label">Customer</div>
+              <div class="block-label">${order.is_gift ? 'Customer (paying)' : 'Customer'}</div>
               <div class="block">
                 ${escapeHtml(order.customer_name)}
                 ${digits ? `<br><a href="tel:+${digits}">${escapeHtml(order.customer_phone)}</a>` : ''}
@@ -655,6 +667,16 @@
                 </div>` : ''}
               </div>
 
+              ${order.is_gift ? (() => {
+                const giftDigits = String(order.gift_recipient_phone || '').replace(/\D/g, '');
+                return `<div class="block-label" style="margin-top:16px;">🎁 Gift for</div>
+              <div class="block">
+                ${escapeHtml(order.gift_recipient_name)}
+                ${giftDigits ? `<br><a href="tel:+${giftDigits}">${escapeHtml(order.gift_recipient_phone)}</a>
+                <div class="contact-links"><a href="https://wa.me/${giftDigits}" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+${giftDigits}">Call</a></div>` : ''}
+                ${order.gift_message ? `<div class="gift-card">“${escapeHtml(order.gift_message)}”</div>` : ''}
+              </div>`;
+              })() : ''}
               ${isShopSale(order) ? `<div class="block-label" style="margin-top:16px;">Sold in</div>
               <div class="block">The QAVERA shop</div>` : isPickup(order) ? `<div class="block-label" style="margin-top:16px;">Pickup</div>
               <div class="block">Customer collects from the shop</div>` : `<div class="block-label" style="margin-top:16px;">Deliver to</div>
@@ -771,6 +793,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
     const NO_DELIVERY_FEE = 25;
     let catalog = null;      // products with their sizes, loaded when the form opens
     let draftItems = [];     // [{ variant_id, label, price, quantity }]
+    let noGiftWasOn = false;
 
     async function loadCatalog() {
       const { data, error } = await adminSupabase
@@ -795,6 +818,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
       if (activeFilter !== 'new') return;
       draftItems = [];
+      noGiftWasOn = false;
       const options = catalog.map(v => `<option value="${v.id}" ${v.soldOut ? 'disabled' : ''}>${escapeHtml(v.label)} · ${qar(v.price)}${v.soldOut ? ' (sold out)' : ''}</option>`).join('');
 
       content.innerHTML = `
@@ -825,6 +849,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <label><input type="radio" name="noFulfillment" value="delivery" checked> Delivery</label>
               <label><input type="radio" name="noFulfillment" value="pickup"> Pickup from the shop</label>
             </div>
+            <label class="no-check" id="noGiftRow"><input type="checkbox" id="noGift"> 🎁 Gift: deliver to someone else</label>
+            <div class="no-grid" id="noGiftFields" hidden>
+              <div class="no-field"><label for="noGiftName">Recipient's name *</label><input id="noGiftName" autocomplete="off"></div>
+              <div class="no-field"><label for="noGiftPhone">Recipient's phone *</label><input id="noGiftPhone" type="tel" placeholder="+974 …" autocomplete="off"></div>
+              <div class="no-field" style="grid-column:1/-1"><label for="noGiftMessage">Gift message (optional)</label><input id="noGiftMessage" maxlength="300" placeholder="Written on a card"></div>
+            </div>
             <div class="no-grid" id="noAddress">
               <div class="no-field"><label for="noArea">Area *</label><input id="noArea" placeholder="e.g. Lusail"></div>
               <div class="no-field"><label for="noStreet">Address *</label><input id="noStreet" placeholder="Zone, street"></div>
@@ -845,6 +875,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="no-field"><label for="noPayment">Payment</label><select id="noPayment">
                 <option value="cash_on_delivery">Cash on delivery / pickup</option>
                 <option value="card_on_delivery">Card on delivery / pickup</option>
+                <option value="fawran">Fawran (paid in advance)</option>
               </select></div>
               <div class="no-field"><label for="noNotes">Notes</label><input id="noNotes" placeholder="Optional"></div>
             </div>
@@ -876,6 +907,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
     function updateNewOrder() {
       const pickup = noPickup();
       document.getElementById('noAddress').hidden = pickup;
+      document.getElementById('noGiftRow').hidden = pickup;
+      const gift = !pickup && document.getElementById('noGift').checked;
+      document.getElementById('noGiftFields').hidden = !gift;
+      // Gifts are paid by Fawran: switch to it once when the box is ticked.
+      if (gift && !noGiftWasOn) document.getElementById('noPayment').value = 'fawran';
+      noGiftWasOn = gift;
       document.getElementById('noFeeField').hidden = pickup;
 
       // Times depend on delivery / pickup and on Fridays for pickup.
@@ -936,6 +973,9 @@ ${escapeHtml(order.delivery_address)}</div>`}
       if (!pickup && !noValue('noArea')) missing.push('area');
       if (!pickup && !noValue('noStreet')) missing.push('address');
       if (!noValue('noDate')) missing.push('date');
+      const gift = !pickup && document.getElementById('noGift').checked;
+      if (gift && !noValue('noGiftName')) missing.push("recipient's name");
+      if (gift && !noValue('noGiftPhone')) missing.push("recipient's phone");
       if (missing.length) { message.textContent = `Please add: ${missing.join(', ')}.`; return; }
 
       const t = noTotals();
@@ -956,7 +996,13 @@ ${escapeHtml(order.delivery_address)}</div>`}
         p_discount_reason: t.percent > 0 ? `${t.percent}% off · WhatsApp` : null,
         p_delivery_fee: t.delivery,
         p_payment_method: document.getElementById('noPayment').value,
-        p_notes: noValue('noNotes') || null
+        p_notes: noValue('noNotes') || null,
+        ...(gift ? {
+          p_gift: true,
+          p_gift_name: noValue('noGiftName'),
+          p_gift_phone: noValue('noGiftPhone'),
+          p_gift_message: noValue('noGiftMessage') || null
+        } : {})
       });
       submit.disabled = false;
 
@@ -972,6 +1018,22 @@ ${escapeHtml(order.delivery_address)}</div>`}
       activeFilter = 'active';
       await loadOrders();
       subtitle.textContent = `Order ${created?.order_number || ''} added · total ${qar(created?.total)}`;
+    }
+
+    async function setPaid(button) {
+      const message = document.getElementById(`msg-${button.dataset.paid}`);
+      button.disabled = true;
+      const { error } = await adminSupabase.rpc('admin_set_payment_status', {
+        p_order_id: button.dataset.paid,
+        p_paid: button.dataset.value === 'true'
+      });
+      if (error) {
+        console.error('Could not update payment:', error);
+        if (message) message.textContent = error.message || 'Could not update the payment.';
+        button.disabled = false;
+        return;
+      }
+      await loadOrders();
     }
 
     async function setStatus(button) {
@@ -1019,6 +1081,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     content.addEventListener('click', event => {
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
+      const paidButton = event.target.closest('[data-paid]');
+      if (paidButton) { setPaid(paidButton); return; }
       const stockButton = event.target.closest('.stock-toggle');
       if (stockButton) { setStock(stockButton); return; }
       const button = event.target.closest('.action');

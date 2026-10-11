@@ -67,6 +67,7 @@
       .track div.current { font-size: .56rem; }
     }
       .order-when { color: var(--sand); margin: -.2rem 0 1rem; }
+      .fawran-due { margin: 0 0 1rem; padding: .8rem 1rem; border: 1px solid rgba(196,169,128,.45); font-size: .9rem; }
   </style>
 </head>
 <body data-page="account">
@@ -525,6 +526,9 @@
               <span class="status ${status === 'delivered' ? 'delivered' : ''}${status === 'cancelled' ? 'cancelled' : ''}">${escapeHtml(labels[status] || status)}</span>
             </div>
             ${when ? `<p class="order-when caption">${escapeHtml(when)}</p>` : ''}
+            ${order.is_gift ? `<p class="order-when caption">🎁 Gift for ${escapeHtml(order.gift_recipient_name || '')}</p>` : ''}
+            ${order.payment_method === 'fawran' && order.payment_status !== 'paid' && status !== 'cancelled'
+              ? `<p class="fawran-due">Waiting for your Fawran payment: please send ${qar(order.total)} to Corporate · Qavera Trading · CR 237335, with ${escapeHtml(order.order_number)} in the note.</p>` : ''}
             ${track}
             <ul class="order-items">${items}</ul>
             <div class="order-foot"><span>${notes.join(' · ')}</span><span>Total<strong>${qar(order.total)}</strong></span></div>
