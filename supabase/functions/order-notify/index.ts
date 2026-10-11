@@ -24,7 +24,14 @@ const SITE_URL = "https://qavera.qa";
 const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Cash on Delivery",
   card_on_delivery: "Card on Delivery",
+  fawran: "Fawran",
 };
+
+// Fawran: paid in advance to the QAVERA business account.
+const FAWRAN_DETAILS = "Corporate · Qavera Trading · CR 237335";
+const isFawran = (order: Record<string, any>) => order.payment_method === "fawran";
+const fawranText = (order: Record<string, any>) =>
+  `Please send ${qar(order.total)} by Fawran to ${FAWRAN_DETAILS}, with ${order.order_number} in the note. We will prepare your order as soon as we receive it.`;
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
@@ -160,6 +167,8 @@ function orderSummaryHtml(order: Record<string, any>, items: OrderItem[]): strin
     <div style="margin-top:22px;padding:16px 18px;background:#F5EDD9;">
       ${scheduleText(order) ? `<div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">${isPickup(order) ? "Pickup" : "Delivery"} date &amp; time</div>
       <div style="margin-bottom:14px;"><strong>${escapeHtml(scheduleText(order))}</strong></div>` : ""}
+      ${order.is_gift ? `<div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">Gift for</div>
+      <div style="margin-bottom:14px;"><strong>${escapeHtml(order.gift_recipient_name)}</strong> · ${escapeHtml(order.gift_recipient_phone)}${order.gift_message ? `<div style="margin-top:6px;font-style:italic;">“${escapeHtml(order.gift_message)}”</div>` : ""}</div>` : ""}
       <div style="color:#9A7A2E;font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:6px;">${isPickup(order) ? "Pickup from" : "Delivery address"}</div>
       <div style="white-space:pre-line;">${isPickup(order) ? escapeHtml(SHOP_ADDRESS) : `${escapeHtml(order.delivery_area)}\n${escapeHtml(order.delivery_address)}`}</div>
       ${order.notes ? `<div style="margin-top:8px;color:#6B5F45;">Notes: ${escapeHtml(order.notes)}</div>` : ""}
@@ -200,6 +209,10 @@ async function handleNewOrder(order: Record<string, any>) {
     "",
     `${isPickup(order) ? "PICKUP" : "DELIVERY"}: ${when || "no date chosen"}`,
     "",
+    order.is_gift ? `GIFT for: ${order.gift_recipient_name} (${order.gift_recipient_phone})` : null,
+    order.is_gift && order.gift_message ? `Gift message: "${order.gift_message}"` : null,
+    isFawran(order) ? "PAYMENT: Fawran, check it has arrived before preparing." : null,
+    "",
     `Customer: ${order.customer_name}`,
     `Phone:    ${order.customer_phone}`,
     `Email:    ${order.customer_email || "—"}`,
@@ -235,6 +248,7 @@ async function handleNewOrder(order: Record<string, any>) {
       "Thank you for your order",
       `<p style="margin:0;text-align:center;">Hello ${escapeHtml(firstName(order.customer_name))}, we have received your order
         <strong>${escapeHtml(order.order_number)}</strong>. We will contact you shortly to confirm your ${isPickup(order) ? "pickup" : "delivery"}.</p>
+       ${isFawran(order) ? `<p style="margin:16px 0 0;padding:12px 14px;border:1px solid #C4A980;text-align:center;">${escapeHtml(fawranText(order))}</p>` : ""}
        ${orderSummaryHtml(order, items)}`,
     );
     const text = [
@@ -242,6 +256,9 @@ async function handleNewOrder(order: Record<string, any>) {
       "",
       `Thank you for your order ${order.order_number}. We will contact you shortly to confirm your ${isPickup(order) ? "pickup" : "delivery"}.`,
       "",
+      isFawran(order) ? fawranText(order) : null,
+      isFawran(order) ? "" : null,
+      order.is_gift ? `Gift for: ${order.gift_recipient_name}` : null,
       when ? `${isPickup(order) ? "Pickup" : "Delivery"}: ${when}` : null,
       "",
       itemsText(items),
@@ -283,13 +300,13 @@ async function handleStatusChange(order: Record<string, any>) {
       "On its way",
       "Your order is on its way",
       `<p style="margin:0;text-align:center;">Hello ${escapeHtml(name)}, your order
-        <strong>${escapeHtml(order.order_number)}</strong> is out for delivery and will reach you soon.</p>
+        <strong>${escapeHtml(order.order_number)}</strong> is out for delivery${order.is_gift ? ` to ${escapeHtml(order.gift_recipient_name)}` : " and will reach you soon"}.</p>
        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
          ${row("Total", qar(order.total), true)}
          ${row("Payment", escapeHtml(PAYMENT_LABELS[order.payment_method] || order.payment_method))}
        </table>`,
     );
-    const text = `Hello ${name},\n\nYour order ${order.order_number} is out for delivery and will reach you soon.\n\n` +
+    const text = `Hello ${name},\n\nYour order ${order.order_number} is out for delivery${order.is_gift ? ` to ${order.gift_recipient_name}` : " and will reach you soon"}.\n\n` +
       `Total: ${qar(order.total)}\n\nQAVERA`;
     await sendEmail(order.customer_email, `Your QAVERA order ${order.order_number} is on its way`, text, html, shopInbox);
   }

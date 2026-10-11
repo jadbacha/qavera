@@ -62,6 +62,17 @@
     .pay strong { font-weight: 500; }
     .pay span { font-size: .85rem; color: rgba(216,216,216,.55); }
     .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
+    .pay label.is-off { opacity: .4; cursor: not-allowed; }
+    .pay-note { grid-column: 1 / -1; font-size: .85rem; color: var(--sand); }
+    .pay-note[hidden] { display: none; }
+
+    /* Gift: delivered to someone else, paid by Fawran */
+    .gift { margin-bottom: 1.8rem; padding: 1.2rem; border: 1px solid rgba(196,169,128,.45); display: grid; gap: 1.2rem; }
+    .gift-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 1.4rem; }
+    .gift-fields .full { grid-column: 1 / -1; }
+    .gift-fields[hidden] { display: none; }
+    .gift-hint { font-size: .85rem; color: rgba(216,216,216,.55); }
+    @media (max-width: 640px) { .gift-fields { grid-template-columns: 1fr; } }
     .pay-soon { grid-column: 1 / -1; display: flex; flex-direction: column; gap: .3rem; padding: 1.2rem; border: 1px dashed rgba(216,216,216,.22); opacity: .55; cursor: not-allowed; user-select: none; }
     .pay-soon strong { font-weight: 500; display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
     .pay-soon em { font-style: normal; font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: var(--sand); padding: .25rem .55rem; }
@@ -165,6 +176,27 @@
             <strong>QAVERA shop</strong>
             Zone 55, Street 162, Building 44 · +974 5096 8968<br>
             Please bring your order number when you collect.
+          </div>
+
+          <div class="gift delivery-only">
+            <label class="check"><input type="checkbox" id="isGift"><span>Send as a gift to someone else</span></label>
+            <div class="gift-fields" id="giftFields" hidden>
+              <p class="gift-hint full">We deliver to the recipient. Gifts are paid in advance by Fawran. Enter the recipient's address below, and your own name and phone so we can reach you.</p>
+              <div class="v3-field">
+                <label for="giftName">Recipient's name *</label>
+                <input type="text" id="giftName" autocomplete="off">
+                <div class="required-error" id="giftNameError">Please enter the recipient's name.</div>
+              </div>
+              <div class="v3-field">
+                <label for="giftPhone">Recipient's phone *</label>
+                <input type="tel" id="giftPhone" placeholder="+974 XXXX XXXX" autocomplete="off">
+                <div class="required-error" id="giftPhoneError">Please enter the recipient's phone.</div>
+              </div>
+              <div class="v3-field full">
+                <label for="giftMessage">Gift message (optional)</label>
+                <textarea id="giftMessage" rows="2" maxlength="300" placeholder="We'll write it on a card, e.g. Happy birthday Lina!"></textarea>
+              </div>
+            </div>
           </div>
 
           <div class="saved delivery-only">
@@ -274,6 +306,8 @@
           <div class="pay">
             <label><input type="radio" name="payment" value="Cash on Delivery" checked><strong data-pay="cash">Cash on delivery</strong><span data-pay-note="cash">Pay when your order arrives.</span></label>
             <label><input type="radio" name="payment" value="Card on Delivery"><strong data-pay="card">Card on delivery</strong><span data-pay-note="card">Pay by card at your door.</span></label>
+            <label><input type="radio" name="payment" value="Fawran"><strong>Fawran</strong><span>Bank transfer from your banking app, before we deliver.</span></label>
+            <p class="pay-note" id="giftPayNote" hidden>Gifts are paid in advance by Fawran.</p>
             <div class="pay-soon" aria-disabled="true">
               <strong>Pay online now <em>Coming soon</em></strong>
               <span>Visa, Mastercard and Apple Pay, securely at checkout.</span>
@@ -932,6 +966,11 @@
         'Please enter your full name.'
       ) || hasError;
 
+      if (isGift()) {
+        hasError = showFieldError('giftName', 'giftNameError', "Please enter the recipient's name.") || hasError;
+        hasError = showFieldError('giftPhone', 'giftPhoneError', "Please enter the recipient's phone.") || hasError;
+      }
+
       if (!isPickup()) {
         hasError = showFieldError(
           'area',
@@ -1024,7 +1063,7 @@
       document.getElementById('whenTitle').textContent = pickup ? 'Pickup date & time' : 'Delivery date & time';
       document.getElementById('dateLabel').textContent = pickup ? 'Pickup date *' : 'Delivery date *';
       document.getElementById('notesLabel').textContent = pickup ? 'Notes' : 'Delivery notes';
-      document.getElementById('payWhen').textContent = pickup ? 'Pay on pickup' : 'Pay on delivery';
+      updatePayWhen();
       document.querySelector('[data-pay="cash"]').textContent = pickup ? 'Cash on pickup' : 'Cash on delivery';
       document.querySelector('[data-pay="card"]').textContent = pickup ? 'Card on pickup' : 'Card on delivery';
       document.querySelector('[data-pay-note="cash"]').textContent = pickup ? 'Pay when you collect your order.' : 'Pay when your order arrives.';
@@ -1034,6 +1073,36 @@
       updatePointsDiscount(getTotals().subtotal);
     }
 
+    // Fawran: paid in advance to the QAVERA business account.
+    const FAWRAN_DETAILS = 'Corporate · Qavera Trading · CR 237335';
+    const isGift = () => !isPickup() && document.getElementById('isGift').checked;
+
+    // Gifts are delivered to someone else and always paid by Fawran.
+    function applyGift() {
+      const gift = isGift();
+      document.getElementById('giftFields').hidden = !gift;
+      document.getElementById('giftPayNote').hidden = !gift;
+      document.querySelectorAll('input[name="payment"]').forEach(input => {
+        const off = gift && input.value !== 'Fawran';
+        input.disabled = off;
+        input.closest('label').classList.toggle('is-off', off);
+      });
+      if (gift) document.querySelector('input[name="payment"][value="Fawran"]').checked = true;
+      else if (!document.querySelector('input[name="payment"]:checked')) {
+        document.querySelector('input[name="payment"][value="Cash on Delivery"]').checked = true;
+      }
+      ['giftNameError', 'giftPhoneError'].forEach(id => document.getElementById(id).classList.remove('show'));
+      updatePayWhen();
+    }
+
+    function updatePayWhen() {
+      const fawran = document.querySelector('input[name="payment"]:checked')?.value === 'Fawran';
+      document.getElementById('payWhen').textContent = fawran ? 'Pay by Fawran' : isPickup() ? 'Pay on pickup' : 'Pay on delivery';
+    }
+
+    document.getElementById('isGift').addEventListener('change', applyGift);
+    document.querySelectorAll('input[name="payment"]').forEach(input => input.addEventListener('change', updatePayWhen));
+    document.querySelectorAll('input[name="fulfillment"]').forEach(input => input.addEventListener('change', applyGift));
     document.querySelectorAll('input[name="fulfillment"]').forEach(input => input.addEventListener('change', applyFulfillment));
     scheduledDateInput.addEventListener('change', () => {
       document.getElementById('scheduledDateError').classList.remove('show');
@@ -1070,7 +1139,11 @@
       const timeSlot = document.querySelector('input[name="timeSlot"]:checked')?.value;
       const scheduledDate = scheduledDateInput.value;
       const paymentLabel = pickup ? paymentSelection.replace('Delivery', 'Pickup') : paymentSelection;
-      const paymentMethod = paymentSelection === 'Card on Delivery'
+      const fawran = paymentSelection === 'Fawran';
+      const gift = isGift();
+      const paymentMethod = fawran
+        ? 'fawran'
+        : paymentSelection === 'Card on Delivery'
         ? 'card_on_delivery'
         : 'cash_on_delivery';
 
@@ -1184,7 +1257,7 @@
           p_notes: document.getElementById('notes').value.trim(),
           p_payment_method: paymentMethod,
           p_points_used: pointsUsed,
-          p_save_address: !pickup && saveAddressCheckbox.checked,
+          p_save_address: !pickup && !gift && saveAddressCheckbox.checked,
           p_address_label: savedAddresses.length === 0 ? 'Home' : 'Address',
           p_items: cart.map(item => ({
             variant_id: item.variant_id,
@@ -1193,7 +1266,14 @@
           })),
           p_fulfillment: pickup ? 'pickup' : 'delivery',
           p_scheduled_date: scheduledDate,
-          p_time_slot: timeSlot
+          p_time_slot: timeSlot,
+          // Sent only for gifts, so ordinary orders don't depend on the gift fields.
+          ...(gift ? {
+            p_gift: true,
+            p_gift_name: document.getElementById('giftName').value.trim(),
+            p_gift_phone: document.getElementById('giftPhone').value.trim(),
+            p_gift_message: document.getElementById('giftMessage').value.trim() || null
+          } : {})
         });
 
         if (error) throw error;
@@ -1215,11 +1295,15 @@
         showCheckoutDialog({
           label: 'Order received',
           title: 'Thank you for your order',
-          text: pickup
+          text: fawran
+            ? `Please send QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)} by Fawran to ${FAWRAN_DETAILS}, and write your order number ${order.order_number} in the note. We will prepare your order as soon as we receive it.`
+            : pickup
             ? 'We will contact you shortly to confirm. Your order will be ready to collect from the QAVERA shop.'
             : 'We will contact you shortly to confirm your delivery.',
           details: [
             ['Order number', order.order_number],
+            ...(gift ? [['Gift for', document.getElementById('giftName').value.trim()]] : []),
+            ...(fawran ? [['Fawran to', FAWRAN_DETAILS]] : []),
             [pickup ? 'Pickup' : 'Delivery', `${formatScheduledDate(scheduledDate)} · ${SLOT_LABELS[timeSlot]}`],
             ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`],
             ['Payment', paymentLabel]
