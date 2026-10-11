@@ -223,7 +223,7 @@
       <div class="v3-cart-items" id="v3CartItems"></div>
       <div class="v3-cart-foot" id="v3CartFoot">
         <div class="v3-cart-row"><span class="caption">Subtotal</span><span class="v3-cart-total" id="v3CartSubtotal">QAR 0</span></div>
-        <p class="v3-cart-note">At checkout: delivery (QAR 20) or free pickup, your date and time, and points.</p>
+        <p class="v3-cart-note">At checkout: delivery (QAR 25) or free pickup, your date and time, and points.</p>
         <a class="btn btn-solid btn-block" id="v3CheckoutButton" href="${PAGES.checkout}">Checkout <span class="arrow">→</span></a>
       </div>
     </aside>
