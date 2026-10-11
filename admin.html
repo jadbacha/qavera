@@ -124,6 +124,7 @@
     .day-bar label { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); margin-right: 2px; }
     .day-bar input { font: inherit; font-size: .85rem; padding: 7px 10px; border: 1px solid var(--border); background: transparent; color: inherit; }
     .day-bar .print-button { margin-left: auto; background: var(--black); border-color: var(--black); color: var(--gold-light); }
+    .day-bar[hidden] { display: none; }
     .print-title { display: none; }
 
     @media print {
@@ -334,6 +335,32 @@
       .stock-row { grid-template-columns: 1fr auto; }
       .stock-row .action { grid-column: 1 / -1; justify-self: start; }
     }
+
+    /* New order (WhatsApp / phone) */
+    .new-order { background: var(--beige-light); border: 1px solid var(--border); padding: 22px; display: grid; gap: 22px; }
+    .no-section { display: grid; gap: 10px; }
+    .no-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+    .no-field { display: grid; gap: 4px; }
+    .no-field label, .no-section > .block-label { font-family: var(--mono); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+    .no-field input, .no-field select, .no-field textarea { font: inherit; font-size: .9rem; padding: 9px 10px; border: 1px solid var(--border); background: #fff; color: inherit; width: 100%; }
+    .no-choice { display: flex; flex-wrap: wrap; gap: 8px; }
+    .no-choice label { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--border); background: #fff; font-size: .85rem; cursor: pointer; }
+    .no-choice label:has(input:checked) { border-color: var(--black); box-shadow: inset 0 0 0 1px var(--black); }
+    .no-add { display: grid; grid-template-columns: 1fr 80px auto; gap: 8px; align-items: end; }
+    .no-items { list-style: none; display: grid; gap: 6px; }
+    .no-items li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .85rem; padding: 8px 10px; background: #fff; border: 1px solid var(--border); }
+    .no-items button { border: 0; background: none; color: #7a2e1f; cursor: pointer; font: inherit; font-size: .75rem; text-decoration: underline; }
+    .no-totals { font-size: .9rem; display: grid; gap: 4px; max-width: 360px; margin-left: auto; width: 100%; }
+    .no-totals div { display: flex; justify-content: space-between; }
+    .no-totals .grand { font-weight: 600; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
+    .no-message { font-size: .85rem; color: #7a2e1f; min-height: 1em; }
+    .no-message.ok { color: #2e7d32; }
+    .new-order [hidden] { display: none !important; }
+    @media (max-width: 560px) {
+      .no-grid { grid-template-columns: 1fr; }
+      .no-add { grid-template-columns: 1fr 70px; }
+      .no-add .action { grid-column: 1 / -1; }
+    }
   </style>
 </head>
 <body>
@@ -417,7 +444,8 @@
       { key: 'cancelled', label: 'Cancelled', match: o => o.status === 'cancelled' },
       { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
       { key: 'all', label: 'All', match: () => true },
-      { key: 'stock', label: 'Stock', match: () => false }
+      { key: 'stock', label: 'Stock', match: () => false },
+      { key: 'new', label: '+ New order', match: () => false }
     ];
 
     // Products on sale, for the Stock tab. null = could not load (SQL 015 not run yet).
@@ -554,7 +582,7 @@
         const count = filter.key === 'stock'
           ? (products || []).filter(p => p.in_stock === false).length
           : orders.filter(o => dayMatch(o) && filter.match(o)).length;
-        const countLabel = filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
+        const countLabel = filter.key === 'new' ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${countLabel}</span>
         </button>`;
@@ -620,6 +648,7 @@
                 ${escapeHtml(order.customer_name)}
                 ${digits ? `<br><a href="tel:+${digits}">${escapeHtml(order.customer_phone)}</a>` : ''}
                 ${order.customer_email ? `<br><span class="muted">${escapeHtml(order.customer_email)}</span>` : ''}
+                ${order.source === 'whatsapp' ? `<br><span class="muted">Ordered on WhatsApp / phone</span>` : ''}
                 ${digits ? `<div class="contact-links">
                   <a href="https://wa.me/${digits}" target="_blank" rel="noopener">WhatsApp</a>
                   <a href="tel:+${digits}">Call</a>
@@ -640,7 +669,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="totals">
                 <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
                 ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
-                ${Number(order.discount_amount) > 0 ? `<div><span>Shop discount${order.discount_reason ? ` · ${escapeHtml(order.discount_reason)}` : ''}</span><span>− ${qar(order.discount_amount)}</span></div>` : ''}
+                ${Number(order.discount_amount) > 0 ? `<div><span>${isShopSale(order) ? 'Shop discount' : 'Discount'}${order.discount_reason ? ` · ${escapeHtml(order.discount_reason)}` : ''}</span><span>− ${qar(order.discount_amount)}</span></div>` : ''}
                 ${isShopSale(order) ? '' : isPickup(order) ? `<div><span>Pickup</span><span>Free</span></div>` : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
                 <div class="grand"><span>Total · ${escapeHtml(isPickup(order) ? String(PAYMENT_LABELS[order.payment_method] || order.payment_method).replace('delivery', 'pickup') : (PAYMENT_LABELS[order.payment_method] || order.payment_method))}</span><span>${qar(order.total)}</span></div>
               </div>
@@ -693,7 +722,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     function renderDayBar() {
       const bar = document.getElementById('dayBar');
-      bar.hidden = activeFilter === 'stock';
+      bar.hidden = activeFilter === 'stock' || activeFilter === 'new';
       document.getElementById('dayFrom').value = dayFrom;
       document.getElementById('dayTo').value = dayTo;
       bar.querySelectorAll('[data-day]').forEach(b => {
@@ -712,6 +741,11 @@ ${escapeHtml(order.delivery_address)}</div>`}
         renderStock();
         return;
       }
+      if (activeFilter === 'new') {
+        // Keep what has been typed when the list refreshes in the background.
+        if (!document.getElementById('newOrderForm')) renderNewOrder();
+        return;
+      }
       const filter = FILTERS.find(f => f.key === activeFilter);
       const visible = orders.filter(o => dayMatch(o) && filter.match(o));
       // To do: soonest delivery / pickup first.
@@ -726,6 +760,218 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
 
       content.innerHTML = `<div class="order-list">${visible.map(renderOrder).join('')}</div>`;
+    }
+
+    // ---- New order: taken on WhatsApp or by phone ----
+    const NO_SLOTS = {
+      delivery: ['12:00-16:00', '18:00-23:00'],
+      pickup: ['10:00-14:00', '16:00-21:00'],
+      pickupFriday: ['13:00-18:00']
+    };
+    const NO_DELIVERY_FEE = 20;
+    let catalog = null;      // products with their sizes, loaded when the form opens
+    let draftItems = [];     // [{ variant_id, label, price, quantity }]
+
+    async function loadCatalog() {
+      const { data, error } = await adminSupabase
+        .from('products')
+        .select('id, name, in_stock, product_variants(id, name, price, active)')
+        .eq('active', true)
+        .order('name');
+      if (error) throw error;
+      return (data || []).flatMap(p => (p.product_variants || [])
+        .filter(v => v.active !== false)
+        .sort((a, b) => Number(a.price) - Number(b.price))
+        .map(v => ({ id: v.id, label: `${p.name} — ${v.name}`, price: Number(v.price), soldOut: p.in_stock === false })));
+    }
+
+    async function renderNewOrder() {
+      content.innerHTML = '<div class="notice"><p>Loading products…</p></div>';
+      try {
+        catalog = await loadCatalog();
+      } catch (error) {
+        content.innerHTML = `<div class="notice"><h2>Could not load products</h2><p>${escapeHtml(error.message)}</p></div>`;
+        return;
+      }
+      if (activeFilter !== 'new') return;
+      draftItems = [];
+      const options = catalog.map(v => `<option value="${v.id}" ${v.soldOut ? 'disabled' : ''}>${escapeHtml(v.label)} · ${qar(v.price)}${v.soldOut ? ' (sold out)' : ''}</option>`).join('');
+
+      content.innerHTML = `
+        <form class="new-order" id="newOrderForm" novalidate>
+          <p class="stock-intro" style="margin:0;">For orders taken on WhatsApp or by phone. It is added to <strong>To do</strong> like a website order.</p>
+
+          <div class="no-section">
+            <div class="block-label">Customer</div>
+            <div class="no-grid">
+              <div class="no-field"><label for="noName">Name *</label><input id="noName" autocomplete="off"></div>
+              <div class="no-field"><label for="noPhone">Phone *</label><input id="noPhone" type="tel" placeholder="+974 …" autocomplete="off"></div>
+            </div>
+          </div>
+
+          <div class="no-section">
+            <div class="block-label">Products</div>
+            <div class="no-add">
+              <div class="no-field"><label for="noProduct">Product</label><select id="noProduct"><option value="">Choose a product…</option>${options}</select></div>
+              <div class="no-field"><label for="noQty">Qty</label><input id="noQty" type="number" min="1" value="1"></div>
+              <button type="button" class="action primary" data-no="add">Add</button>
+            </div>
+            <ul class="no-items" id="noItems"></ul>
+          </div>
+
+          <div class="no-section">
+            <div class="block-label">Delivery or pickup</div>
+            <div class="no-choice">
+              <label><input type="radio" name="noFulfillment" value="delivery" checked> Delivery</label>
+              <label><input type="radio" name="noFulfillment" value="pickup"> Pickup from the shop</label>
+            </div>
+            <div class="no-grid" id="noAddress">
+              <div class="no-field"><label for="noArea">Area *</label><input id="noArea" placeholder="e.g. Lusail"></div>
+              <div class="no-field"><label for="noStreet">Address *</label><input id="noStreet" placeholder="Zone, street"></div>
+              <div class="no-field"><label for="noBuilding">Building / villa</label><input id="noBuilding"></div>
+              <div class="no-field"><label for="noApartment">Apartment / floor</label><input id="noApartment"></div>
+            </div>
+            <div class="no-grid">
+              <div class="no-field"><label for="noDate">Date *</label><input id="noDate" type="date" value="${qatarDayOffset(1)}"></div>
+              <div class="no-field"><label for="noSlot">Time *</label><select id="noSlot"></select></div>
+            </div>
+          </div>
+
+          <div class="no-section">
+            <div class="block-label">Price</div>
+            <div class="no-grid">
+              <div class="no-field"><label for="noDiscount">Discount %</label><input id="noDiscount" type="number" min="0" max="100" step="1" value="0"></div>
+              <div class="no-field" id="noFeeField"><label for="noFee">Delivery charge (QAR)</label><input id="noFee" type="number" min="0" step="1" value="${NO_DELIVERY_FEE}"></div>
+              <div class="no-field"><label for="noPayment">Payment</label><select id="noPayment">
+                <option value="cash_on_delivery">Cash on delivery / pickup</option>
+                <option value="card_on_delivery">Card on delivery / pickup</option>
+              </select></div>
+              <div class="no-field"><label for="noNotes">Notes</label><input id="noNotes" placeholder="Optional"></div>
+            </div>
+            <div class="no-totals" id="noTotals"></div>
+          </div>
+
+          <div class="no-message" id="noMessage" role="alert"></div>
+          <div><button type="submit" class="action primary" id="noSubmit">Create order</button></div>
+        </form>`;
+
+      const form = document.getElementById('newOrderForm');
+      form.addEventListener('input', updateNewOrder);
+      form.addEventListener('change', updateNewOrder);
+      form.addEventListener('submit', event => { event.preventDefault(); submitNewOrder(); });
+      updateNewOrder();
+    }
+
+    const noValue = id => document.getElementById(id).value.trim();
+    const noPickup = () => document.querySelector('input[name="noFulfillment"]:checked')?.value === 'pickup';
+
+    function noTotals() {
+      const subtotal = draftItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const percent = Math.min(Math.max(Number(noValue('noDiscount')) || 0, 0), 100);
+      const discount = Math.round(subtotal * percent) / 100;
+      const delivery = noPickup() ? 0 : Math.max(Number(noValue('noFee')) || 0, 0);
+      return { subtotal, percent, discount, delivery, total: subtotal - discount + delivery };
+    }
+
+    function updateNewOrder() {
+      const pickup = noPickup();
+      document.getElementById('noAddress').hidden = pickup;
+      document.getElementById('noFeeField').hidden = pickup;
+
+      // Times depend on delivery / pickup and on Fridays for pickup.
+      const date = document.getElementById('noDate').value;
+      const friday = !!date && new Date(`${date}T12:00:00Z`).getUTCDay() === 5;
+      const slots = pickup ? (friday ? NO_SLOTS.pickupFriday : NO_SLOTS.pickup) : NO_SLOTS.delivery;
+      const slotSelect = document.getElementById('noSlot');
+      if (slotSelect.dataset.slots !== slots.join()) {
+        const previous = slotSelect.value;
+        slotSelect.innerHTML = slots.map(s => `<option value="${s}">${SLOT_LABELS[s]}</option>`).join('');
+        if (slots.includes(previous)) slotSelect.value = previous;
+        slotSelect.dataset.slots = slots.join();
+      }
+
+      document.getElementById('noItems').innerHTML = draftItems.map((item, i) => `
+        <li><span>${escapeHtml(item.label)} × ${item.quantity}</span>
+          <span>${qar(item.price * item.quantity)} <button type="button" data-no="remove" data-index="${i}">Remove</button></span></li>`).join('');
+
+      const t = noTotals();
+      document.getElementById('noTotals').innerHTML = `
+        <div><span>Subtotal</span><span>${qar(t.subtotal)}</span></div>
+        ${t.discount > 0 ? `<div><span>Discount ${t.percent}%</span><span>− ${qar(t.discount)}</span></div>` : ''}
+        <div><span>${pickup ? 'Pickup' : 'Delivery'}</span><span>${pickup ? 'Free' : qar(t.delivery)}</span></div>
+        <div class="grand"><span>Total</span><span>${qar(t.total)}</span></div>`;
+    }
+
+    function newOrderClick(event) {
+      const button = event.target.closest('[data-no]');
+      if (!button) return;
+      const message = document.getElementById('noMessage');
+      message.textContent = '';
+      message.classList.remove('ok');
+      if (button.dataset.no === 'add') {
+        const variant = catalog.find(v => v.id === document.getElementById('noProduct').value);
+        const quantity = Math.floor(Number(document.getElementById('noQty').value));
+        if (!variant) { message.textContent = 'Choose a product.'; return; }
+        if (!(quantity > 0)) { message.textContent = 'Enter a quantity.'; return; }
+        const existing = draftItems.find(item => item.variant_id === variant.id);
+        if (existing) existing.quantity += quantity;
+        else draftItems.push({ variant_id: variant.id, label: variant.label, price: variant.price, quantity });
+        document.getElementById('noProduct').value = '';
+        document.getElementById('noQty').value = 1;
+      } else if (button.dataset.no === 'remove') {
+        draftItems.splice(Number(button.dataset.index), 1);
+      }
+      updateNewOrder();
+    }
+
+    async function submitNewOrder() {
+      const message = document.getElementById('noMessage');
+      const submit = document.getElementById('noSubmit');
+      message.classList.remove('ok');
+      const pickup = noPickup();
+      const missing = [];
+      if (!noValue('noName')) missing.push('name');
+      if (!noValue('noPhone')) missing.push('phone');
+      if (!draftItems.length) missing.push('at least one product');
+      if (!pickup && !noValue('noArea')) missing.push('area');
+      if (!pickup && !noValue('noStreet')) missing.push('address');
+      if (!noValue('noDate')) missing.push('date');
+      if (missing.length) { message.textContent = `Please add: ${missing.join(', ')}.`; return; }
+
+      const t = noTotals();
+      submit.disabled = true;
+      message.textContent = '';
+      const { data, error } = await adminSupabase.rpc('admin_create_order', {
+        p_customer_name: noValue('noName'),
+        p_customer_phone: noValue('noPhone'),
+        p_fulfillment: pickup ? 'pickup' : 'delivery',
+        p_delivery_area: pickup ? null : noValue('noArea'),
+        p_delivery_address: pickup ? null : noValue('noStreet'),
+        p_building: pickup ? null : noValue('noBuilding'),
+        p_apartment: pickup ? null : noValue('noApartment'),
+        p_scheduled_date: noValue('noDate'),
+        p_time_slot: document.getElementById('noSlot').value,
+        p_items: draftItems.map(item => ({ variant_id: item.variant_id, quantity: item.quantity })),
+        p_discount_percent: t.percent,
+        p_discount_reason: t.percent > 0 ? `${t.percent}% off · WhatsApp` : null,
+        p_delivery_fee: t.delivery,
+        p_payment_method: document.getElementById('noPayment').value,
+        p_notes: noValue('noNotes') || null
+      });
+      submit.disabled = false;
+
+      if (error) {
+        console.error('Could not create order:', error);
+        message.textContent = /admin_create_order/.test(error.message || '')
+          ? 'Run 027_admin_new_order.sql in Supabase first.'
+          : (error.message || 'Could not create this order.');
+        return;
+      }
+
+      const created = Array.isArray(data) ? data[0] : data;
+      activeFilter = 'active';
+      await loadOrders();
+      subtitle.textContent = `Order ${created?.order_number || ''} added · total ${qar(created?.total)}`;
     }
 
     async function setStatus(button) {
@@ -772,6 +1018,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
     });
 
     content.addEventListener('click', event => {
+      if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
       const stockButton = event.target.closest('.stock-toggle');
       if (stockButton) { setStock(stockButton); return; }
       const button = event.target.closest('.action');
