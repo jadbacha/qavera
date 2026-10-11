@@ -143,7 +143,7 @@
   </style>
 </head>
 <body data-page="checkout" data-no-loader>
-  <script src="v3/qavera.js?v=20261009c"></script>
+  <script src="v3/qavera.js?v=20261011"></script>
 
   <main class="v3-main">
     <header class="co-head">
@@ -157,7 +157,7 @@
           <div class="co-step-head"><span class="num">01</span><h2>Delivery or <em>pickup</em></h2></div>
 
           <div class="choice" role="radiogroup" aria-label="Delivery or pickup">
-            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em>QAR 20</em></strong><span>To your door, anywhere in Qatar.</span></label>
+            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em>QAR 25</em></strong><span>To your door, anywhere in Qatar.</span></label>
             <label><input type="radio" name="fulfillment" value="pickup"><strong>Pickup <em>Free</em></strong><span>Collect it from the QAVERA shop.</span></label>
           </div>
 
@@ -291,9 +291,9 @@
         <div class="rows">
           <div class="summary-row"><span>Subtotal</span><span id="subtotal">QAR 0</span></div>
           <div class="summary-row points-discount" id="pointsDiscountRow" style="display:none"><span>Points discount</span><span id="pointsDiscount">-QAR 0</span></div>
-          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">QAR 20</span></div>
+          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">QAR 25</span></div>
         </div>
-        <div class="summary-total"><span>Total</span><span id="total">QAR 20</span></div>
+        <div class="summary-total"><span>Total</span><span id="total">QAR 25</span></div>
         <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
         <p class="secure caption"><span>Signed in</span><span>·</span><span id="payWhen">Pay on delivery</span></p>
         <p class="terms-note">By placing your order you agree to our <a href="terms.html" target="_blank">Terms &amp; refund policy</a>.</p>
@@ -478,7 +478,7 @@
     // QAVERA Points always start at 0 in the UI. Supabase may replace this with the user's real balance.
     let USER_POINTS = 0;
     pointsBalanceElement.textContent = '0 points';
-    const DELIVERY_FEE = 20;
+    const DELIVERY_FEE = 25;
     const SLOT_LABELS = {
       '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
       '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM', '13:00-18:00': '1 PM – 6 PM'

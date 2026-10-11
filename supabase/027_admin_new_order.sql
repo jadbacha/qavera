@@ -100,7 +100,7 @@ begin
   v_discount := round(v_subtotal * coalesce(p_discount_percent, 0) / 100, 2);
 
   if not v_pickup then
-    v_delivery := coalesce(p_delivery_fee, 20);
+    v_delivery := coalesce(p_delivery_fee, 25);
     if v_delivery < 0 then
       raise exception 'Invalid delivery fee';
     end if;
