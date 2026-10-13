@@ -64,6 +64,13 @@
     .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
     .pay label.is-off { opacity: .4; cursor: not-allowed; }
     .area-fee { font-size: .85rem; color: var(--sand); min-height: 1.2em; }
+    .area-search { position: relative; }
+    .area-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; max-height: 18rem; overflow-y: auto; background: #1a1816; border: 1px solid rgba(196,169,128,.45); box-shadow: 0 12px 30px rgba(0,0,0,.45); }
+    .area-suggest[hidden] { display: none; }
+    .area-suggest button { display: flex; justify-content: space-between; gap: 1rem; width: 100%; padding: .75rem 1rem; border: 0; border-bottom: 1px solid rgba(216,216,216,.08); background: transparent; color: var(--silver); font: inherit; font-size: .92rem; text-align: left; cursor: pointer; }
+    .area-suggest button:last-child { border-bottom: 0; }
+    .area-suggest button span { font-family: var(--mono); font-size: .75rem; color: var(--sand); white-space: nowrap; }
+    .area-suggest button:hover, .area-suggest button.is-active { background: rgba(196,169,128,.14); }
     .pay-note { grid-column: 1 / -1; font-size: .85rem; color: var(--sand); }
     .pay-note[hidden] { display: none; }
 
@@ -246,8 +253,10 @@
             </div>
             <div class="v3-field full delivery-only">
               <label for="area">Delivery area *</label>
-              <input type="text" id="area" list="areaList" placeholder="Start typing, e.g. Al Sadd, Lusail" autocomplete="off" required>
-              <datalist id="areaList"></datalist>
+              <div class="area-search">
+                <input type="text" id="area" placeholder="Start typing, e.g. Al Sadd, Lusail" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="areaSuggest" required>
+                <div class="area-suggest" id="areaSuggest" role="listbox" hidden></div>
+              </div>
               <div class="area-fee" id="areaFee"></div>
               <div class="required-error" id="areaError">Please choose your delivery area.</div>
             </div>
@@ -989,7 +998,10 @@
         ) || hasError;
         if (document.getElementById('area').value.trim() && !findArea(document.getElementById('area').value)) {
           const areaError = document.getElementById('areaError');
-          areaError.textContent = CALL_TO_ORDER;
+          const options = searchAreas(document.getElementById('area').value);
+          areaError.textContent = options.length
+            ? `Please pick your area from the list, e.g. ${options.slice(0, 3).map(o => o.name).join(', ')}.`
+            : CALL_TO_ORDER;
           areaError.classList.add('show');
           hasError = true;
         }
@@ -1097,14 +1109,131 @@
       document.getElementById('deliveryFee').textContent = isPickup() ? 'Free' : area ? `QAR ${area.fee}` : 'Choose your area';
       document.getElementById('areaFee').textContent = area
         ? `Delivery to ${area.name}: QAR ${area.fee}`
-        : typed && deliveryAreas.length && !deliveryAreas.some(a => a.name.toLowerCase().startsWith(typed.toLowerCase()))
+        : typed && areasLoaded && typed.length >= 3 && !searchAreas(typed).length
         ? CALL_TO_ORDER : '';
       if (area && areasLoaded) {
-        areaInput.value = area.name;
         document.getElementById('areaError').classList.remove('show');
       }
       updatePointsDiscount(getTotals().subtotal);
     }
+
+    // ---- Area search: finds areas even with other spellings (msheireb → Mushayrib) ----
+    const AREA_SKIP_WORDS = new Set(['al', 'el', 'ad', 'as', 'ar', 'an', 'the', 'fereej', 'freej', 'frej', 'fereij', 'zone']);
+    const areaNorm = text => String(text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    // Words without "Al", "Fereej"… run together: "Al Wakrah" → "wakrah".
+    const areaCore = text => areaNorm(text).split(' ').filter(w => w && !AREA_SKIP_WORDS.has(w)).join('');
+    // Sound skeleton: no vowels or y/w/h, q → k, double letters once ("msheireb" and "mushayrib" → "msrb").
+    const areaSkeleton = text => areaCore(text).replace(/q/g, 'k').replace(/[aeiouywh]/g, '').replace(/(.)\1+/g, '$1');
+    // Edit distance with swapped letters counting once ("lusial" → "lusail").
+    function areaDistance(a, b) {
+      const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+      for (let j = 1; j <= b.length; j++) d[0][j] = j;
+      for (let i = 1; i <= a.length; i++) {
+        for (let j = 1; j <= b.length; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+          if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+        }
+      }
+      return d[a.length][b.length];
+    }
+    function areaScore(query, area) {
+      const q = areaNorm(query);
+      if (!q) return 0;
+      const name = areaNorm(area.name);
+      if (name === q) return 120;
+      if (name.startsWith(q)) return 100;
+      if (name.split(' ').some(w => w === q)) return 95;
+      if (name.split(' ').some(w => w.startsWith(q))) return 90;
+      const qCore = areaCore(query), nCore = areaCore(area.name);
+      if (qCore.length >= 3 && (nCore.startsWith(qCore) || (qCore.length >= 4 && nCore.includes(qCore)))) return 80;
+      const qSkel = areaSkeleton(query), nSkel = areaSkeleton(area.name);
+      if (qSkel.length >= 3 && nSkel.startsWith(qSkel)) return 70;
+      if (qCore.length >= 3) {
+        // Close spelling of the start of the name ("gharafa", "rayan", "lusial", "wab").
+        const allowed = qCore.length >= 8 ? 2 : 1;
+        const dist = Math.min(...[nCore, ...name.split(' ').filter(w => !AREA_SKIP_WORDS.has(w))]
+          .map(target => areaDistance(qCore, target.slice(0, qCore.length + 1)))
+          .concat(areaDistance(qCore, nCore.slice(0, qCore.length))));
+        if (dist <= allowed) return 60 - dist;
+      }
+      return 0;
+    }
+    // Everyday names for areas on the list.
+    const AREA_NICKNAMES = {
+      'matar qadeem': 'Old Airport', 'old matar': 'Old Airport',
+      'porto arabia': 'The Pearl', 'pearl qatar': 'The Pearl', 'the pearl qatar': 'The Pearl',
+      'fox hills': 'Lusail', 'lusail marina': 'Lusail',
+      'downtown doha': 'Mushayrib', 'souq waqif': 'Al Souq'
+    };
+    const nicknameFor = query => {
+      const q = areaNorm(query);
+      if (q.length < 4) return null;
+      const key = Object.keys(AREA_NICKNAMES).find(k => k.startsWith(q) || areaDistance(q, k.slice(0, q.length)) <= 1);
+      return key ? deliveryAreas.find(a => a.name === AREA_NICKNAMES[key]) : null;
+    };
+    const searchAreas = query => deliveryAreas
+      .map(area => ({ area, score: Math.max(areaScore(query, area), nicknameFor(query) === area ? 110 : 0) }))
+      .filter(m => m.score > 0)
+      .sort((a, b) => b.score - a.score || a.area.name.localeCompare(b.area.name))
+      .slice(0, 8)
+      .map(m => m.area);
+
+    const areaInputEl = document.getElementById('area');
+    const areaSuggestEl = document.getElementById('areaSuggest');
+    let areaMatches = [];
+    let areaActive = -1;
+
+    function showAreaSuggestions() {
+      const typed = areaInputEl.value.trim();
+      areaMatches = typed && areasLoaded && !findArea(typed) ? searchAreas(typed) : [];
+      areaActive = areaMatches.length ? 0 : -1;
+      areaSuggestEl.innerHTML = areaMatches.map((a, i) =>
+        `<button type="button" role="option" data-area-index="${i}" class="${i === areaActive ? 'is-active' : ''}">${escapeAreaHtml(a.name)}<span>QAR ${a.fee}</span></button>`).join('');
+      areaSuggestEl.hidden = !areaMatches.length;
+      areaInputEl.setAttribute('aria-expanded', String(!!areaMatches.length));
+    }
+    const escapeAreaHtml = text => String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+
+    function chooseArea(area) {
+      areaInputEl.value = area.name;
+      areaSuggestEl.hidden = true;
+      areaInputEl.setAttribute('aria-expanded', 'false');
+      updateDeliveryFee();
+    }
+
+    areaSuggestEl.addEventListener('mousedown', event => event.preventDefault());  // keep focus in the box
+    areaSuggestEl.addEventListener('click', event => {
+      const button = event.target.closest('[data-area-index]');
+      if (button) chooseArea(areaMatches[Number(button.dataset.areaIndex)]);
+    });
+    areaInputEl.addEventListener('keydown', event => {
+      if (areaSuggestEl.hidden || !areaMatches.length) return;
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        areaActive = (areaActive + (event.key === 'ArrowDown' ? 1 : -1) + areaMatches.length) % areaMatches.length;
+        areaSuggestEl.querySelectorAll('button').forEach((b, i) => b.classList.toggle('is-active', i === areaActive));
+      } else if (event.key === 'Enter' && areaActive >= 0) {
+        event.preventDefault();
+        chooseArea(areaMatches[areaActive]);
+      } else if (event.key === 'Escape') {
+        areaSuggestEl.hidden = true;
+      }
+    });
+    // Leaving the box with a close spelling picks the best match ("msheireb" → Mushayrib).
+    areaInputEl.addEventListener('blur', () => {
+      setTimeout(() => {
+        areaSuggestEl.hidden = true;
+        const typed = areaInputEl.value.trim();
+        const exact = areasLoaded && findArea(typed);
+        if (exact && exact.name !== typed) chooseArea(exact);  // "al sadd" → "Al Sadd"
+        if (typed && areasLoaded && !findArea(typed)) {
+          const best = searchAreas(typed);
+          if (best.length === 1 || (best.length && areaScore(typed, best[0]) > areaScore(typed, best[1]))) chooseArea(best[0]);
+        }
+      }, 150);
+    });
 
     async function loadDeliveryAreas() {
       const { data, error } = await supabaseClient
@@ -1112,15 +1241,13 @@
       if (error) { console.error('Could not load delivery areas:', error); return; }
       deliveryAreas = (data || []).map(a => ({ name: a.name, fee: Number(a.fee) }));
       areasLoaded = deliveryAreas.length > 0;
-      document.getElementById('areaList').innerHTML = deliveryAreas
-        .map(a => `<option value="${a.name.replace(/"/g, '&quot;')}">QAR ${a.fee}</option>`).join('');
       const fees = deliveryAreas.map(a => a.fee);
       if (fees.length) document.getElementById('deliveryFrom').textContent = `From QAR ${Math.min(...fees)}`;
       updateDeliveryFee();
     }
 
-    document.getElementById('area').addEventListener('input', updateDeliveryFee);
-    document.getElementById('area').addEventListener('change', updateDeliveryFee);
+    document.getElementById('area').addEventListener('input', () => { updateDeliveryFee(); showAreaSuggestions(); });
+    document.getElementById('area').addEventListener('focus', showAreaSuggestions);
     loadDeliveryAreas();
 
     // Fawran: paid in advance to the QAVERA business account.
