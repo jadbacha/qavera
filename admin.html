@@ -328,6 +328,15 @@
     .stock-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,.08); }
     .stock-name { font-size: 15px; }
     .stock-state { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2e7d32; }
+    .area-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .area-add input, .area-row input { font: inherit; font-size: .9rem; padding: 8px 10px; border: 1px solid var(--border); background: #fff; color: inherit; }
+    .area-add #newAreaName { flex: 1 1 200px; }
+    .area-add #newAreaFee, .area-row input { width: 90px; }
+    .area-row { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,.08); }
+    .area-row .action { margin: 0; padding: 8px 12px; }
+    .area-row .action.danger { margin-left: 0; }
+    .stock-message.ok { color: #2e7d32; }
+    @media (max-width: 560px) { .area-row { grid-template-columns: 1fr auto; } }
     .stock-row.is-out .stock-name { opacity: .55; text-decoration: line-through; }
     .stock-row.is-out .stock-state { color: #b00020; }
     .stock-row .action { margin: 0; white-space: nowrap; }
@@ -456,6 +465,7 @@
       { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
       { key: 'all', label: 'All', match: () => true },
       { key: 'stock', label: 'Stock', match: () => false },
+      { key: 'areas', label: 'Delivery areas', match: () => false },
       { key: 'new', label: '+ New order', match: () => false }
     ];
 
@@ -594,7 +604,7 @@
         const count = filter.key === 'stock'
           ? (products || []).filter(p => p.in_stock === false).length
           : orders.filter(o => dayMatch(o) && filter.match(o)).length;
-        const countLabel = filter.key === 'new' ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
+        const countLabel = (filter.key === 'new' || filter.key === 'areas') ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${countLabel}</span>
         </button>`;
@@ -829,7 +839,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     function renderDayBar() {
       const bar = document.getElementById('dayBar');
-      bar.hidden = activeFilter === 'stock' || activeFilter === 'new';
+      bar.hidden = ['stock', 'new', 'areas'].includes(activeFilter);
       document.getElementById('dayFrom').value = dayFrom;
       document.getElementById('dayTo').value = dayTo;
       bar.querySelectorAll('[data-day]').forEach(b => {
@@ -846,6 +856,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
       renderDayBar();
       if (activeFilter === 'stock') {
         renderStock();
+        return;
+      }
+      if (activeFilter === 'areas') {
+        if (!document.getElementById('areasPanel')) renderAreas();
         return;
       }
       if (activeFilter === 'new') {
@@ -869,13 +883,101 @@ ${escapeHtml(order.delivery_address)}</div>`}
       content.innerHTML = `<div class="order-list">${visible.map(renderOrder).join('')}</div>`;
     }
 
+    // ---- Delivery areas: the delivery charge for each area ----
+    let areas = null;
+    async function loadAreas() {
+      const { data, error } = await adminSupabase
+        .from('delivery_areas').select('id, name, fee, active').order('fee').order('name');
+      if (error) throw error;
+      return data || [];
+    }
+
+    async function renderAreas(message = '') {
+      content.innerHTML = '<div class="notice"><p>Loading areas…</p></div>';
+      try {
+        areas = await loadAreas();
+      } catch (error) {
+        content.innerHTML = `<div class="notice"><h2>Delivery areas are not set up yet</h2><p>Run <strong>031_delivery_areas.sql</strong> in Supabase, then refresh this page.</p></div>`;
+        return;
+      }
+      if (activeFilter !== 'areas') return;
+      const groups = [...new Set(areas.map(a => Number(a.fee)))].sort((a, b) => a - b);
+      content.innerHTML = `
+        <div id="areasPanel">
+          <p class="stock-intro">Customers choose their area at checkout and pay its delivery charge. Areas not on this list can't order delivery online and are asked to call or WhatsApp.</p>
+          <div class="area-add">
+            <input id="newAreaName" placeholder="New area name">
+            <input id="newAreaFee" type="number" min="0" step="1" placeholder="QAR">
+            <button type="button" class="action primary" data-area-add>Add area</button>
+          </div>
+          <div class="stock-message ${message.startsWith('✓') ? 'ok' : ''}" id="areasMessage" role="alert">${escapeHtml(message)}</div>
+          ${groups.map(fee => {
+            const list = areas.filter(a => Number(a.fee) === fee);
+            return `<section class="stock-group">
+              <div class="block-label">QAR ${fee} · ${list.length} area${list.length === 1 ? '' : 's'}</div>
+              ${list.map(a => `<div class="area-row" data-area="${a.id}">
+                <span class="stock-name">${escapeHtml(a.name)}</span>
+                <input type="number" min="0" step="1" value="${Number(a.fee)}" aria-label="Delivery charge for ${escapeHtml(a.name)}">
+                <button type="button" class="action" data-area-save>Save</button>
+                <button type="button" class="action danger" data-area-remove>Remove</button>
+              </div>`).join('')}
+            </section>`;
+          }).join('')}
+        </div>`;
+    }
+
+    async function areasClick(event) {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const message = document.getElementById('areasMessage');
+      const row = button.closest('[data-area]');
+      let result = null;
+      let done = '';
+
+      if (button.hasAttribute('data-area-add')) {
+        const name = document.getElementById('newAreaName').value.trim();
+        const fee = Number(document.getElementById('newAreaFee').value);
+        if (!name || !(fee >= 0) || document.getElementById('newAreaFee').value === '') {
+          message.textContent = 'Enter the area name and its delivery charge.';
+          return;
+        }
+        result = await adminSupabase.from('delivery_areas').insert({ name, fee });
+        done = `✓ ${name} added at QAR ${fee}`;
+      } else if (button.hasAttribute('data-area-save')) {
+        const fee = Number(row.querySelector('input').value);
+        if (!(fee >= 0) || row.querySelector('input').value === '') { message.textContent = 'Enter a delivery charge.'; return; }
+        result = await adminSupabase.from('delivery_areas').update({ fee }).eq('id', row.dataset.area);
+        done = `✓ ${row.querySelector('.stock-name').textContent} is now QAR ${fee}`;
+      } else if (button.hasAttribute('data-area-remove')) {
+        // Removing needs a second tap so it can't happen by accident.
+        if (!button.classList.contains('armed')) {
+          button.classList.add('armed');
+          button.textContent = 'Tap again to remove';
+          return;
+        }
+        result = await adminSupabase.from('delivery_areas').delete().eq('id', row.dataset.area);
+        done = `✓ ${row.querySelector('.stock-name').textContent} removed`;
+      } else {
+        return;
+      }
+
+      if (result.error) {
+        console.error('Could not change delivery areas:', result.error);
+        message.textContent = /duplicate|unique/i.test(result.error.message || '')
+          ? 'That area is already on the list.'
+          : (result.error.message || 'Could not save.');
+        return;
+      }
+      renderAreas(done);
+    }
+
     // ---- New order: taken on WhatsApp or by phone ----
     const NO_SLOTS = {
       delivery: ['12:00-16:00', '18:00-23:00'],
       pickup: ['10:00-14:00', '16:00-21:00'],
       pickupFriday: ['13:00-18:00']
     };
-    const NO_DELIVERY_FEE = 25;
+    const NO_DELIVERY_FEE = 30;  // until an area is picked
     let catalog = null;      // products with their sizes, loaded when the form opens
     let draftItems = [];     // [{ variant_id, label, price, quantity }]
     let noGiftWasOn = false;
@@ -897,6 +999,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       content.innerHTML = '<div class="notice"><p>Loading products…</p></div>';
       try {
         catalog = await loadCatalog();
+        areas = await loadAreas().catch(() => areas);
       } catch (error) {
         content.innerHTML = `<div class="notice"><h2>Could not load products</h2><p>${escapeHtml(error.message)}</p></div>`;
         return;
@@ -941,7 +1044,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="no-field" style="grid-column:1/-1"><label for="noGiftMessage">Gift message (optional)</label><input id="noGiftMessage" maxlength="300" placeholder="Written on a card"></div>
             </div>
             <div class="no-grid" id="noAddress">
-              <div class="no-field"><label for="noArea">Area *</label><input id="noArea" placeholder="e.g. Lusail"></div>
+              <div class="no-field"><label for="noArea">Area *</label><input id="noArea" list="noAreaList" placeholder="Start typing, e.g. Lusail" autocomplete="off"><datalist id="noAreaList">${(areas || []).map(a => `<option value="${escapeHtml(a.name)}">QAR ${Number(a.fee)}</option>`).join('')}</datalist></div>
               <div class="no-field"><label for="noStreet">Address *</label><input id="noStreet" placeholder="Zone, street"></div>
               <div class="no-field"><label for="noBuilding">Building / villa</label><input id="noBuilding"></div>
               <div class="no-field"><label for="noApartment">Apartment / floor</label><input id="noApartment"></div>
@@ -972,6 +1075,11 @@ ${escapeHtml(order.delivery_address)}</div>`}
         </form>`;
 
       const form = document.getElementById('newOrderForm');
+      // Picking a known area fills in its delivery charge (it can still be changed).
+      document.getElementById('noArea').addEventListener('input', event => {
+        const area = (areas || []).find(a => a.name.toLowerCase() === event.target.value.trim().toLowerCase());
+        if (area) document.getElementById('noFee').value = Number(area.fee);
+      });
       form.addEventListener('input', updateNewOrder);
       form.addEventListener('change', updateNewOrder);
       form.addEventListener('submit', event => { event.preventDefault(); submitNewOrder(); });
@@ -1166,6 +1274,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     content.addEventListener('click', event => {
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
+      if (event.target.closest('#areasPanel')) { areasClick(event); return; }
       const paidButton = event.target.closest('[data-paid]');
       if (paidButton) { setPaid(paidButton); return; }
       const stockButton = event.target.closest('.stock-toggle');

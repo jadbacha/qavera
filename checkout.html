@@ -63,6 +63,7 @@
     .pay span { font-size: .85rem; color: rgba(216,216,216,.55); }
     .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
     .pay label.is-off { opacity: .4; cursor: not-allowed; }
+    .area-fee { font-size: .85rem; color: var(--sand); min-height: 1.2em; }
     .pay-note { grid-column: 1 / -1; font-size: .85rem; color: var(--sand); }
     .pay-note[hidden] { display: none; }
 
@@ -154,7 +155,7 @@
   </style>
 </head>
 <body data-page="checkout" data-no-loader>
-  <script src="v3/qavera.js?v=20261011"></script>
+  <script src="v3/qavera.js?v=20261013"></script>
 
   <main class="v3-main">
     <header class="co-head">
@@ -168,7 +169,7 @@
           <div class="co-step-head"><span class="num">01</span><h2>Delivery or <em>pickup</em></h2></div>
 
           <div class="choice" role="radiogroup" aria-label="Delivery or pickup">
-            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em>QAR 25</em></strong><span>To your door, anywhere in Qatar.</span></label>
+            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em id="deliveryFrom">From QAR 30</em></strong><span>To your door. The charge depends on your area.</span></label>
             <label><input type="radio" name="fulfillment" value="pickup"><strong>Pickup <em>Free</em></strong><span>Collect it from the QAVERA shop.</span></label>
           </div>
 
@@ -245,8 +246,10 @@
             </div>
             <div class="v3-field full delivery-only">
               <label for="area">Delivery area *</label>
-              <input type="text" id="area" placeholder="e.g. West Bay, Al Waab, Lusail" required>
-              <div class="required-error" id="areaError">Please enter your delivery area.</div>
+              <input type="text" id="area" list="areaList" placeholder="Start typing, e.g. Al Sadd, Lusail" autocomplete="off" required>
+              <datalist id="areaList"></datalist>
+              <div class="area-fee" id="areaFee"></div>
+              <div class="required-error" id="areaError">Please choose your delivery area.</div>
             </div>
             <div class="v3-field full delivery-only">
               <label for="address">Street / full address *</label>
@@ -325,9 +328,9 @@
         <div class="rows">
           <div class="summary-row"><span>Subtotal</span><span id="subtotal">QAR 0</span></div>
           <div class="summary-row points-discount" id="pointsDiscountRow" style="display:none"><span>Points discount</span><span id="pointsDiscount">-QAR 0</span></div>
-          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">QAR 25</span></div>
+          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">Choose your area</span></div>
         </div>
-        <div class="summary-total"><span>Total</span><span id="total">QAR 25</span></div>
+        <div class="summary-total"><span>Total</span><span id="total">QAR 0</span></div>
         <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
         <p class="secure caption"><span>Signed in</span><span>·</span><span id="payWhen">Pay on delivery</span></p>
         <p class="terms-note">By placing your order you agree to our <a href="terms.html" target="_blank">Terms &amp; refund policy</a>.</p>
@@ -512,7 +515,13 @@
     // QAVERA Points always start at 0 in the UI. Supabase may replace this with the user's real balance.
     let USER_POINTS = 0;
     pointsBalanceElement.textContent = '0 points';
-    const DELIVERY_FEE = 25;
+    // Delivery charge by area (admin page → Delivery areas). The database charges the same.
+    const CALL_TO_ORDER = "We don't deliver to this area online yet. Please call or WhatsApp us on +974 5096 8968.";
+    let deliveryAreas = [];   // [{ name, fee }]
+    let areasLoaded = false;  // until the list loads, any area at the old flat charge
+    const findArea = name => areasLoaded
+      ? deliveryAreas.find(a => a.name.toLowerCase() === String(name || '').trim().toLowerCase())
+      : (String(name || '').trim() ? { name: String(name).trim(), fee: 25 } : undefined);
     const SLOT_LABELS = {
       '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
       '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM', '13:00-18:00': '1 PM – 6 PM'
@@ -528,7 +537,7 @@
     const slotsFor = date => isPickup() ? (isFriday(date) ? SLOTS.pickupFriday : SLOTS.pickup) : SLOTS.delivery;
 
     const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
-    const deliveryFee = () => (isPickup() ? 0 : DELIVERY_FEE);
+    const deliveryFee = () => (isPickup() ? 0 : Number(findArea(document.getElementById('area').value)?.fee || 0));
 
     // Dates are counted in Qatar time, up to 30 days ahead. Same day is allowed,
     // except for Premium / Luxury boxes (made to order: from tomorrow).
@@ -749,6 +758,7 @@
       if (!addressRecord) return;
 
       document.getElementById('area').value = addressRecord.area || '';
+      updateDeliveryFee();
       setPhoneFields(addressRecord.phone);
 
       const raw = String(addressRecord.full_address || '');
@@ -975,8 +985,14 @@
         hasError = showFieldError(
           'area',
           'areaError',
-          'Please enter your delivery area.'
+          'Please choose your delivery area.'
         ) || hasError;
+        if (document.getElementById('area').value.trim() && !findArea(document.getElementById('area').value)) {
+          const areaError = document.getElementById('areaError');
+          areaError.textContent = CALL_TO_ORDER;
+          areaError.classList.add('show');
+          hasError = true;
+        }
 
         hasError = showFieldError(
           'address',
@@ -1059,7 +1075,7 @@
       const pickup = isPickup();
       document.body.classList.toggle('is-pickup', pickup);
       document.getElementById('deliveryLabel').textContent = pickup ? 'Pickup from the shop' : 'Delivery across Qatar';
-      document.getElementById('deliveryFee').textContent = pickup ? 'Free' : `QAR ${DELIVERY_FEE}`;
+      updateDeliveryFee();
       document.getElementById('whenTitle').textContent = pickup ? 'Pickup date & time' : 'Delivery date & time';
       document.getElementById('dateLabel').textContent = pickup ? 'Pickup date *' : 'Delivery date *';
       document.getElementById('notesLabel').textContent = pickup ? 'Notes' : 'Delivery notes';
@@ -1072,6 +1088,40 @@
       applyDateRules();
       updatePointsDiscount(getTotals().subtotal);
     }
+
+    // Delivery charge for the area typed or picked from the list.
+    function updateDeliveryFee() {
+      const areaInput = document.getElementById('area');
+      const area = findArea(areaInput.value);
+      const typed = areaInput.value.trim();
+      document.getElementById('deliveryFee').textContent = isPickup() ? 'Free' : area ? `QAR ${area.fee}` : 'Choose your area';
+      document.getElementById('areaFee').textContent = area
+        ? `Delivery to ${area.name}: QAR ${area.fee}`
+        : typed && deliveryAreas.length && !deliveryAreas.some(a => a.name.toLowerCase().startsWith(typed.toLowerCase()))
+        ? CALL_TO_ORDER : '';
+      if (area && areasLoaded) {
+        areaInput.value = area.name;
+        document.getElementById('areaError').classList.remove('show');
+      }
+      updatePointsDiscount(getTotals().subtotal);
+    }
+
+    async function loadDeliveryAreas() {
+      const { data, error } = await supabaseClient
+        .from('delivery_areas').select('name, fee').eq('active', true).order('name');
+      if (error) { console.error('Could not load delivery areas:', error); return; }
+      deliveryAreas = (data || []).map(a => ({ name: a.name, fee: Number(a.fee) }));
+      areasLoaded = deliveryAreas.length > 0;
+      document.getElementById('areaList').innerHTML = deliveryAreas
+        .map(a => `<option value="${a.name.replace(/"/g, '&quot;')}">QAR ${a.fee}</option>`).join('');
+      const fees = deliveryAreas.map(a => a.fee);
+      if (fees.length) document.getElementById('deliveryFrom').textContent = `From QAR ${Math.min(...fees)}`;
+      updateDeliveryFee();
+    }
+
+    document.getElementById('area').addEventListener('input', updateDeliveryFee);
+    document.getElementById('area').addEventListener('change', updateDeliveryFee);
+    loadDeliveryAreas();
 
     // Fawran: paid in advance to the QAVERA business account.
     const FAWRAN_DETAILS = 'Corporate · Qavera Trading · CR 237335';
