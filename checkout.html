@@ -1109,7 +1109,7 @@
       document.getElementById('deliveryFee').textContent = isPickup() ? 'Free' : area ? `QAR ${area.fee}` : 'Choose your area';
       document.getElementById('areaFee').textContent = area
         ? `Delivery to ${area.name}: QAR ${area.fee}`
-        : typed && areasLoaded && typed.length >= 3 && !searchAreas(typed).length
+        : typed && areasLoaded && typed.length >= 3 && document.activeElement !== areaInput && !searchAreas(typed).length
         ? CALL_TO_ORDER : '';
       if (area && areasLoaded) {
         document.getElementById('areaError').classList.remove('show');
@@ -1125,6 +1125,8 @@
     const areaCore = text => areaNorm(text).split(' ').filter(w => w && !AREA_SKIP_WORDS.has(w)).join('');
     // Sound skeleton: no vowels or y/w/h, q → k, double letters once ("msheireb" and "mushayrib" → "msrb").
     const areaSkeleton = text => areaCore(text).replace(/q/g, 'k').replace(/[aeiouywh]/g, '').replace(/(.)\1+/g, '$1');
+    // Same, but keeping "sh", "kh", "th", "gh" as their own sounds ("mshe" → "msh" like "Mushayrib").
+    const areaSounds = text => areaCore(text).replace(/q/g, 'k').replace(/([sktgd])h/g, '$1H').replace(/[aeiouywh]/g, '').replace(/(.)\1+/g, '$1');
     // Edit distance with swapped letters counting once ("lusial" → "lusail").
     function areaDistance(a, b) {
       const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
@@ -1150,6 +1152,10 @@
       if (qCore.length >= 3 && (nCore.startsWith(qCore) || (qCore.length >= 4 && nCore.includes(qCore)))) return 80;
       const qSkel = areaSkeleton(query), nSkel = areaSkeleton(area.name);
       if (qSkel.length >= 3 && nSkel.startsWith(qSkel)) return 70;
+      const qSounds = areaSounds(query);
+      if (qSounds.length >= 3 && areaSounds(area.name).startsWith(qSounds)) return 68;
+      // Half-typed other spelling: "mshe" → Mushayrib (same first sounds).
+      if (qCore.length >= 3 && qSkel.length >= 2 && qCore[0] === nCore[0] && nSkel.startsWith(qSkel)) return 65;
       if (qCore.length >= 3) {
         // Close spelling of the start of the name ("gharafa", "rayan", "lusial", "wab").
         const allowed = qCore.length >= 8 ? 2 : 1;
@@ -1231,6 +1237,7 @@
         if (typed && areasLoaded && !findArea(typed)) {
           const best = searchAreas(typed);
           if (best.length === 1 || (best.length && areaScore(typed, best[0]) > areaScore(typed, best[1]))) chooseArea(best[0]);
+          else updateDeliveryFee();
         }
       }, 150);
     });
