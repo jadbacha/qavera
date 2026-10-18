@@ -380,6 +380,7 @@
     .wa-label { font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
     .wa-send { font-family: var(--sans); font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; border: 1px solid #1f8f4e; color: #1f8f4e; text-decoration: none; background: transparent; }
     .wa-send::before { content: '💬 '; }
+    .invoice-btn { font-family: var(--sans); font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; border: 1px solid var(--black); color: var(--black); background: transparent; cursor: pointer; margin-right: 8px; }
     .action.paid-button { border-color: #2e7d32; color: #2e7d32; }
   </style>
 </head>
@@ -685,11 +686,147 @@
     }
 
     function renderWhatsApp(order) {
+      if (isShopSale(order) || order.status === 'cancelled') return '';
       const messages = waMessages(order);
-      if (!messages.length) return '';
-      return `<div class="wa-row"><span class="wa-label">WhatsApp</span>${messages.map(m =>
-        `<a class="wa-send" href="https://wa.me/${m.digits}?text=${encodeURIComponent(m.text)}" target="_blank" rel="noopener">${escapeHtml(m.label)}</a>`
-      ).join('')}</div>`;
+      return `<div class="wa-row">
+        <button type="button" class="invoice-btn" data-invoice="${order.id}">🧾 Invoice (PDF)</button>
+        ${messages.length ? `<span class="wa-label">WhatsApp</span>${messages.map(m =>
+          `<a class="wa-send" href="https://wa.me/${m.digits}?text=${encodeURIComponent(m.text)}" target="_blank" rel="noopener">${escapeHtml(m.label)}</a>`
+        ).join('')}` : ''}
+      </div>`;
+    }
+
+    // ---- Invoice: an A4 page to save as PDF and send to the customer ----
+    // The logo is embedded in the invoice so the PDF is complete on its own.
+    let invoiceLogo = `${location.origin}/email-logo.png`;
+    fetch('email-logo.png').then(r => r.ok ? r.blob() : null).then(blob => {
+      if (!blob) return;
+      const reader = new FileReader();
+      reader.onload = () => { invoiceLogo = reader.result; };
+      reader.readAsDataURL(blob);
+    }).catch(() => {});
+
+    function invoiceHtml(order) {
+      const pickup = isPickup(order);
+      const fawran = order.payment_method === 'fawran';
+      const paid = order.payment_status === 'paid';
+      const placed = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Qatar' });
+      const rows = (order.order_items || []).map(item => {
+        const flavors = Array.isArray(item.customization)
+          ? item.customization.filter(f => Number(f.quantity) > 0).map(f => `${escapeHtml(f.name)} × ${Number(f.quantity)}`).join(', ')
+          : '';
+        const unit = Number(item.total_price) / Math.max(Number(item.quantity) || 1, 1);
+        return `<tr>
+          <td>${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)}${flavors ? `<div class="sub">${flavors}</div>` : ''}</td>
+          <td class="c">${Number(item.quantity)}</td>
+          <td class="r">${qar(unit)}</td>
+          <td class="r">${qar(item.total_price)}</td>
+        </tr>`;
+      }).join('');
+      const line = (label, value, cls = '') => `<div class="line ${cls}"><span>${label}</span><span>${value}</span></div>`;
+      const payment = String(PAYMENT_LABELS[order.payment_method] || order.payment_method || '').replace(pickup ? 'delivery' : '§', 'pickup');
+
+      return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QAVERA invoice ${escapeHtml(order.order_number)}</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #1a1713; font-size: 13px; line-height: 1.5; background: #fff; }
+  .page { max-width: 780px; margin: 0 auto; padding: 24px; }
+  .head { background: #0d0b08; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .head img { width: 190px; height: auto; display: block; }
+  .head .shop { color: #d8d0c0; font-size: 11px; text-align: right; line-height: 1.6; }
+  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 30px; margin: 26px 0 4px; }
+  .meta { color: #6b5f45; margin-bottom: 22px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+  .box { border: 1px solid #e3d9c2; padding: 12px 14px; }
+  .label { color: #9a7a2e; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
+  .pre { white-space: pre-line; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6b5f45; border-bottom: 1.5px solid #1a1713; padding: 8px 6px; }
+  td { padding: 9px 6px; border-bottom: 1px solid #ebe0c4; vertical-align: top; }
+  .c { text-align: center; } .r { text-align: right; white-space: nowrap; }
+  .sub { color: #6b5f45; font-size: 11px; margin-top: 2px; }
+  .totals { margin: 14px 0 0 auto; width: 300px; }
+  .line { display: flex; justify-content: space-between; padding: 4px 0; }
+  .line.total { border-top: 1.5px solid #1a1713; margin-top: 6px; padding-top: 8px; font-size: 16px; font-weight: 700; }
+  .pay { margin-top: 24px; padding: 14px 16px; border: 1.5px solid #c4a980; background: #faf5ea; }
+  .pay strong { font-size: 14px; }
+  .stamp { display: inline-block; margin-top: 20px; padding: 6px 14px; border: 2px solid #2e7d32; color: #2e7d32; font-weight: 700; letter-spacing: .2em; }
+  .foot { margin-top: 30px; text-align: center; color: #6b5f45; font-size: 11px; }
+  .bar { position: sticky; top: 0; background: #f5edd9; padding: 10px; text-align: center; font-size: 13px; }
+  .bar button { font: inherit; padding: 8px 18px; background: #0d0b08; color: #c4a980; border: 0; cursor: pointer; margin-left: 8px; }
+  @media print { .bar { display: none; } .page { padding: 0; } }
+  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } .totals { width: 100%; } .head { flex-direction: column; align-items: flex-start; } .head .shop { text-align: left; } }
+</style></head><body>
+<div class="bar">Choose <strong>Save as PDF</strong> in the print window, then send it on WhatsApp. <button type="button" onclick="window.print()">Print / Save PDF</button></div>
+<div class="page">
+  <div class="head">
+    <img src="${invoiceLogo}" alt="QAVERA">
+    <div class="shop">QAVERA · Qavera Trading<br>Zone 55, Street 162, Building 44, Doha<br>+974 5096 8968 · qavera.qa</div>
+  </div>
+
+  <h1>Invoice</h1>
+  <div class="meta">${escapeHtml(order.order_number)} · ${escapeHtml(placed)}</div>
+
+  <div class="cols">
+    <div class="box">
+      <div class="label">Bill to</div>
+      <div>${escapeHtml(order.customer_name)}</div>
+      <div>${escapeHtml(order.customer_phone || '')}</div>
+      ${order.customer_email ? `<div>${escapeHtml(order.customer_email)}</div>` : ''}
+    </div>
+    <div class="box">
+      <div class="label">${pickup ? 'Pickup' : 'Delivery'}${order.is_gift ? ' · Gift' : ''}</div>
+      ${scheduleLabel(order) ? `<div><strong>${escapeHtml(scheduleLabel(order))}</strong></div>` : ''}
+      ${order.is_gift ? `<div>For ${escapeHtml(order.gift_recipient_name)} · ${escapeHtml(order.gift_recipient_phone || '')}</div>` : ''}
+      <div class="pre">${pickup ? 'QAVERA shop, Zone 55, Street 162, Building 44' : `${escapeHtml(order.delivery_area || '')}\n${escapeHtml(order.delivery_address || '')}`}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Item</th><th class="c">Qty</th><th class="r">Price</th><th class="r">Total</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <div class="totals">
+    ${line('Subtotal', qar(order.subtotal))}
+    ${Number(order.points_discount) > 0 ? line(`Points (${Number(order.points_used)})`, `− ${qar(order.points_discount)}`) : ''}
+    ${Number(order.discount_amount) > 0 ? line(`Discount${order.discount_reason ? ` (${escapeHtml(order.discount_reason)})` : ''}`, `− ${qar(order.discount_amount)}`) : ''}
+    ${pickup ? line('Pickup', 'Free') : line('Delivery', qar(order.delivery_fee))}
+    ${line('Total', qar(order.total), 'total')}
+    ${line('Payment', escapeHtml(payment))}
+  </div>
+
+  ${fawran && !paid ? `<div class="pay">
+    <div class="label">How to pay</div>
+    <strong>Please send ${qar(order.total)} by Fawran</strong><br>
+    To: ${escapeHtml(FAWRAN_DETAILS)}<br>
+    Note: ${escapeHtml(order.order_number)}<br>
+    We will prepare your order as soon as we receive it.
+  </div>` : ''}
+  ${paid ? '<div class="stamp">PAID</div>' : ''}
+
+  <div class="foot">Thank you for choosing QAVERA.</div>
+</div>
+<script>
+  // Open the print window once the logo has loaded (Save as PDF from there).
+  const img = document.querySelector('.head img');
+  const go = () => setTimeout(() => window.print(), 300);
+  if (img.complete) go(); else { img.onload = go; img.onerror = go; }
+<\/script>
+</body></html>`;
+    }
+
+    function openInvoice(order) {
+      const win = window.open('', '_blank');
+      if (!win) {
+        alert('Please allow pop-ups for this page to open the invoice.');
+        return;
+      }
+      win.document.open();
+      win.document.write(invoiceHtml(order));
+      win.document.close();
     }
 
     function renderActions(order) {
@@ -1275,6 +1412,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
     content.addEventListener('click', event => {
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
       if (event.target.closest('#areasPanel')) { areasClick(event); return; }
+      const invoiceButton = event.target.closest('[data-invoice]');
+      if (invoiceButton) {
+        const order = orders.find(o => o.id === invoiceButton.dataset.invoice);
+        if (order) openInvoice(order);
+        return;
+      }
       const paidButton = event.target.closest('[data-paid]');
       if (paidButton) { setPaid(paidButton); return; }
       const stockButton = event.target.closest('.stock-toggle');
