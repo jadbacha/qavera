@@ -65,6 +65,9 @@
     .pay label.is-off { opacity: .4; cursor: not-allowed; }
     .area-fee { font-size: .85rem; color: var(--sand); min-height: 1.2em; }
     .area-search { position: relative; }
+    .area-search::after { content: ''; position: absolute; right: .3rem; top: 50%; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--sand); transform: translateY(-50%); pointer-events: none; }
+    .area-search input { padding-right: 1.6rem; }
+    @media (max-width: 700px) { .area-suggest { max-height: 45vh; } }
     .area-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; max-height: 18rem; overflow-y: auto; background: #1a1816; border: 1px solid rgba(196,169,128,.45); box-shadow: 0 12px 30px rgba(0,0,0,.45); }
     .area-suggest[hidden] { display: none; }
     .area-suggest button { display: flex; justify-content: space-between; gap: 1rem; width: 100%; padding: .75rem 1rem; border: 0; border-bottom: 1px solid rgba(216,216,216,.08); background: transparent; color: var(--silver); font: inherit; font-size: .92rem; text-align: left; cursor: pointer; }
@@ -1193,11 +1196,16 @@
 
     function showAreaSuggestions() {
       const typed = areaInputEl.value.trim();
-      areaMatches = typed && areasLoaded && !findArea(typed) ? searchAreas(typed) : [];
-      areaActive = areaMatches.length ? 0 : -1;
+      // Empty box (or an area already chosen): the whole list A–Z. Typing narrows it down.
+      areaMatches = !areasLoaded ? []
+        : !typed || findArea(typed) ? deliveryAreas.slice().sort((a, b) => a.name.localeCompare(b.name))
+        : searchAreas(typed);
+      const chosen = typed && findArea(typed);
+      areaActive = chosen ? areaMatches.indexOf(chosen) : typed ? 0 : -1;
       areaSuggestEl.innerHTML = areaMatches.map((a, i) =>
         `<button type="button" role="option" data-area-index="${i}" class="${i === areaActive ? 'is-active' : ''}">${escapeAreaHtml(a.name)}<span>QAR ${a.fee}</span></button>`).join('');
       areaSuggestEl.hidden = !areaMatches.length;
+      if (areaActive > 0) areaSuggestEl.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' });
       areaInputEl.setAttribute('aria-expanded', String(!!areaMatches.length));
     }
     const escapeAreaHtml = text => String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -1254,7 +1262,17 @@
     }
 
     document.getElementById('area').addEventListener('input', () => { updateDeliveryFee(); showAreaSuggestions(); });
-    document.getElementById('area').addEventListener('focus', showAreaSuggestions);
+    document.getElementById('area').addEventListener('focus', () => {
+      showAreaSuggestions();
+      // On phones, bring the box near the top so the list isn't hidden behind the keyboard.
+      if (window.innerWidth < 700) {
+        setTimeout(() => {
+          const top = areaInputEl.getBoundingClientRect().top + window.scrollY - 90;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }, 250);
+      }
+    });
+    document.getElementById('area').addEventListener('click', () => { if (areaSuggestEl.hidden) showAreaSuggestions(); });
     loadDeliveryAreas();
 
     // Fawran: paid in advance to the QAVERA business account.
