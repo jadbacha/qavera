@@ -363,6 +363,16 @@
     .no-totals div { display: flex; justify-content: space-between; }
     .no-totals .grand { font-weight: 600; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
     .no-check { display: flex; align-items: center; gap: 8px; font-size: .9rem; cursor: pointer; }
+    .no-flavours { border: 1px solid var(--border); background: #fff; padding: 12px 14px; display: grid; gap: 6px; }
+    .no-flavours[hidden] { display: none; }
+    .no-flv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .85rem; margin-bottom: 4px; }
+    .no-flv-head span { color: var(--text-muted); margin-right: auto; }
+    .no-flv-head button, .no-flv-row button { font: inherit; font-size: .8rem; border: 1px solid var(--border); background: #fff; padding: 4px 10px; cursor: pointer; }
+    .no-flv-row { display: grid; grid-template-columns: 1fr 34px 34px 34px; align-items: center; gap: 6px; font-size: .88rem; }
+    .no-flv-row b { text-align: center; }
+    .no-flv-row button:disabled { opacity: .35; cursor: default; }
+    .no-flv-note { font-size: .8rem; color: #7a2e1f; min-height: 1em; }
+    .no-flv-list { display: block; color: var(--text-muted); font-size: .78rem; }
     .no-message { font-size: .85rem; color: #7a2e1f; min-height: 1em; }
     .no-message.ok { color: #2e7d32; }
     .new-order [hidden] { display: none !important; }
@@ -1119,17 +1129,27 @@ ${escapeHtml(order.delivery_address)}</div>`}
     let draftItems = [];     // [{ variant_id, label, price, quantity }]
     let noGiftWasOn = false;
 
+    // Flavours of the Premium and Luxury boxes (same as the box pages on the website).
+    const BOX_FLAVOURS = {
+      Premium: ['Carmelitto Di QAVERA', 'Noccelle Di QAVERA', 'Pistachio Royal', 'Caffezinho', 'Manga Di QAVERA', 'Fragola Di QAVERA'],
+      Luxury: ['Mouhalabia Fustuq', 'Cheesecake', 'Nocciolla Coffee', 'Raspberry Dunkel', 'Mango Passion', 'Matcha-cha']
+    };
+    let flavourCounts = [];
+
     async function loadCatalog() {
       const { data, error } = await adminSupabase
         .from('products')
-        .select('id, name, in_stock, product_variants(id, name, price, active)')
+        .select('id, name, in_stock, product_variants(id, name, price, active, pieces)')
         .eq('active', true)
         .order('name');
       if (error) throw error;
       return (data || []).flatMap(p => (p.product_variants || [])
         .filter(v => v.active !== false)
         .sort((a, b) => Number(a.price) - Number(b.price))
-        .map(v => ({ id: v.id, label: `${p.name} — ${v.name}`, price: Number(v.price), soldOut: p.in_stock === false })));
+        .map(v => ({
+          id: v.id, label: `${p.name} — ${v.name}`, price: Number(v.price), soldOut: p.in_stock === false,
+          pieces: Number(v.pieces) || 0, flavours: Number(v.pieces) ? (BOX_FLAVOURS[p.name] || null) : null
+        })));
     }
 
     async function renderNewOrder() {
@@ -1165,6 +1185,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="no-field"><label for="noQty">Qty</label><input id="noQty" type="number" min="1" value="1"></div>
               <button type="button" class="action primary" data-no="add">Add</button>
             </div>
+            <div class="no-flavours" id="noFlavours" hidden></div>
             <ul class="no-items" id="noItems"></ul>
           </div>
 
@@ -1212,6 +1233,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         </form>`;
 
       const form = document.getElementById('newOrderForm');
+      document.getElementById('noProduct').addEventListener('change', renderFlavours);
       // Picking a known area fills in its delivery charge (it can still be changed).
       document.getElementById('noArea').addEventListener('input', event => {
         const area = (areas || []).find(a => a.name.toLowerCase() === event.target.value.trim().toLowerCase());
@@ -1258,7 +1280,9 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
 
       document.getElementById('noItems').innerHTML = draftItems.map((item, i) => `
-        <li><span>${escapeHtml(item.label)} × ${item.quantity}</span>
+        <li><span>${escapeHtml(item.label)} × ${item.quantity}${item.flavors
+          ? `<span class="no-flv-list">${item.flavors.map(f => `${escapeHtml(f.name)} × ${f.quantity}`).join(', ')}</span>`
+          : (catalog.find(v => v.id === item.variant_id)?.flavours ? `<span class="no-flv-list">Chef's selection</span>` : '')}</span>
           <span>${qar(item.price * item.quantity)} <button type="button" data-no="remove" data-index="${i}">Remove</button></span></li>`).join('');
 
       const t = noTotals();
@@ -1269,22 +1293,69 @@ ${escapeHtml(order.delivery_address)}</div>`}
         <div class="grand"><span>Total</span><span>${qar(t.total)}</span></div>`;
     }
 
+    // Box flavours: optional; empty = chef's selection, otherwise must fill the box.
+    function renderFlavours(keepCounts) {
+      const panel = document.getElementById('noFlavours');
+      const variant = catalog.find(v => v.id === document.getElementById('noProduct').value);
+      if (!variant || !variant.flavours) { panel.hidden = true; panel.innerHTML = ''; flavourCounts = []; return; }
+      if (keepCounts !== true || flavourCounts.length !== variant.flavours.length) flavourCounts = variant.flavours.map(() => 0);
+      const total = flavourCounts.reduce((a, b) => a + b, 0);
+      panel.hidden = false;
+      panel.innerHTML = `
+        <div class="no-flv-head">
+          <strong>Flavours</strong> <span>${total} / ${variant.pieces} pieces · leave at 0 for chef's selection</span>
+          <button type="button" data-no="flv-even">Even mix</button>
+          <button type="button" data-no="flv-clear">Clear</button>
+        </div>
+        ${variant.flavours.map((name, i) => `<div class="no-flv-row">
+          <span>${escapeHtml(name)}</span>
+          <button type="button" data-no="flv" data-i="${i}" data-d="-1" ${flavourCounts[i] <= 0 ? 'disabled' : ''}>−</button>
+          <b>${flavourCounts[i]}</b>
+          <button type="button" data-no="flv" data-i="${i}" data-d="1" ${total >= variant.pieces ? 'disabled' : ''}>+</button>
+        </div>`).join('')}
+        <div class="no-flv-note" id="noFlvNote">${total && total !== variant.pieces ? `Choose ${variant.pieces - total} more piece${variant.pieces - total === 1 ? '' : 's'}.` : ''}</div>`;
+    }
+
     function newOrderClick(event) {
       const button = event.target.closest('[data-no]');
       if (!button) return;
       const message = document.getElementById('noMessage');
       message.textContent = '';
       message.classList.remove('ok');
+      if (button.dataset.no.startsWith('flv')) {
+        const variant = catalog.find(v => v.id === document.getElementById('noProduct').value);
+        if (!variant || !variant.flavours) return;
+        if (button.dataset.no === 'flv') {
+          const total = flavourCounts.reduce((a, b) => a + b, 0);
+          const i = Number(button.dataset.i), d = Number(button.dataset.d);
+          if (d > 0 && total < variant.pieces) flavourCounts[i] += 1;
+          if (d < 0 && flavourCounts[i] > 0) flavourCounts[i] -= 1;
+        } else if (button.dataset.no === 'flv-even') {
+          const n = variant.flavours.length;
+          flavourCounts = variant.flavours.map((_, i) => Math.floor(variant.pieces / n) + (i < variant.pieces % n ? 1 : 0));
+        } else {
+          flavourCounts = variant.flavours.map(() => 0);
+        }
+        renderFlavours(true);
+        return;
+      }
       if (button.dataset.no === 'add') {
         const variant = catalog.find(v => v.id === document.getElementById('noProduct').value);
         const quantity = Math.floor(Number(document.getElementById('noQty').value));
         if (!variant) { message.textContent = 'Choose a product.'; return; }
         if (!(quantity > 0)) { message.textContent = 'Enter a quantity.'; return; }
-        const existing = draftItems.find(item => item.variant_id === variant.id);
+        const chosen = variant.flavours ? flavourCounts.reduce((a, b) => a + b, 0) : 0;
+        if (chosen && chosen !== variant.pieces) {
+          document.getElementById('noFlvNote').textContent = `The flavours must add up to ${variant.pieces} pieces (now ${chosen}).`;
+          return;
+        }
+        const flavors = chosen ? variant.flavours.map((name, i) => ({ name, quantity: flavourCounts[i] })).filter(f => f.quantity > 0) : null;
+        const existing = !flavors && draftItems.find(item => item.variant_id === variant.id && !item.flavors);
         if (existing) existing.quantity += quantity;
-        else draftItems.push({ variant_id: variant.id, label: variant.label, price: variant.price, quantity });
+        else draftItems.push({ variant_id: variant.id, label: variant.label, price: variant.price, quantity, flavors });
         document.getElementById('noProduct').value = '';
         document.getElementById('noQty').value = 1;
+        renderFlavours();
       } else if (button.dataset.no === 'remove') {
         draftItems.splice(Number(button.dataset.index), 1);
       }
@@ -1321,7 +1392,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         p_apartment: pickup ? null : noValue('noApartment'),
         p_scheduled_date: noValue('noDate'),
         p_time_slot: document.getElementById('noSlot').value,
-        p_items: draftItems.map(item => ({ variant_id: item.variant_id, quantity: item.quantity })),
+        p_items: draftItems.map(item => ({ variant_id: item.variant_id, quantity: item.quantity, flavors: item.flavors || null })),
         p_discount_percent: t.percent,
         p_discount_reason: t.percent > 0 ? `${t.percent}% off · WhatsApp` : null,
         p_delivery_fee: t.delivery,
