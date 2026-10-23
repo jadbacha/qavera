@@ -876,7 +876,7 @@
     function renderPaymentChange(order) {
       if (isShopSale(order) || order.status === 'cancelled') return '';
       const opt = (value, label) => `<option value="${value}" ${order.payment_method === value ? 'selected' : ''}>${label}</option>`;
-      return `<button type="button" class="link-btn" data-paychange="${order.id}">Change payment</button>
+      return `<button type="button" class="invoice-btn" data-paychange="${order.id}">💳 Change payment</button>
         <div class="pay-change" id="pay-${order.id}" hidden>
           <select aria-label="Payment method">
             ${opt('cash_on_delivery', isPickup(order) ? 'Cash on pickup' : 'Cash on delivery')}
