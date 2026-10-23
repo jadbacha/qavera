@@ -1105,7 +1105,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       for (let from = 0; ; from += 1000) {
         const { data, error } = await adminSupabase
           .from('orders')
-          .select('order_number, created_at, source, customer_name, customer_phone, total, payment_method, payment_status, status, fulfillment_type')
+          .select('order_number, created_at, source, customer_name, customer_phone, subtotal, discount_amount, points_discount, delivery_fee, total, payment_method, payment_status, status, fulfillment_type')
           .order('created_at', { ascending: false })
           .range(from, from + 999);
         if (error) throw error;
@@ -1234,20 +1234,77 @@ ${escapeHtml(order.delivery_address)}</div>`}
         return;
       }
       if (event.target.closest('[data-sales-print]')) { window.print(); return; }
-      if (event.target.closest('[data-sales-csv]')) {
-        const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-        const rows = [['Order', 'Made (Qatar time)', 'Source', 'Customer', 'Phone', 'Amount (QAR)', 'Paid by', 'Payment', 'Status']]
-          .concat(salesInRange().map(o => [o.order_number, madeAt(o), SOURCE_LABELS[o.source] || o.source, o.customer_name,
-            o.customer_phone, Number(o.total || 0), paidBy(o), paymentState(o), statusLabel(o)]));
-        const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `QAVERA sales ${salesFrom || 'start'} to ${salesTo || qatarDayOffset(0)}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(link.href), 2000);
-      }
+      if (event.target.closest('[data-sales-csv]')) downloadSalesCsv();
+    }
+
+    // How an order was sold and paid, for the report.
+    const saleType = o => o.source === 'store' ? 'In shop' : o.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery';
+    const payGroup = o => ({ cash_on_delivery: 'Cash', cash: 'Cash', card_on_delivery: 'Card', card: 'Card', fawran: 'Fawran' })[o.payment_method] || 'Other';
+    const fullDay = day => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
+    });
+
+    function downloadSalesCsv() {
+      const list = salesInRange();
+      const counted = list.filter(o => o.status !== 'cancelled');
+      const money = v => Math.round(Number(v || 0) * 100) / 100;
+      const sum = (arr, key = 'total') => money(arr.reduce((t, o) => t + Number(o[key] || 0), 0));
+      const count = arr => `${arr.length} order${arr.length === 1 ? '' : 's'}`;
+
+      // All time starts at the first order.
+      const firstDay = (salesOrders || []).reduce((min, o) => { const d = qatarDay(o.created_at); return !min || d < min ? d : min; }, '');
+      const from = salesFrom || firstDay || qatarDayOffset(0);
+      const to = salesTo || qatarDayOffset(0);
+      const title = from === to ? `QAVERA sales on ${fullDay(from)}` : `QAVERA sales from ${fullDay(from)} to ${fullDay(to)}`;
+
+      const methods = ['Cash', 'Card', 'Fawran'];
+      if (counted.some(o => payGroup(o) === 'Other')) methods.push('Other');
+      const types = ['Delivery', 'Pickup', 'In shop'];
+      const totalFor = (type, method) => sum(counted.filter(o => (!type || saleType(o) === type) && (!method || payGroup(o) === method)));
+
+      const rows = [
+        [title],
+        [`Downloaded ${madeAt({ created_at: new Date().toISOString() })} (Qatar time). Amounts in QAR. Cancelled orders are not counted in the totals.`],
+        [],
+        ['SUMMARY'],
+        ['Total sales', sum(counted), count(counted)],
+        ['Paid', sum(counted.filter(isPaid)), count(counted.filter(isPaid))],
+        ['Not paid yet', sum(counted.filter(o => !isPaid(o))), count(counted.filter(o => !isPaid(o)))],
+        ['Products (before discounts)', sum(counted, 'subtotal')],
+        ['Discounts given', money(-(sum(counted, 'discount_amount') + sum(counted, 'points_discount')))],
+        ['Delivery charges', sum(counted, 'delivery_fee')],
+        [],
+        ['BY PAYMENT'],
+        ...methods.map(m => { const arr = counted.filter(o => payGroup(o) === m); return [m, sum(arr), count(arr)]; }),
+        [],
+        ['BY TYPE'],
+        ...types.map(t => { const arr = counted.filter(o => saleType(o) === t); return [t, sum(arr), count(arr)]; }),
+        [],
+        ['BY TYPE AND PAYMENT', ...methods, 'Total'],
+        ...types.map(t => [t, ...methods.map(m => totalFor(t, m)), totalFor(t, null)]),
+        ['Total', ...methods.map(m => totalFor(null, m)), totalFor(null, null)],
+        [],
+        ['BY WHERE THE ORDER CAME FROM'],
+        ...Object.entries(SOURCE_LABELS).map(([k, label]) => { const arr = counted.filter(o => o.source === k); return [label, sum(arr), count(arr)]; }),
+        [],
+        ['ALL ORDERS'],
+        ['Order', 'Made (Qatar time)', 'Type', 'Came from', 'Customer', 'Phone', 'Products', 'Discount', 'Delivery', 'Total', 'Paid by', 'Payment', 'Status'],
+        ...list.map(o => [o.order_number, madeAt(o), saleType(o), SOURCE_LABELS[o.source] || o.source, o.customer_name, o.customer_phone,
+          money(o.subtotal), money(-(Number(o.discount_amount || 0) + Number(o.points_discount || 0))), money(o.delivery_fee), money(o.total),
+          paidBy(o), paymentState(o), statusLabel(o)]),
+        ['Total (without cancelled)', '', '', '', '', '', sum(counted, 'subtotal'),
+          money(-(sum(counted, 'discount_amount') + sum(counted, 'points_discount'))), sum(counted, 'delivery_fee'), sum(counted)]
+      ];
+
+      const cell = v => typeof v === 'number' ? String(v) : `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `QAVERA sales ${from} to ${to}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 2000);
     }
 
     // ---- Delivery areas: the delivery charge for each area ----
