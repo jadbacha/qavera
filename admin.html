@@ -328,6 +328,32 @@
     .stock-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,.08); }
     .stock-name { font-size: 15px; }
     .stock-state { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #2e7d32; }
+    .sales-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+    .sales-bar label { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+    .sales-bar input[type=date] { font: inherit; font-size: .85rem; padding: 7px 10px; border: 1px solid var(--border); background: transparent; color: var(--text-dark); letter-spacing: 0; text-transform: none; }
+    .sales-check { cursor: pointer; }
+    .sales-range { font-family: var(--serif); font-weight: 400; font-size: 1.3rem; margin-bottom: 12px; }
+    .sales-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .sales-card { background: var(--beige-light); border: 1px solid var(--border); padding: 12px 14px; display: grid; gap: 2px; }
+    .sales-card span { font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+    .sales-card strong { font-size: 1.15rem; }
+    .sales-card.big { background: var(--black); color: var(--gold-light); }
+    .sales-card.big span, .sales-card.big em { color: rgba(196,169,128,.75); }
+    .sales-card em { font-style: normal; font-size: .75rem; }
+    .sales-methods { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .82rem; color: var(--text-muted); margin-bottom: 14px; }
+    .sales-methods b { color: var(--text-dark); font-weight: 600; }
+    .sales-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+    .sales-actions .action { margin: 0; }
+    .sales-table-wrap { overflow-x: auto; background: var(--beige-light); border: 1px solid var(--border); }
+    .sales-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+    .sales-table th { text-align: left; font-family: var(--mono); font-size: .62rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); padding: 10px; border-bottom: 1px solid var(--black); white-space: nowrap; }
+    .sales-table td { padding: 9px 10px; border-bottom: 1px solid rgba(0,0,0,.07); white-space: nowrap; }
+    .sales-table .r { text-align: right; }
+    .sales-table tfoot td { font-weight: 700; border-top: 1px solid var(--black); border-bottom: 0; }
+    .sales-table tr.is-cancelled td { color: var(--text-muted); text-decoration: line-through; }
+    .pay-state { font-size: .72rem; padding: 2px 8px; border: 1px solid; white-space: nowrap; }
+    .pay-state.paid { color: #2e7d32; } .pay-state.unpaid { color: #b26a00; } .pay-state.cancelled { color: var(--text-muted); }
+    @media print { .sales-bar, .sales-actions { display: none !important; } .sales-table-wrap { overflow: visible; border: 0; } }
     .area-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .area-add input, .area-row input { font: inherit; font-size: .9rem; padding: 8px 10px; border: 1px solid var(--border); background: #fff; color: inherit; }
     .area-add #newAreaName { flex: 1 1 200px; }
@@ -476,6 +502,7 @@
       { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
       { key: 'all', label: 'All', match: () => true },
       { key: 'stock', label: 'Stock', match: () => false },
+      { key: 'sales', label: 'Sales', match: () => false },
       { key: 'areas', label: 'Delivery areas', match: () => false },
       { key: 'new', label: '+ New order', match: () => false }
     ];
@@ -615,7 +642,7 @@
         const count = filter.key === 'stock'
           ? (products || []).filter(p => p.in_stock === false).length
           : orders.filter(o => dayMatch(o) && filter.match(o)).length;
-        const countLabel = (filter.key === 'new' || filter.key === 'areas') ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
+        const countLabel = ['new', 'areas', 'sales'].includes(filter.key) ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${countLabel}</span>
         </button>`;
@@ -986,7 +1013,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     function renderDayBar() {
       const bar = document.getElementById('dayBar');
-      bar.hidden = ['stock', 'new', 'areas'].includes(activeFilter);
+      bar.hidden = ['stock', 'new', 'areas', 'sales'].includes(activeFilter);
       document.getElementById('dayFrom').value = dayFrom;
       document.getElementById('dayTo').value = dayTo;
       bar.querySelectorAll('[data-day]').forEach(b => {
@@ -1003,6 +1030,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
       renderDayBar();
       if (activeFilter === 'stock') {
         renderStock();
+        return;
+      }
+      if (activeFilter === 'sales') {
+        if (!document.getElementById('salesPanel')) renderSales();
         return;
       }
       if (activeFilter === 'areas') {
@@ -1028,6 +1059,163 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
 
       content.innerHTML = `<div class="order-list">${visible.map(renderOrder).join('')}</div>`;
+    }
+
+    // ---- Sales: every order with when, how much and how it was paid ----
+    let salesOrders = null;
+    let salesFrom = '';
+    let salesTo = '';
+    let salesShowCancelled = false;
+
+    async function loadSalesOrders() {
+      // All orders (not only the latest 300), in pages of 1000.
+      const all = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await adminSupabase
+          .from('orders')
+          .select('order_number, created_at, source, customer_name, customer_phone, total, payment_method, payment_status, status, fulfillment_type')
+          .order('created_at', { ascending: false })
+          .range(from, from + 999);
+        if (error) throw error;
+        all.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
+      return all;
+    }
+
+    const SOURCE_LABELS = { website: 'Website', whatsapp: 'WhatsApp / phone', store: 'Shop (till)' };
+    function paidBy(o) {
+      const pickup = o.fulfillment_type === 'pickup';
+      return ({
+        cash_on_delivery: pickup ? 'Cash on pickup' : 'Cash on delivery',
+        card_on_delivery: pickup ? 'Card on pickup' : 'Card on delivery',
+        fawran: 'Fawran', cash: 'Cash in shop', card: 'Card in shop'
+      })[o.payment_method] || o.payment_method || '';
+    }
+    function paymentState(o) {
+      if (o.status === 'cancelled') return 'Cancelled';
+      if (o.payment_status === 'paid' || o.source === 'store') return 'Paid';
+      if (o.status === 'delivered') return 'Paid on delivery / pickup';
+      return 'Not paid yet';
+    }
+    const isPaid = o => ['Paid', 'Paid on delivery / pickup'].includes(paymentState(o));
+    const madeAt = o => new Date(o.created_at).toLocaleString('en-GB', {
+      timeZone: 'Asia/Qatar', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    function salesInRange() {
+      return (salesOrders || []).filter(o => {
+        const day = qatarDay(o.created_at);
+        return (!salesFrom || day >= salesFrom) && (!salesTo || day <= salesTo)
+          && (salesShowCancelled || o.status !== 'cancelled');
+      });
+    }
+
+    async function renderSales() {
+      content.innerHTML = '<div class="notice"><p>Loading sales…</p></div>';
+      try {
+        salesOrders = await loadSalesOrders();
+      } catch (error) {
+        content.innerHTML = `<div class="notice"><h2>Could not load sales</h2><p>${escapeHtml(error.message)}</p></div>`;
+        return;
+      }
+      if (activeFilter === 'sales') drawSales();
+    }
+
+    function drawSales() {
+      const list = salesInRange();
+      const counted = list.filter(o => o.status !== 'cancelled');
+      const sum = arr => arr.reduce((t, o) => t + Number(o.total || 0), 0);
+      const byMethod = {};
+      counted.forEach(o => { const k = paidBy(o); byMethod[k] = (byMethod[k] || 0) + Number(o.total || 0); });
+      const bySource = {};
+      counted.forEach(o => { const k = SOURCE_LABELS[o.source] || o.source; bySource[k] = (bySource[k] || 0) + Number(o.total || 0); });
+      const paidTotal = sum(counted.filter(isPaid));
+      const unpaidTotal = sum(counted.filter(o => !isPaid(o)));
+      const presets = [
+        ['today', 'Today'], ['week', 'Last 7 days'], ['month', 'This month'], ['all', 'All time']
+      ];
+      const activePreset = presetFor(salesFrom, salesTo);
+      const rangeText = !salesFrom && !salesTo ? 'All time'
+        : salesFrom === salesTo ? dayLabel(salesFrom) : `${salesFrom ? dayLabel(salesFrom) : 'Start'} to ${salesTo ? dayLabel(salesTo) : 'today'}`;
+
+      content.innerHTML = `
+        <div id="salesPanel">
+          <div class="sales-bar">
+            ${presets.map(([k, l]) => `<button type="button" class="filter ${activePreset === k ? 'active' : ''}" data-sales-preset="${k}">${l}</button>`).join('')}
+            <label>From <input type="date" id="salesFrom" value="${salesFrom}"></label>
+            <label>To <input type="date" id="salesTo" value="${salesTo}"></label>
+            <label class="sales-check"><input type="checkbox" id="salesCancelled" ${salesShowCancelled ? 'checked' : ''}> Show cancelled</label>
+          </div>
+
+          <h2 class="sales-range">${escapeHtml(rangeText)}</h2>
+          <div class="sales-cards">
+            <div class="sales-card big"><span>Total sales</span><strong>${qar(sum(counted))}</strong><em>${counted.length} order${counted.length === 1 ? '' : 's'}</em></div>
+            <div class="sales-card"><span>Paid</span><strong>${qar(paidTotal)}</strong></div>
+            <div class="sales-card"><span>Not paid yet</span><strong>${qar(unpaidTotal)}</strong></div>
+            ${Object.entries(bySource).map(([k, v]) => `<div class="sales-card"><span>${escapeHtml(k)}</span><strong>${qar(v)}</strong></div>`).join('')}
+          </div>
+          <div class="sales-methods">${Object.entries(byMethod).map(([k, v]) => `<span>${escapeHtml(k)}: <b>${qar(v)}</b></span>`).join('')}</div>
+
+          <div class="sales-actions">
+            <button type="button" class="action" data-sales-csv>Download for Excel (CSV)</button>
+            <button type="button" class="action" data-sales-print>Print</button>
+          </div>
+
+          ${list.length ? `<div class="sales-table-wrap"><table class="sales-table">
+            <thead><tr><th>Order</th><th>Made</th><th>Source</th><th>Customer</th><th class="r">Amount</th><th>Paid by</th><th>Payment</th></tr></thead>
+            <tbody>${list.map(o => `<tr class="${o.status === 'cancelled' ? 'is-cancelled' : ''}">
+              <td>${escapeHtml(o.order_number)}</td>
+              <td>${escapeHtml(madeAt(o))}</td>
+              <td>${escapeHtml(SOURCE_LABELS[o.source] || o.source || '')}</td>
+              <td>${escapeHtml(o.customer_name || '')}</td>
+              <td class="r">${qar(o.total)}</td>
+              <td>${escapeHtml(paidBy(o))}</td>
+              <td><span class="pay-state ${isPaid(o) ? 'paid' : o.status === 'cancelled' ? 'cancelled' : 'unpaid'}">${escapeHtml(paymentState(o))}</span></td>
+            </tr>`).join('')}</tbody>
+            <tfoot><tr><td colspan="4">Total (without cancelled)</td><td class="r">${qar(sum(counted))}</td><td colspan="2"></td></tr></tfoot>
+          </table></div>` : '<div class="notice"><p>No orders in this period.</p></div>'}
+        </div>`;
+
+      document.getElementById('salesFrom').addEventListener('change', e => { salesFrom = e.target.value; if (salesTo && salesFrom > salesTo) salesTo = salesFrom; drawSales(); });
+      document.getElementById('salesTo').addEventListener('change', e => { salesTo = e.target.value; if (salesFrom && salesTo < salesFrom) salesFrom = salesTo; drawSales(); });
+      document.getElementById('salesCancelled').addEventListener('change', e => { salesShowCancelled = e.target.checked; drawSales(); });
+    }
+
+    function presetDates(key) {
+      const today = qatarDayOffset(0);
+      if (key === 'today') return [today, today];
+      if (key === 'week') return [qatarDayOffset(-6), today];
+      if (key === 'month') return [today.slice(0, 8) + '01', today];
+      return ['', ''];
+    }
+    const presetFor = (from, to) => ['today', 'week', 'month', 'all'].find(k => {
+      const [f, t] = presetDates(k);
+      return f === from && t === to;
+    }) || '';
+
+    function salesClick(event) {
+      const preset = event.target.closest('[data-sales-preset]');
+      if (preset) {
+        [salesFrom, salesTo] = presetDates(preset.dataset.salesPreset);
+        drawSales();
+        return;
+      }
+      if (event.target.closest('[data-sales-print]')) { window.print(); return; }
+      if (event.target.closest('[data-sales-csv]')) {
+        const cell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+        const rows = [['Order', 'Made (Qatar time)', 'Source', 'Customer', 'Phone', 'Amount (QAR)', 'Paid by', 'Payment', 'Status']]
+          .concat(salesInRange().map(o => [o.order_number, madeAt(o), SOURCE_LABELS[o.source] || o.source, o.customer_name,
+            o.customer_phone, Number(o.total || 0), paidBy(o), paymentState(o), statusLabel(o)]));
+        const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `QAVERA sales ${salesFrom || 'start'} to ${salesTo || qatarDayOffset(0)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+      }
     }
 
     // ---- Delivery areas: the delivery charge for each area ----
@@ -1483,6 +1671,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
     content.addEventListener('click', event => {
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
       if (event.target.closest('#areasPanel')) { areasClick(event); return; }
+      if (event.target.closest('#salesPanel')) { salesClick(event); return; }
       const invoiceButton = event.target.closest('[data-invoice]');
       if (invoiceButton) {
         const order = orders.find(o => o.id === invoiceButton.dataset.invoice);
@@ -1497,7 +1686,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       if (button) setStatus(button);
     });
 
-    document.getElementById('refreshButton').addEventListener('click', loadOrders);
+    document.getElementById('refreshButton').addEventListener('click', () => (activeFilter === 'sales' ? renderSales() : loadOrders()));
 
     document.getElementById('dayFrom').addEventListener('change', event => {
       dayFrom = event.target.value || '';
