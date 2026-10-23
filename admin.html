@@ -416,6 +416,12 @@
     .wa-label { font-family: var(--mono); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
     .wa-send { font-family: var(--sans); font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; border: 1px solid #1f8f4e; color: #1f8f4e; text-decoration: none; background: transparent; }
     .wa-send::before { content: '💬 '; }
+    .link-btn { font: inherit; font-size: .72rem; border: 0; background: none; color: var(--text-muted); text-decoration: underline; cursor: pointer; padding: 4px 0; }
+    .pay-change { width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); background: #fff; }
+    .pay-change[hidden] { display: none; }
+    .pay-change select { font: inherit; font-size: .85rem; padding: 7px 10px; border: 1px solid var(--border); background: #fff; }
+    .pay-change label { font-size: .85rem; display: flex; align-items: center; gap: 6px; }
+    .pay-change .action { margin: 0; }
     .invoice-btn { font-family: var(--sans); font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; padding: 9px 14px; border: 1px solid var(--black); color: var(--black); background: transparent; cursor: pointer; margin-right: 8px; }
     .action.paid-button { border-color: #2e7d32; color: #2e7d32; }
   </style>
@@ -866,6 +872,22 @@
       win.document.close();
     }
 
+    // Change how an order is paid (e.g. said cash, then paid by Fawran).
+    function renderPaymentChange(order) {
+      if (isShopSale(order) || order.status === 'cancelled') return '';
+      const opt = (value, label) => `<option value="${value}" ${order.payment_method === value ? 'selected' : ''}>${label}</option>`;
+      return `<button type="button" class="link-btn" data-paychange="${order.id}">Change payment</button>
+        <div class="pay-change" id="pay-${order.id}" hidden>
+          <select aria-label="Payment method">
+            ${opt('cash_on_delivery', isPickup(order) ? 'Cash on pickup' : 'Cash on delivery')}
+            ${opt('card_on_delivery', isPickup(order) ? 'Card on pickup' : 'Card on delivery')}
+            ${opt('fawran', 'Fawran')}
+          </select>
+          <label><input type="checkbox" ${order.payment_status === 'paid' ? 'checked' : ''}> Already paid</label>
+          <button type="button" class="action primary" data-paysave="${order.id}">Save</button>
+        </div>`;
+    }
+
     function renderActions(order) {
       if (isShopSale(order) && order.status === 'delivered') {
         return `<div class="actions"><span class="final-note">Paid in the shop</span></div>`;
@@ -875,7 +897,7 @@
         ? `<button type="button" class="action paid-button" data-paid="${order.id}" data-value="false">Fawran received ✓ (undo)</button>`
         : `<button type="button" class="action primary" data-paid="${order.id}" data-value="true">Fawran received</button>`;
       if (order.status === 'delivered') {
-        return `<div class="actions">${order.payment_status === 'paid' ? '' : fawranButton}<span class="final-note">${isPickup(order) ? 'Collected' : 'Delivered'}${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span>${renderWhatsApp(order)}<div class="order-message" id="msg-${order.id}"></div></div>`;
+        return `<div class="actions">${order.payment_status === 'paid' ? '' : fawranButton}<span class="final-note">${isPickup(order) ? 'Collected' : 'Delivered'}${Number(order.points_earned) > 0 ? ` · ${Number(order.points_earned)} points given` : ''}</span>${renderWhatsApp(order)}${renderPaymentChange(order)}<div class="order-message" id="msg-${order.id}"></div></div>`;
       }
       if (order.status === 'cancelled') {
         return `<div class="actions"><span class="final-note">Cancelled${Number(order.points_used) > 0 ? ' · points returned to the customer' : ''}</span></div>`;
@@ -893,7 +915,7 @@
       }
       buttons.push(`<button type="button" class="action danger" data-id="${order.id}" data-status="cancelled">Cancel order</button>`);
 
-      return `<div class="actions">${buttons.join('')}${renderWhatsApp(order)}<div class="order-message" id="msg-${order.id}"></div></div>`;
+      return `<div class="actions">${buttons.join('')}${renderWhatsApp(order)}${renderPaymentChange(order)}<div class="order-message" id="msg-${order.id}"></div></div>`;
     }
 
     function renderOrder(order) {
@@ -1609,6 +1631,27 @@ ${escapeHtml(order.delivery_address)}</div>`}
       subtitle.textContent = `Order ${created?.order_number || ''} added · total ${qar(created?.total)}`;
     }
 
+    async function savePaymentMethod(button) {
+      const id = button.dataset.paysave;
+      const box = document.getElementById(`pay-${id}`);
+      const message = document.getElementById(`msg-${id}`);
+      button.disabled = true;
+      const { error } = await adminSupabase.rpc('admin_set_payment_method', {
+        p_order_id: id,
+        p_method: box.querySelector('select').value,
+        p_paid: box.querySelector('input[type=checkbox]').checked
+      });
+      if (error) {
+        console.error('Could not change payment:', error);
+        if (message) message.textContent = /admin_set_payment_method/.test(error.message || '')
+          ? 'Run 034_admin_change_payment.sql in Supabase first.'
+          : (error.message || 'Could not change the payment.');
+        button.disabled = false;
+        return;
+      }
+      await loadOrders();
+    }
+
     async function setPaid(button) {
       const message = document.getElementById(`msg-${button.dataset.paid}`);
       button.disabled = true;
@@ -1672,6 +1715,14 @@ ${escapeHtml(order.delivery_address)}</div>`}
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
       if (event.target.closest('#areasPanel')) { areasClick(event); return; }
       if (event.target.closest('#salesPanel')) { salesClick(event); return; }
+      const payChange = event.target.closest('[data-paychange]');
+      if (payChange) {
+        const box = document.getElementById(`pay-${payChange.dataset.paychange}`);
+        box.hidden = !box.hidden;
+        return;
+      }
+      const paySave = event.target.closest('[data-paysave]');
+      if (paySave) { savePaymentMethod(paySave); return; }
       const invoiceButton = event.target.closest('[data-invoice]');
       if (invoiceButton) {
         const order = orders.find(o => o.id === invoiceButton.dataset.invoice);
