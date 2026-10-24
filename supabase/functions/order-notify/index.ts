@@ -9,6 +9,9 @@
 // Uses the same secrets as contact-notify:
 //   RESEND_API_KEY, CONTACT_TO_EMAIL (QAVERA inbox), CONTACT_WEBHOOK_SECRET
 // Optional: ORDERS_FROM_EMAIL (default "QAVERA <orders@qavera.qa>")
+// Optional: WHATSAPP_ALERTS: WhatsApp alert for each new website order, sent
+//   free through CallMeBot. Format "phone:apikey", several separated by commas,
+//   e.g. "97455555555:1234567,97466666666:7654321".
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 type OrderItem = {
@@ -175,6 +178,26 @@ function orderSummaryHtml(order: Record<string, any>, items: OrderItem[]): strin
     </div>`;
 }
 
+// WhatsApp alert to the QAVERA team (CallMeBot). A failure here is only
+// logged, so it never stops the emails.
+async function sendWhatsAppAlerts(text: string) {
+  const recipients = (Deno.env.get("WHATSAPP_ALERTS") || "")
+    .split(",")
+    .map((entry) => entry.trim().split(":").map((part) => part.trim()))
+    .filter(([phone, apikey]) => phone && apikey);
+  for (const [phone, apikey] of recipients) {
+    try {
+      const url = "https://api.callmebot.com/whatsapp.php" +
+        `?phone=${encodeURIComponent(phone.replace(/[^0-9]/g, ""))}` +
+        `&text=${encodeURIComponent(text)}&apikey=${encodeURIComponent(apikey)}`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) console.error(`WhatsApp alert to ...${phone.slice(-4)} failed: ${response.status}`);
+    } catch (error) {
+      console.error(`WhatsApp alert to ...${phone.slice(-4)} failed:`, error);
+    }
+  }
+}
+
 async function sendEmail(to: string, subject: string, text: string, html: string | null, replyTo?: string) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -240,6 +263,25 @@ async function handleNewOrder(order: Record<string, any>) {
     null,
     order.customer_email || undefined,
   ));
+
+  // WhatsApp alert for orders from the website (orders added on the admin
+  // page were entered by the team, so no alert).
+  if (order.source !== "whatsapp") {
+    tasks.push(sendWhatsAppAlerts([
+      `*New QAVERA order ${order.order_number}*`,
+      `${isPickup(order) ? "Pickup" : "Delivery"}: ${when || "no date chosen"}`,
+      order.is_gift ? `Gift for ${order.gift_recipient_name}` : null,
+      "",
+      `${order.customer_name} · ${order.customer_phone}`,
+      ...items.map((item) => `- ${item.product_name} (${item.variant_name}) x${item.quantity}`),
+      "",
+      `Total: ${qar(order.total)} · ${payment}`,
+      isPickup(order) ? null : `To: ${order.delivery_area}`,
+      isFawran(order) ? "Fawran: check it has arrived before preparing." : null,
+      "",
+      `${SITE_URL}/admin.html`,
+    ].filter((line) => line !== null).join("\n")));
+  }
 
   // 2. Confirmation to the customer.
   if (order.customer_email) {
