@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment | QAVERA</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3/qavera.css?v=20261009f">
+  <style>
+    .pay-result { max-width: 40rem; }
+    .pay-result p { color: var(--ink); line-height: 1.7; }
+    .pay-result p + p { margin-top: .9rem; }
+    .pay-result a { color: var(--oxblood); }
+    .pay-result .order-ref { margin-bottom: 1.6rem; color: var(--muted-light); }
+    .pay-result .links { margin-top: 2.4rem; display: flex; flex-wrap: wrap; gap: 1.4rem; }
+  </style>
+</head>
+<body data-page="legal">
+  <script src="v3/qavera.js?v=20261013"></script>
+
+  <main class="v3-main">
+    <header class="v3-page-head">
+      <p class="caption reveal">Payment</p>
+      <h1 class="display reveal d1">Thank <em>you</em>.</h1>
+      <p class="lead reveal d2">We are confirming your payment.</p>
+    </header>
+
+    <section class="v3-section light">
+      <article class="pay-result">
+        <p class="order-ref caption" id="orderRef" hidden></p>
+        <p>As soon as your payment is confirmed, you will receive an email with your order details.</p>
+        <p>If your payment did not go through, or you have any question, please call or WhatsApp us on <a href="https://wa.me/97450968968">+974 5096 8968</a>.</p>
+        <div class="links">
+          <a href="account.html">See my orders</a>
+          <a href="shop.html">Back to the shop</a>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    // Show the order number if the payment page sends one back.
+    (() => {
+      const params = new URLSearchParams(location.search);
+      const ref = params.get('order') || params.get('orderId') || params.get('reference');
+      if (ref && /^[A-Za-z0-9-]{1,40}$/.test(ref)) {
+        const el = document.getElementById('orderRef');
+        el.textContent = `Order ${ref}`;
+        el.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>
