@@ -15,7 +15,10 @@
     .pay-result p + p { margin-top: .9rem; }
     .pay-result a { color: var(--oxblood); }
     .pay-result .order-ref { margin-bottom: 1.6rem; color: var(--muted-light); }
-    .pay-result .links { margin-top: 2.4rem; display: flex; flex-wrap: wrap; gap: 1.4rem; }
+    .pay-result .links { margin-top: 2.4rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1.4rem; }
+    .pay-result .retry { font: inherit; font-family: var(--mono); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; padding: .95rem 1.6rem; border: 0; background: var(--ink); color: var(--paper, #f5edd9); cursor: pointer; }
+    .pay-result .retry:disabled { opacity: .5; cursor: wait; }
+    .pay-result [hidden] { display: none !important; }
   </style>
 </head>
 <body data-page="legal">
@@ -24,16 +27,17 @@
   <main class="v3-main">
     <header class="v3-page-head">
       <p class="caption reveal">Payment</p>
-      <h1 class="display reveal d1">Thank <em>you</em>.</h1>
-      <p class="lead reveal d2">We are confirming your payment.</p>
+      <h1 class="display reveal d1" id="payTitle">One <em>moment</em>.</h1>
+      <p class="lead reveal d2" id="payLead">We are confirming your payment.</p>
     </header>
 
     <section class="v3-section light">
       <article class="pay-result">
         <p class="order-ref caption" id="orderRef" hidden></p>
-        <p>As soon as your payment is confirmed, you will receive an email with your order details.</p>
-        <p>If your payment did not go through, or you have any question, please call or WhatsApp us on <a href="https://wa.me/97450968968">+974 5096 8968</a>.</p>
+        <p id="payText">This only takes a few seconds. Please keep this page open.</p>
+        <p>Any question? Call or WhatsApp us on <a href="https://wa.me/97450968968">+974 5096 8968</a>.</p>
         <div class="links">
+          <button type="button" class="retry" id="payRetry" hidden>Try paying again</button>
           <a href="account.html">See my orders</a>
           <a href="shop.html">Back to the shop</a>
         </div>
@@ -41,17 +45,90 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Show the order number if the payment page sends one back.
-    (() => {
-      const params = new URLSearchParams(location.search);
-      const ref = params.get('order') || params.get('orderId') || params.get('reference');
-      if (ref && /^[A-Za-z0-9-]{1,40}$/.test(ref)) {
-        const el = document.getElementById('orderRef');
-        el.textContent = `Order ${ref}`;
-        el.hidden = false;
+    const supabaseClient = window.supabase.createClient(
+      'https://rhwajaceuhpfwughlgpd.supabase.co',
+      'sb_publishable_z19paX78926eQBcMOLw-dA_T8um0KS0'
+    );
+    const qar = v => `QAR ${Number.isInteger(Number(v)) ? Number(v) : Number(v).toFixed(2)}`;
+    const params = new URLSearchParams(location.search);
+    let orderId = params.get('order');
+    try { orderId = orderId || localStorage.getItem('qaveraPayingOrder'); } catch (_) {}
+    const $ = id => document.getElementById(id);
+
+    function show(title, lead, text, retry) {
+      $('payTitle').innerHTML = title;
+      $('payLead').textContent = lead;
+      $('payText').textContent = text;
+      $('payRetry').hidden = !retry;
+    }
+
+    async function check() {
+      const { data, error } = await supabaseClient.functions.invoke('card-payment', { body: { action: 'check', order_id: orderId } });
+      if (error && !data) throw error;
+      return data || {};
+    }
+
+    async function confirmPayment() {
+      if (!orderId) {
+        show('Thank <em>you</em>.', 'We could not find your order on this page.',
+          'If you paid, you will receive a confirmation email shortly. You can also check your orders in your account.', false);
+        return;
       }
-    })();
+      try {
+        // Noqoody may take a few seconds to record the payment.
+        let result = {};
+        for (let attempt = 0; attempt < 6; attempt++) {
+          result = await check();
+          if (result.order_number) {
+            $('orderRef').textContent = `Order ${result.order_number} · ${qar(result.total)}`;
+            $('orderRef').hidden = false;
+          }
+          if (result.status === 'paid' || result.status === 'failed') break;
+          await new Promise(resolve => setTimeout(resolve, 2500));
+        }
+        if (result.status === 'paid') {
+          try { localStorage.removeItem('qaveraPayingOrder'); } catch (_) {}
+          show('Payment <em>received</em>.', 'Thank you, your order is confirmed.',
+            'You will receive an email with your order details. We will contact you to confirm your delivery or pickup.', false);
+        } else if (result.error) {
+          show('Payment <em>not confirmed</em>.', 'We could not check your payment right now.',
+            'If you paid, there is nothing to do: we will confirm it and email you. If not, you can try again.', true);
+        } else {
+          show('Payment <em>not completed</em>.', 'Your order is saved, but it is not paid yet.',
+            'No money was taken. You can try paying again, or choose another way by contacting us.', true);
+        }
+      } catch (error) {
+        console.error(error);
+        show('Payment <em>not confirmed</em>.', 'We could not check your payment right now.',
+          'If you paid, there is nothing to do: we will confirm it and email you. If not, you can try again.', true);
+      }
+    }
+
+    $('payRetry').addEventListener('click', async () => {
+      const button = $('payRetry');
+      button.disabled = true;
+      button.textContent = 'Opening payment…';
+      try {
+        const { data: session } = await supabaseClient.auth.getSession();
+        if (!session?.session) {
+          try { localStorage.setItem('qaveraPayingOrder', orderId); } catch (_) {}
+          location.href = 'login.html?next=payment-result.html';
+          return;
+        }
+        const { data } = await supabaseClient.functions.invoke('card-payment', { body: { action: 'start', order_id: orderId } });
+        if (data?.url) { location.href = data.url; return; }
+        if (data?.status === 'paid') { confirmPayment(); return; }
+        show('Payment <em>not completed</em>.', 'The payment page did not open.', data?.error || 'Please try again in a moment, or contact us.', true);
+      } catch (error) {
+        show('Payment <em>not completed</em>.', 'The payment page did not open.', 'Please try again in a moment, or contact us.', true);
+      }
+      button.disabled = false;
+      button.textContent = 'Try paying again';
+    });
+
+    confirmPayment();
   </script>
 </body>
 </html>

@@ -5,6 +5,8 @@
 //   status -> out_for_delivery -> "on its way" email (pickup orders: "ready for pickup")
 //   status -> delivered        -> "delivered" email to the customer (with points earned)
 //   Shop sales (source = 'store', from the POS) are ignored.
+//   Card online orders: the new-order emails are sent once the payment
+//   succeeds (payment_status -> paid), not when the unpaid order is created.
 //
 // Uses the same secrets as contact-notify:
 //   RESEND_API_KEY, CONTACT_TO_EMAIL (QAVERA inbox), CONTACT_WEBHOOK_SECRET
@@ -28,6 +30,7 @@ const PAYMENT_LABELS: Record<string, string> = {
   cash_on_delivery: "Cash on Delivery",
   card_on_delivery: "Card on Delivery",
   fawran: "Fawran",
+  card_online: "Card (paid online)",
 };
 
 // Fawran: paid in advance to the QAVERA business account.
@@ -235,6 +238,7 @@ async function handleNewOrder(order: Record<string, any>) {
     order.is_gift ? `GIFT for: ${order.gift_recipient_name} (${order.gift_recipient_phone})` : null,
     order.is_gift && order.gift_message ? `Gift message: "${order.gift_message}"` : null,
     isFawran(order) ? "PAYMENT: Fawran, check it has arrived before preparing." : null,
+    order.payment_method === "card_online" ? "PAYMENT: Paid online by card." : null,
     "",
     `Customer: ${order.customer_name}`,
     `Phone:    ${order.customer_phone}`,
@@ -388,8 +392,14 @@ Deno.serve(async (req) => {
     return new Response("Ignored (shop sale)", { status: 200 });
   }
 
+  const cardOnline = payload.record.payment_method === "card_online";
   try {
     if (payload.type === "INSERT") {
+      // Card online: wait until the customer has paid.
+      if (!cardOnline || payload.record.payment_status === "paid") await handleNewOrder(payload.record);
+    } else if (payload.type === "UPDATE" && cardOnline && payload.record.online_paid_at
+               && !payload.old_record?.online_paid_at) {
+      // Just paid online (set by the card-payment function).
       await handleNewOrder(payload.record);
     } else if (payload.type === "UPDATE" && payload.old_record?.status !== payload.record.status) {
       await handleStatusChange(payload.record);
