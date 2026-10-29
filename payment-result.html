@@ -53,8 +53,11 @@
     );
     const qar = v => `QAR ${Number.isInteger(Number(v)) ? Number(v) : Number(v).toFixed(2)}`;
     const params = new URLSearchParams(location.search);
-    let orderId = params.get('order');
-    try { orderId = orderId || localStorage.getItem('qaveraPayingOrder'); } catch (_) {}
+    // Noqoody may add its own details to the return link (even right after our
+    // order id), so pick out just the order id.
+    const findId = value => (String(value || '').match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i) || [])[0] || null;
+    let orderId = findId(params.get('order'));
+    try { orderId = orderId || findId(localStorage.getItem('qaveraPayingOrder')); } catch (_) {}
     const $ = id => document.getElementById(id);
 
     function show(title, lead, text, retry) {
