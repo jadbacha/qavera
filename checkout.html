@@ -1085,9 +1085,31 @@
       if (cart.length === 0) {
         hasError = true;
         showCheckoutMessage('Your cart is empty.');
+      } else if (hasError) {
+        showMissingDetails();
       }
 
       return !hasError;
+    }
+
+    // Tell the customer what is missing, then take them to the first problem.
+    function showMissingDetails() {
+      const errors = [...document.querySelectorAll('.required-error.show')]
+        .filter(error => error.offsetParent !== null && error.textContent.trim());
+      if (!errors.length) return;
+      showCheckoutDialog({
+        label: 'Checkout',
+        title: 'Please check your order',
+        text: errors.length === 1 ? 'One detail needs your attention:' : `${errors.length} details need your attention:`,
+        details: errors.map(error => [`• ${error.textContent.trim()}`, '']),
+        button: 'Fix it',
+        onClose: () => {
+          const first = errors[0];
+          first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const field = first.parentElement.querySelector('input:not([type="radio"]):not([type="checkbox"]), select, textarea');
+          if (field) setTimeout(() => field.focus({ preventScroll: true }), 400);
+        }
+      });
     }
 
     // Delivery or pickup: fee, labels and which fields are needed.
