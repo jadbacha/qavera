@@ -63,6 +63,9 @@
     .pay span { font-size: .85rem; color: rgba(216,216,216,.55); }
     .pay input:focus-visible + strong { outline: 1px solid var(--sand); outline-offset: 4px; }
     .pay label.is-off { opacity: .4; cursor: not-allowed; }
+    .pay [hidden] { display: none !important; }
+    .pay label.pay-online { grid-column: 1 / -1; }
+    .pay label.pay-online em { font-style: normal; font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: var(--sand); padding: .2rem .5rem; margin-left: .6rem; }
     .area-fee { font-size: .85rem; color: var(--sand); min-height: 1.2em; }
     .area-search { position: relative; }
     .area-search::after { content: ''; position: absolute; right: .3rem; top: 50%; width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--sand); transform: translateY(-50%); pointer-events: none; }
@@ -322,8 +325,9 @@
             <label><input type="radio" name="payment" value="Cash on Delivery" checked><strong data-pay="cash">Cash on delivery</strong><span data-pay-note="cash">Pay when your order arrives.</span></label>
             <label><input type="radio" name="payment" value="Card on Delivery"><strong data-pay="card">Card on delivery</strong><span data-pay-note="card">Pay by card at your door.</span></label>
             <label><input type="radio" name="payment" value="Fawran"><strong>Fawran</strong><span>Bank transfer from your banking app, before we deliver.</span></label>
-            <p class="pay-note" id="giftPayNote" hidden>Gifts are paid in advance by Fawran.</p>
-            <div class="pay-soon" aria-disabled="true">
+            <label class="pay-online" id="payOnline" hidden><input type="radio" name="payment" value="Card Online"><strong>Pay online now<em id="payOnlineTest" hidden>Test mode</em></strong><span>Visa, Mastercard, Apple Pay, Google Pay or NAPS debit, securely on the Noqoody payment page.</span></label>
+            <p class="pay-note" id="giftPayNote" hidden>Gifts are paid in advance, by Fawran or online by card.</p>
+            <div class="pay-soon" id="paySoon" aria-disabled="true">
               <strong>Pay online now <em>Coming soon</em></strong>
               <span>Visa, Mastercard and Apple Pay, securely at checkout.</span>
             </div>
@@ -915,6 +919,7 @@
         }
 
         currentUser = sessionData.session.user;
+        loadCardOnline();
 
         let profile = null;
         let profileError = null;
@@ -1279,18 +1284,32 @@
     const FAWRAN_DETAILS = 'Corporate · Qavera Trading · CR 237335';
     const isGift = () => !isPickup() && document.getElementById('isGift').checked;
 
-    // Gifts are delivered to someone else and always paid by Fawran.
+    // Pay online by card (Noqoody): shown once the server says it is set up.
+    // With a test key only admins see it.
+    async function loadCardOnline() {
+      try {
+        const { data } = await supabaseClient.functions.invoke('card-payment', { body: { action: 'config' } });
+        if (!data?.enabled) return;
+        document.getElementById('payOnline').hidden = false;
+        document.getElementById('payOnlineTest').hidden = !data.test;
+        document.getElementById('paySoon').hidden = true;
+      } catch (_) { /* stays "Coming soon" */ }
+    }
+
+    // Gifts are delivered to someone else and always paid in advance.
+    const PAID_AHEAD = ['Fawran', 'Card Online'];
     function applyGift() {
       const gift = isGift();
       document.getElementById('giftFields').hidden = !gift;
       document.getElementById('giftPayNote').hidden = !gift;
       document.querySelectorAll('input[name="payment"]').forEach(input => {
-        const off = gift && input.value !== 'Fawran';
+        const off = gift && !PAID_AHEAD.includes(input.value);
         input.disabled = off;
         input.closest('label').classList.toggle('is-off', off);
       });
-      if (gift) document.querySelector('input[name="payment"][value="Fawran"]').checked = true;
-      else if (!document.querySelector('input[name="payment"]:checked')) {
+      if (gift && !PAID_AHEAD.includes(document.querySelector('input[name="payment"]:checked')?.value)) {
+        document.querySelector('input[name="payment"][value="Fawran"]').checked = true;
+      } else if (!document.querySelector('input[name="payment"]:checked')) {
         document.querySelector('input[name="payment"][value="Cash on Delivery"]').checked = true;
       }
       ['giftNameError', 'giftPhoneError'].forEach(id => document.getElementById(id).classList.remove('show'));
@@ -1298,8 +1317,9 @@
     }
 
     function updatePayWhen() {
-      const fawran = document.querySelector('input[name="payment"]:checked')?.value === 'Fawran';
-      document.getElementById('payWhen').textContent = fawran ? 'Pay by Fawran' : isPickup() ? 'Pay on pickup' : 'Pay on delivery';
+      const choice = document.querySelector('input[name="payment"]:checked')?.value;
+      document.getElementById('payWhen').textContent = choice === 'Fawran' ? 'Pay by Fawran'
+        : choice === 'Card Online' ? 'Pay online now' : isPickup() ? 'Pay on pickup' : 'Pay on delivery';
     }
 
     document.getElementById('isGift').addEventListener('change', applyGift);
@@ -1343,8 +1363,11 @@
       const paymentLabel = pickup ? paymentSelection.replace('Delivery', 'Pickup') : paymentSelection;
       const fawran = paymentSelection === 'Fawran';
       const gift = isGift();
+      const cardOnline = paymentSelection === 'Card Online';
       const paymentMethod = fawran
         ? 'fawran'
+        : cardOnline
+        ? 'card_online'
         : paymentSelection === 'Card on Delivery'
         ? 'card_on_delivery'
         : 'cash_on_delivery';
@@ -1494,6 +1517,32 @@
         window.QaveraCart && window.QaveraCart.render();
 
         const orderTotal = Number(order.total);
+        if (cardOnline) {
+          // Off to the Noqoody payment page; payment-result.html confirms it.
+          confirmOrderButton.textContent = 'Opening payment…';
+          try { localStorage.setItem('qaveraPayingOrder', order.order_id); } catch (_) {}
+          let payError = null;
+          try {
+            const { data: pay, error: invokeError } = await supabaseClient.functions.invoke('card-payment', {
+              body: { action: 'start', order_id: order.order_id }
+            });
+            if (pay?.url) { window.location.href = pay.url; return; }
+            if (pay?.status === 'paid') { window.location.href = `payment-result.html?order=${order.order_id}`; return; }
+            payError = pay?.error || invokeError?.message;
+          } catch (error) {
+            payError = error?.message;
+          }
+          console.error('Could not open the payment page:', payError);
+          showCheckoutDialog({
+            label: 'Order saved',
+            title: 'The payment page did not open',
+            text: `Your order ${order.order_number} is saved but not paid yet. You can pay it from your account (Pay now), or call or WhatsApp us on +974 5096 8968.`,
+            details: [['Order number', order.order_number], ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`]],
+            button: 'Go to my orders',
+            onClose: () => { window.location.href = 'account.html'; }
+          });
+          return;
+        }
         showCheckoutDialog({
           label: 'Order received',
           title: 'Thank you for your order',

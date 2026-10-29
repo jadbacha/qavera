@@ -505,7 +505,8 @@
     }
 
     const FILTERS = [
-      { key: 'active', label: 'To do', match: o => !isShopSale(o) && !['delivered', 'cancelled'].includes(o.status) },
+      // Card online orders show up once they are paid (unpaid ones stay in All).
+      { key: 'active', label: 'To do', match: o => !isShopSale(o) && !['delivered', 'cancelled'].includes(o.status) && !cardUnpaid(o) },
       { key: 'delivered', label: 'Delivered', match: o => !isShopSale(o) && o.status === 'delivered' },
       { key: 'cancelled', label: 'Cancelled', match: o => o.status === 'cancelled' },
       { key: 'shop', label: 'Shop sales', match: o => isShopSale(o) && o.status !== 'cancelled' },
@@ -530,12 +531,15 @@
       cash_on_delivery: 'Cash on delivery',
       card_on_delivery: 'Card on delivery',
       fawran: 'Fawran',
+      card_online: 'Card online',
       cash: 'Cash in shop',
       card: 'Card in shop'
     };
 
     // Sales made in the shop with the POS app.
     const isShopSale = order => order.source === 'store';
+    // Customer chose to pay online by card but has not paid (yet).
+    const cardUnpaid = order => order.payment_method === 'card_online' && order.payment_status !== 'paid';
 
     let orders = [];
     let activeFilter = 'active';
@@ -638,11 +642,44 @@
       }
 
       orders = data || [];
+      checkRecentCardPayments();
       const productsResult = await productsRequest;
       products = productsResult.error ? null : (productsResult.data || []);
       const updated = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
       subtitle.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'} · updated ${updated}`;
       render();
+    }
+
+    // Online card payments: ask Noqoody whether the order was paid.
+    async function checkCardPayment(button) {
+      const message = document.getElementById(`msg-${button.dataset.cardcheck}`);
+      button.disabled = true;
+      button.textContent = 'Checking…';
+      const { data, error } = await adminSupabase.functions.invoke('card-payment', {
+        body: { action: 'check', order_id: button.dataset.cardcheck }
+      }).catch(error => ({ error }));
+      if (data?.status === 'paid') { loadOrders(); return; }
+      button.disabled = false;
+      button.textContent = '🔄 Check card payment';
+      if (message) {
+        message.textContent = error || data?.error ? 'Could not check the payment. Try again in a moment.'
+          : data?.status === 'failed' ? 'Not paid: the card payment failed.' : 'Not paid yet: the customer has not completed the card payment.';
+      }
+    }
+
+    // Once per page load: card orders from the last 2 days that are not paid
+    // yet (in case the customer paid and closed the page before coming back).
+    let cardChecksDone = false;
+    async function checkRecentCardPayments() {
+      if (cardChecksDone) return;
+      cardChecksDone = true;
+      const since = Date.now() - 2 * 24 * 3600 * 1000;
+      const recent = orders.filter(o => cardUnpaid(o) && o.status !== 'cancelled' && new Date(o.created_at).getTime() > since);
+      if (!recent.length) return;
+      const results = await Promise.all(recent.map(o => adminSupabase.functions.invoke('card-payment', {
+        body: { action: 'check', order_id: o.id }
+      }).then(r => r.data?.status).catch(() => null)));
+      if (results.includes('paid')) loadOrders();
     }
 
     function renderFilters() {
@@ -892,6 +929,7 @@
             ${opt('cash_on_delivery', isPickup(order) ? 'Cash on pickup' : 'Cash on delivery')}
             ${opt('card_on_delivery', isPickup(order) ? 'Card on pickup' : 'Card on delivery')}
             ${opt('fawran', 'Fawran')}
+            ${order.payment_method === 'card_online' ? opt('card_online', 'Card (paid online)') : ''}
           </select>
           <label><input type="checkbox" ${order.payment_status === 'paid' ? 'checked' : ''}> Already paid</label>
           <button type="button" class="action primary" data-paysave="${order.id}">Save</button>
@@ -902,7 +940,9 @@
       if (isShopSale(order) && order.status === 'delivered') {
         return `<div class="actions"><span class="final-note">Paid in the shop</span><div class="wa-row">${renderEditDelete(order)}</div><div class="order-message" id="msg-${order.id}"></div></div>`;
       }
-      const fawranButton = order.payment_method !== 'fawran' ? ''
+      const fawranButton = cardUnpaid(order)
+        ? `<button type="button" class="action primary" data-cardcheck="${order.id}">🔄 Check card payment</button>`
+        : order.payment_method !== 'fawran' ? ''
         : order.payment_status === 'paid'
         ? `<button type="button" class="action paid-button" data-paid="${order.id}" data-value="false">Fawran received ✓ (undo)</button>`
         : `<button type="button" class="action primary" data-paid="${order.id}" data-value="true">Fawran received</button>`;
@@ -949,7 +989,7 @@
             <div>
               <div class="order-number">${escapeHtml(order.order_number)}</div>
               <div class="order-time">${escapeHtml(formatTime(order.created_at))}</div>
-              ${scheduleLabel(order) ? `<div class="order-when ${isPickup(order) ? 'is-pickup' : ''}">${isPickup(order) ? 'Pickup' : 'Delivery'} · ${escapeHtml(scheduleLabel(order))}</div>` : ''}${order.is_gift ? '<span class="gift-tag">🎁 Gift</span>' : ''}${order.payment_method === 'fawran' ? `<span class="pay-tag ${order.payment_status === 'paid' ? 'paid' : ''}">${order.payment_status === 'paid' ? 'Fawran received' : 'Waiting for Fawran'}</span>` : ''}
+              ${scheduleLabel(order) ? `<div class="order-when ${isPickup(order) ? 'is-pickup' : ''}">${isPickup(order) ? 'Pickup' : 'Delivery'} · ${escapeHtml(scheduleLabel(order))}</div>` : ''}${order.is_gift ? '<span class="gift-tag">🎁 Gift</span>' : ''}${order.payment_method === 'fawran' ? `<span class="pay-tag ${order.payment_status === 'paid' ? 'paid' : ''}">${order.payment_status === 'paid' ? 'Fawran received' : 'Waiting for Fawran'}</span>` : ''}${order.payment_method === 'card_online' ? `<span class="pay-tag ${order.payment_status === 'paid' ? 'paid' : ''}">${order.payment_status === 'paid' ? 'Paid online by card' : 'Card payment not completed'}</span>` : ''}
             </div>
             <span class="status ${escapeHtml(order.status)}">${isShopSale(order) && order.status === 'delivered' ? 'Shop sale' : escapeHtml(statusLabel(order))}</span>
           </div>
@@ -1121,7 +1161,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       return ({
         cash_on_delivery: pickup ? 'Cash on pickup' : 'Cash on delivery',
         card_on_delivery: pickup ? 'Card on pickup' : 'Card on delivery',
-        fawran: 'Fawran', cash: 'Cash in shop', card: 'Card in shop'
+        fawran: 'Fawran', card_online: 'Card online', cash: 'Cash in shop', card: 'Card in shop'
       })[o.payment_method] || o.payment_method || '';
     }
     function paymentState(o) {
@@ -1138,8 +1178,9 @@ ${escapeHtml(order.delivery_address)}</div>`}
     function salesInRange() {
       return (salesOrders || []).filter(o => {
         const day = qatarDay(o.created_at);
+        // Unpaid card online orders are checkouts the customer never paid: not sales.
         return (!salesFrom || day >= salesFrom) && (!salesTo || day <= salesTo)
-          && (salesShowCancelled || o.status !== 'cancelled');
+          && (salesShowCancelled || o.status !== 'cancelled') && !cardUnpaid(o);
       });
     }
 
@@ -1239,7 +1280,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     // How an order was sold and paid, for the report.
     const saleType = o => o.source === 'store' ? 'In shop' : o.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery';
-    const payGroup = o => ({ cash_on_delivery: 'Cash', cash: 'Cash', card_on_delivery: 'Card', card: 'Card', fawran: 'Fawran' })[o.payment_method] || 'Other';
+    const payGroup = o => ({ cash_on_delivery: 'Cash', cash: 'Cash', card_on_delivery: 'Card', card: 'Card', card_online: 'Card', fawran: 'Fawran' })[o.payment_method] || 'Other';
     const fullDay = day => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', {
       day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'
     });
@@ -1556,7 +1597,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
       const subtotal = Number(order.subtotal) || 0;
       set('noDiscount', subtotal > 0 ? Math.round(Number(order.discount_amount || 0) / subtotal * 10000) / 100 : 0);
       set('noFee', pickup ? NO_DELIVERY_FEE : Number(order.delivery_fee || 0));
-      set('noPayment', ['cash_on_delivery', 'card_on_delivery', 'fawran'].includes(order.payment_method) ? order.payment_method : 'cash_on_delivery');
+      if (order.payment_method === 'card_online') {
+        document.getElementById('noPayment').insertAdjacentHTML('beforeend', '<option value="card_online">Card (paid online)</option>');
+      }
+      set('noPayment', ['cash_on_delivery', 'card_on_delivery', 'fawran', 'card_online'].includes(order.payment_method) ? order.payment_method : 'cash_on_delivery');
       set('noNotes', order.notes);
       updateNewOrder();  // builds the time options for this date
       if (order.time_slot) set('noSlot', order.time_slot);
@@ -1897,6 +1941,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
         if (order) openInvoice(order);
         return;
       }
+      const cardCheck = event.target.closest('[data-cardcheck]');
+      if (cardCheck) { checkCardPayment(cardCheck); return; }
       const paidButton = event.target.closest('[data-paid]');
       if (paidButton) { setPaid(paidButton); return; }
       const stockButton = event.target.closest('.stock-toggle');
