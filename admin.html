@@ -772,130 +772,162 @@
       if (isShopSale(order) || order.status === 'cancelled') return '';
       const messages = waMessages(order);
       return `<div class="wa-row">
-        <button type="button" class="invoice-btn" data-invoice="${order.id}">🧾 Invoice (PDF)</button>
+        <button type="button" class="invoice-btn" data-invoice="${order.id}">🧾 Print receipt / invoice</button>
         ${messages.length ? `<span class="wa-label">WhatsApp</span>${messages.map(m =>
           `<a class="wa-send" href="https://wa.me/${m.digits}?text=${encodeURIComponent(m.text)}" target="_blank" rel="noopener">${escapeHtml(m.label)}</a>`
         ).join('')}` : ''}
       </div>`;
     }
 
-    // ---- Invoice: an A4 page to save as PDF and send to the customer ----
-    // The logo is embedded in the invoice so the PDF is complete on its own.
-    let invoiceLogo = `${location.origin}/email-logo.png`;
-    fetch('email-logo.png').then(r => r.ok ? r.blob() : null).then(blob => {
+    // ---- Invoice / receipt: the same A4 page as the till prints ----
+    // "Receipt" once the order is paid, "Invoice" before. The logo is embedded
+    // so a saved PDF is complete on its own.
+    let invoiceLogo = `${location.origin}/receipt-logo.png`;
+    fetch('receipt-logo.png').then(r => r.ok ? r.blob() : null).then(blob => {
       if (!blob) return;
       const reader = new FileReader();
       reader.onload = () => { invoiceLogo = reader.result; };
       reader.readAsDataURL(blob);
     }).catch(() => {});
 
+    // Box sizes read like the till: "Premium — 12 Pieces".
+    const BOX_SIZE_NAMES = { s: '12 Pieces', m: '25 Pieces', l: '48 Pieces', mini: 'Mini, 2 Pieces' };
+    function receiptItemName(item) {
+      const box = /^(premium|luxury)$/i.test(String(item.product_name || '').trim());
+      const size = box ? BOX_SIZE_NAMES[String(item.variant_name || '').trim().toLowerCase()] : null;
+      return `${item.product_name || ''}${item.variant_name ? ` — ${size || item.variant_name}` : ''}`;
+    }
+
     function invoiceHtml(order) {
+      const shopSale = isShopSale(order);
       const pickup = isPickup(order);
-      const fawran = order.payment_method === 'fawran';
-      const paid = order.payment_status === 'paid';
-      const placed = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Qatar' });
-      const rows = (order.order_items || []).map(item => {
-        const flavors = Array.isArray(item.customization)
-          ? item.customization.filter(f => Number(f.quantity) > 0).map(f => `${escapeHtml(f.name)} × ${Number(f.quantity)}`).join(', ')
+      const paid = order.status !== 'cancelled' && isPaid(order);
+      const fawranDue = order.payment_method === 'fawran' && !paid;
+      const money = v => `${Number(v || 0).toFixed(2)}`;
+      const created = new Date(order.created_at);
+      const date = created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Qatar' });
+      const time = created.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Qatar' });
+      const items = order.order_items || [];
+      const rows = items.map(item => {
+        const flavours = Array.isArray(item.customization)
+          ? item.customization.filter(f => Number(f.quantity) > 0).map(f => `${Number(f.quantity)} ${escapeHtml(f.name)}`).join(', ')
           : '';
         const unit = Number(item.total_price) / Math.max(Number(item.quantity) || 1, 1);
-        return `<tr>
-          <td>${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)}${flavors ? `<div class="sub">${flavors}</div>` : ''}</td>
-          <td class="c">${Number(item.quantity)}</td>
-          <td class="r">${qar(unit)}</td>
-          <td class="r">${qar(item.total_price)}</td>
-        </tr>`;
+        return `<div class="row">
+          <div>${escapeHtml(receiptItemName(item))}${flavours ? ' (Customized)' : ''}${flavours ? `<div class="flavours">${flavours}</div>` : ''}</div>
+          <div>${Number(item.quantity)}</div>
+          <div>${money(unit)}</div>
+          <div>${money(item.total_price)}</div>
+        </div>`;
       }).join('');
-      const line = (label, value, cls = '') => `<div class="line ${cls}"><span>${label}</span><span>${value}</span></div>`;
-      const payment = String(PAYMENT_LABELS[order.payment_method] || order.payment_method || '').replace(pickup ? 'delivery' : '§', 'pickup');
+      const discount = Number(order.discount_amount || 0) + Number(order.points_discount || 0);
+      const discountLabel = [order.discount_reason, Number(order.points_discount) > 0 ? `${Number(order.points_used)} points` : '']
+        .filter(Boolean).join(', ');
+      const address = !shopSale && !pickup
+        ? [order.delivery_area, ...String(order.delivery_address || '').split('\n')].filter(Boolean).join(', ') : '';
+      const title = paid ? 'Receipt' : 'Invoice';
+      const total = (label, value) => `<div class="total-row"><span>${label}</span><strong>${value}</strong></div>`;
 
       return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>QAVERA invoice ${escapeHtml(order.order_number)}</title>
+<title>QAVERA ${title.toLowerCase()} ${escapeHtml(order.order_number)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4; margin: 14mm; }
+  @page { size: A4 portrait; margin: 12mm 15mm; }
   * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #1a1713; font-size: 13px; line-height: 1.5; background: #fff; }
-  .page { max-width: 780px; margin: 0 auto; padding: 24px; }
-  .head { background: #0d0b08; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-  .head img { width: 190px; height: auto; display: block; }
-  .head .shop { color: #d8d0c0; font-size: 11px; text-align: right; line-height: 1.6; }
-  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 30px; margin: 26px 0 4px; }
-  .meta { color: #6b5f45; margin-bottom: 22px; }
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
-  .box { border: 1px solid #e3d9c2; padding: 12px 14px; }
-  .label { color: #9a7a2e; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 4px; }
-  .pre { white-space: pre-line; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6b5f45; border-bottom: 1.5px solid #1a1713; padding: 8px 6px; }
-  td { padding: 9px 6px; border-bottom: 1px solid #ebe0c4; vertical-align: top; }
-  .c { text-align: center; } .r { text-align: right; white-space: nowrap; }
-  .sub { color: #6b5f45; font-size: 11px; margin-top: 2px; }
-  .totals { margin: 14px 0 0 auto; width: 300px; }
-  .line { display: flex; justify-content: space-between; padding: 4px 0; }
-  .line.total { border-top: 1.5px solid #1a1713; margin-top: 6px; padding-top: 8px; font-size: 16px; font-weight: 700; }
-  .pay { margin-top: 24px; padding: 14px 16px; border: 1.5px solid #c4a980; background: #faf5ea; }
-  .pay strong { font-size: 14px; }
-  .stamp { display: inline-block; margin-top: 20px; padding: 6px 14px; border: 2px solid #2e7d32; color: #2e7d32; font-weight: 700; letter-spacing: .2em; }
-  .foot { margin-top: 30px; text-align: center; color: #6b5f45; font-size: 11px; }
-  .bar { position: sticky; top: 0; background: #f5edd9; padding: 10px; text-align: center; font-size: 13px; }
+  html, body { margin: 0; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; }
+  .bar { position: sticky; top: 0; z-index: 2; background: #f5edd9; padding: 10px; text-align: center; font-size: 13px; }
   .bar button { font: inherit; padding: 8px 18px; background: #0d0b08; color: #c4a980; border: 0; cursor: pointer; margin-left: 8px; }
-  @media print { .bar { display: none; } .page { padding: 0; } }
-  @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } .totals { width: 100%; } .head { flex-direction: column; align-items: flex-start; } .head .shop { text-align: left; } }
+  .sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 12mm 15mm; display: flex; flex-direction: column; }
+  .top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; width: 100%; }
+  .order { justify-self: start; font-size: 13px; line-height: 1.45; }
+  .order > div:first-child { font-size: 12px; margin-bottom: 2mm; }
+  .customer-title { font-weight: bold; font-size: 11px; }
+  .logo img { width: 230px; height: auto; display: block; }
+  .company { justify-self: end; font-size: 13px; line-height: 1.45; }
+  .company strong { display: block; margin-bottom: 1mm; font-size: 11px; }
+  hr { width: 100%; height: 2px; margin: 15px 0 20px; padding: 0; border: 0; border-top: 2px solid #C4A980; background: #C4A980; }
+  h1 { text-align: center; margin: 3mm 0 4mm; font-size: 30px; font-family: "Cormorant Garamond", serif; font-weight: 500; }
+  .head, .row { display: grid; grid-template-columns: 1fr 25mm 35mm 35mm; line-height: 1.3; break-inside: avoid; }
+  .head { background: #eeeeee; min-height: 9mm; align-items: center; font-size: 15px; font-weight: bold; }
+  .head > div, .row > div { padding: 2mm 0; }
+  .head > div:not(:first-child), .row > div:not(:first-child) { text-align: center; }
+  .row { min-height: 8mm; border-bottom: 0.25mm solid #eeeeee; align-items: center; font-size: 10.5px; }
+  .flavours { margin-top: 3px; font-size: 11px; color: #666; }
+  .fawran { margin-top: 6mm; padding: 3mm 4mm; border: 1px solid #C4A980; font-size: 12px; line-height: 1.5; }
+  .space { flex: 1 1 auto; }
+  .end { break-inside: avoid; }
+  .totals { width: 85mm; margin-left: auto; margin-top: 8mm; font-size: 13px; line-height: 1.7; }
+  .totals-line, .footer-line { width: 100%; height: 0.3mm; background: #222; margin-bottom: 2mm; }
+  .total-row, .grand { display: grid; grid-template-columns: 35mm 1fr; align-items: center; }
+  .total-row strong, .grand strong { text-align: right; }
+  .grand { border-top: 1px solid #eeeeee; padding-top: 3mm; margin-top: 3mm; font-size: 15px; }
+  .footer { margin-top: 3mm; text-align: center; }
+  .footer-line { margin-bottom: 3mm; }
+  .footer h2 { margin: 0; font-size: 16px; }
+  .footer p { margin: 2mm 0 0; font-size: 8px; letter-spacing: 2px; }
+  .long .logo img { width: 170px; } .long hr { margin: 8px 0 10px; } .long h1 { margin: 1mm 0 2mm; font-size: 24px; }
+  .long .row { min-height: 6mm; } .long .head > div, .long .row > div { padding: 1mm 0; }
+  @media print { .bar { display: none; } .sheet { width: auto; min-height: calc(297mm - 24mm - 1mm); padding: 0; } }
+  @media screen and (max-width: 820px) { .sheet { width: 100%; padding: 16px; min-height: 0; } .top { grid-template-columns: 1fr; gap: 12px; } .logo { order: -1; } .logo img { width: 150px; margin: 0 auto; } .company { justify-self: start; } .head, .row { grid-template-columns: 1fr 12mm 20mm 20mm; } .totals { width: 100%; } }
 </style></head><body>
-<div class="bar">Choose <strong>Save as PDF</strong> in the print window, then send it on WhatsApp. <button type="button" onclick="window.print()">Print / Save PDF</button></div>
-<div class="page">
-  <div class="head">
-    <img src="${invoiceLogo}" alt="QAVERA">
-    <div class="shop">QAVERA · Qavera Trading<br>Zone 55, Street 162, Building 44, Doha<br>+974 5096 8968 · qavera.qa</div>
-  </div>
-
-  <h1>Invoice</h1>
-  <div class="meta">${escapeHtml(order.order_number)} · ${escapeHtml(placed)}</div>
-
-  <div class="cols">
-    <div class="box">
-      <div class="label">Bill to</div>
-      <div>${escapeHtml(order.customer_name)}</div>
-      <div>${escapeHtml(order.customer_phone || '')}</div>
-      ${order.customer_email ? `<div>${escapeHtml(order.customer_email)}</div>` : ''}
+<div class="bar">Print it, or choose <strong>Save as PDF</strong> in the print window to send it. <button type="button" onclick="window.print()">Print / Save PDF</button></div>
+<div class="sheet${items.length > 12 ? ' long' : ''}">
+  <div class="top">
+    <div class="order">
+      <div><strong>Order ${escapeHtml(order.order_number)}</strong></div>
+      <div class="customer-title">Customer Information</div>
+      <div>Name: ${escapeHtml(order.customer_name || 'Walk-in Customer')}</div>
+      <div>Phone: ${escapeHtml(order.customer_phone || '-')}</div>
+      ${address ? `<div>Address: ${escapeHtml(address)}</div>` : ''}
+      ${!shopSale && scheduleLabel(order) ? `<div>${pickup ? 'Pickup' : 'Delivery'}: ${escapeHtml(scheduleLabel(order))}</div>` : ''}
+      ${order.is_gift ? `<div>Gift for: ${escapeHtml(order.gift_recipient_name || '')}${order.gift_recipient_phone ? `, ${escapeHtml(order.gift_recipient_phone)}` : ''}</div>` : ''}
+      <div>Date: ${escapeHtml(date)}</div>
+      <div>Time: ${escapeHtml(time)}</div>
     </div>
-    <div class="box">
-      <div class="label">${pickup ? 'Pickup' : 'Delivery'}${order.is_gift ? ' · Gift' : ''}</div>
-      ${scheduleLabel(order) ? `<div><strong>${escapeHtml(scheduleLabel(order))}</strong></div>` : ''}
-      ${order.is_gift ? `<div>For ${escapeHtml(order.gift_recipient_name)} · ${escapeHtml(order.gift_recipient_phone || '')}</div>` : ''}
-      <div class="pre">${pickup ? 'QAVERA shop, Zone 55, Street 162, Building 44' : `${escapeHtml(order.delivery_area || '')}\n${escapeHtml(order.delivery_address || '')}`}</div>
+    <div class="logo"><img src="${invoiceLogo}" alt="QAVERA"></div>
+    <div class="company">
+      <strong>QAVERA TRADING</strong>
+      <div>CR: 237335</div>
+      <div>Phone: +974 50968968</div>
+      <div>info@qavera.qa</div>
+      <div>Zone 55, 162, blg 44</div>
     </div>
   </div>
 
-  <table>
-    <thead><tr><th>Item</th><th class="c">Qty</th><th class="r">Price</th><th class="r">Total</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>
+  <hr>
+  <h1>${title}</h1>
+  <hr>
 
-  <div class="totals">
-    ${line('Subtotal', qar(order.subtotal))}
-    ${Number(order.points_discount) > 0 ? line(`Points (${Number(order.points_used)})`, `− ${qar(order.points_discount)}`) : ''}
-    ${Number(order.discount_amount) > 0 ? line(`Discount${order.discount_reason ? ` (${escapeHtml(order.discount_reason)})` : ''}`, `− ${qar(order.discount_amount)}`) : ''}
-    ${pickup ? line('Pickup', 'Free') : line('Delivery', qar(order.delivery_fee))}
-    ${line('Total', qar(order.total), 'total')}
-    ${line('Payment', escapeHtml(payment))}
+  <div class="head"><div>Item</div><div>QTY</div><div>Unit Price</div><div>Total</div></div>
+  ${rows}
+
+  ${fawranDue ? `<div class="fawran"><strong>Please send ${money(order.total)} QAR by Fawran</strong> to ${escapeHtml(FAWRAN_DETAILS)}, with ${escapeHtml(order.order_number)} in the note. We will prepare your order as soon as we receive it.</div>` : ''}
+
+  <div class="space"></div>
+
+  <div class="end">
+    <div class="totals">
+      <div class="totals-line"></div>
+      ${total('Subtotal', `${money(order.subtotal)} QAR`)}
+      ${total('Sale Tax', '0.00 QAR')}
+      ${total(`Discount${discountLabel ? ` (${escapeHtml(discountLabel)})` : ''}`, `${discount > 0 ? `− ${money(discount)}` : '0.00'} QAR`)}
+      ${!shopSale && !pickup ? total('Delivery', `${money(order.delivery_fee)} QAR`) : ''}
+      ${total('Payment Method', escapeHtml(paidBy(order)))}
+      ${total('Status', order.status === 'cancelled' ? 'Cancelled' : paid ? 'Paid' : 'Not paid yet')}
+      <div class="grand"><span>TOTAL</span><strong>${money(order.total)} QAR</strong></div>
+    </div>
+    <div class="footer">
+      <div class="footer-line"></div>
+      <h2>${paid && shopSale ? 'Thank you for your purchase!' : 'Thank you for your order!'}</h2>
+      <p>W E &nbsp; A P P R E C I A T E &nbsp; Y O U R &nbsp; S U P P O R T</p>
+    </div>
   </div>
-
-  ${fawran && !paid ? `<div class="pay">
-    <div class="label">How to pay</div>
-    <strong>Please send ${qar(order.total)} by Fawran</strong><br>
-    To: ${escapeHtml(FAWRAN_DETAILS)}<br>
-    Note: ${escapeHtml(order.order_number)}<br>
-    We will prepare your order as soon as we receive it.
-  </div>` : ''}
-  ${paid ? '<div class="stamp">PAID</div>' : ''}
-
-  <div class="foot">Thank you for choosing QAVERA.</div>
 </div>
 <script>
-  // Open the print window once the logo has loaded (Save as PDF from there).
-  const img = document.querySelector('.head img');
-  const go = () => setTimeout(() => window.print(), 300);
+  // Open the print window once the logo and font are ready.
+  const img = document.querySelector('.logo img');
+  const go = () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => setTimeout(() => window.print(), 300));
   if (img.complete) go(); else { img.onload = go; img.onerror = go; }
 <\/script>
 </body></html>`;
@@ -938,7 +970,7 @@
 
     function renderActions(order) {
       if (isShopSale(order) && order.status === 'delivered') {
-        return `<div class="actions"><span class="final-note">Paid in the shop</span><div class="wa-row">${renderEditDelete(order)}</div><div class="order-message" id="msg-${order.id}"></div></div>`;
+        return `<div class="actions"><span class="final-note">Paid in the shop</span><div class="wa-row"><button type="button" class="invoice-btn" data-invoice="${order.id}">🧾 Print receipt</button>${renderEditDelete(order)}</div><div class="order-message" id="msg-${order.id}"></div></div>`;
       }
       const fawranButton = cardUnpaid(order)
         ? `<button type="button" class="action primary" data-cardcheck="${order.id}">🔄 Check card payment</button>`
