@@ -385,6 +385,12 @@
     .no-items { list-style: none; display: grid; gap: 6px; }
     .no-items li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .85rem; padding: 8px 10px; background: #fff; border: 1px solid var(--border); }
     .no-items button { border: 0; background: none; color: #7a2e1f; cursor: pointer; font: inherit; font-size: .75rem; text-decoration: underline; }
+    .cust-field { position: relative; }
+    .cust-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin: 2px 0 0; padding: 4px 0; list-style: none; background: #fff; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,.12); max-height: 280px; overflow-y: auto; }
+    .cust-suggest button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 12px; cursor: pointer; font: inherit; font-size: .85rem; }
+    .cust-suggest button:hover { background: #f4efe4; }
+    .cust-suggest span { color: #555; margin-left: 6px; }
+    .cust-suggest em { display: block; font-style: normal; color: #888; font-size: .75rem; margin-top: 2px; }
     .no-disc { display: flex; gap: 6px; }
     .no-disc select { width: auto; flex: none; }
     .no-disc input { flex: 1; min-width: 0; }
@@ -1545,8 +1551,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <div class="no-section">
             <div class="block-label">Customer</div>
             <div class="no-grid">
-              <div class="no-field"><label for="noName">Name *</label><input id="noName" autocomplete="off"></div>
-              <div class="no-field"><label for="noPhone">Phone *</label><input id="noPhone" type="tel" placeholder="+974 …" autocomplete="off"></div>
+              <div class="no-field cust-field"><label for="noName">Name *</label><input id="noName" autocomplete="off" placeholder="Type a name or phone: past customers appear"><ul class="cust-suggest" data-for="noName" hidden></ul></div>
+              <div class="no-field cust-field"><label for="noPhone">Phone *</label><input id="noPhone" type="tel" placeholder="+974 …" autocomplete="off"><ul class="cust-suggest" data-for="noPhone" hidden></ul></div>
             </div>
           </div>
 
@@ -1616,6 +1622,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         if (area) document.getElementById('noFee').value = Number(area.fee);
       });
       if (edit) fillEditForm(edit);
+      setupCustomerLookup();
       const itemDiscountInput = event => {
         const i = event.target.dataset.discValue ?? event.target.dataset.discMode;
         if (i === undefined || !draftItems[i]) return;
@@ -1672,6 +1679,64 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     const noValue = id => document.getElementById(id).value.trim();
     const noPickup = () => document.querySelector('input[name="noFulfillment"]:checked')?.value === 'pickup';
+
+    // Returning customers: typing a name or phone shows past customers (from
+    // their orders); picking one fills in the name, phone and last address.
+    function setupCustomerLookup() {
+      let timer = null;
+      let lastQuery = '';
+      let results = [];
+      const lists = [...document.querySelectorAll('.cust-suggest')];
+      const hide = () => lists.forEach(list => { list.hidden = true; list.innerHTML = ''; });
+      const show = (list, rows) => {
+        results = rows;
+        if (!rows.length) { list.hidden = true; list.innerHTML = ''; return; }
+        list.innerHTML = rows.map((c, i) => `<li><button type="button" data-cust="${i}">
+          <strong>${escapeHtml(c.customer_name)}</strong> <span>${escapeHtml(c.customer_phone)}</span>
+          <em>${c.delivery_area ? escapeHtml(c.delivery_area) + ' · ' : ''}${c.order_count} order${c.order_count === 1 ? '' : 's'}</em></button></li>`).join('');
+        list.hidden = false;
+      };
+      ['noName', 'noPhone'].forEach(id => {
+        const input = document.getElementById(id);
+        const list = document.querySelector(`.cust-suggest[data-for="${id}"]`);
+        input.addEventListener('input', () => {
+          clearTimeout(timer);
+          const query = input.value.trim();
+          const enough = query.replace(/\D/g, '').length >= 3 || (id === 'noName' && query.length >= 2);
+          if (!enough) { hide(); return; }
+          timer = setTimeout(async () => {
+            lastQuery = query;
+            const { data, error } = await adminSupabase.rpc('find_customers', { p_query: query, p_limit: 6 });
+            if (error || lastQuery !== query || document.activeElement !== input) return;
+            hide();
+            show(list, data || []);
+          }, 250);
+        });
+        input.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
+        input.addEventListener('blur', () => setTimeout(hide, 200));
+        list.addEventListener('mousedown', event => event.preventDefault());  // keep focus while picking
+        list.addEventListener('click', event => {
+          const button = event.target.closest('[data-cust]');
+          if (!button) return;
+          const c = results[Number(button.dataset.cust)];
+          if (!c) return;
+          const set = (field, value) => { document.getElementById(field).value = value ?? ''; };
+          set('noName', c.customer_name);
+          set('noPhone', c.customer_phone);
+          // Last delivery address, only into empty address fields.
+          if (c.delivery_area && !noValue('noArea') && !noValue('noStreet')) {
+            const raw = String(c.delivery_address || '');
+            set('noArea', c.delivery_area);
+            set('noStreet', raw.split(/\nBuilding \/ Villa:|\nApartment \/ Floor:/)[0].trim());
+            set('noBuilding', (raw.match(/Building \/ Villa:\s*(.*)$/m) || [])[1]?.trim());
+            set('noApartment', (raw.match(/Apartment \/ Floor:\s*(.*)$/m) || [])[1]?.trim());
+            document.getElementById('noArea').dispatchEvent(new Event('input', { bubbles: true }));  // its delivery charge
+          }
+          hide();
+          updateNewOrder();
+        });
+      });
+    }
 
     // Item discount: % of the line or QAR off the line (never more than the line), like the till.
     function lineDiscount(item) {
