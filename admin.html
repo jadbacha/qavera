@@ -385,6 +385,13 @@
     .no-items { list-style: none; display: grid; gap: 6px; }
     .no-items li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .85rem; padding: 8px 10px; background: #fff; border: 1px solid var(--border); }
     .no-items button { border: 0; background: none; color: #7a2e1f; cursor: pointer; font: inherit; font-size: .75rem; text-decoration: underline; }
+    .no-disc { display: flex; gap: 6px; }
+    .no-disc select { width: auto; flex: none; }
+    .no-disc input { flex: 1; min-width: 0; }
+    .no-items li { flex-wrap: wrap; }
+    .no-item-disc { flex-basis: 100%; }
+    .no-item-disc button { text-decoration: none; border: 1px solid var(--border); padding: 4px 10px; color: inherit; background: #fff; }
+    .item-disc { display: block; color: #2e7d32; font-size: .78rem; margin-top: 2px; }
     .no-totals { font-size: .9rem; display: grid; gap: 4px; max-width: 360px; margin-left: auto; width: 100%; }
     .no-totals div { display: flex; justify-content: space-between; }
     .no-totals .grand { font-weight: 600; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 4px; }
@@ -631,7 +638,7 @@
 
       const { data, error } = await adminSupabase
         .from('orders')
-        .select('*, order_items(variant_id, product_name, variant_name, quantity, total_price, customization)')
+        .select('*, order_items(*)')
         .order('created_at', { ascending: false })
         .limit(300);
 
@@ -814,14 +821,16 @@
           : '';
         const unit = Number(item.total_price) / Math.max(Number(item.quantity) || 1, 1);
         return `<div class="row">
-          <div>${escapeHtml(receiptItemName(item))}${flavours ? ' (Customized)' : ''}${flavours ? `<div class="flavours">${flavours}</div>` : ''}</div>
+          <div>${escapeHtml(receiptItemName(item))}${flavours ? ' (Customized)' : ''}${flavours ? `<div class="flavours">${flavours}</div>` : ''}${Number(item.discount_amount) > 0 ? `<div class="flavours">Discount ${escapeHtml(item.discount_label || '')}: − ${money(item.discount_amount)}</div>` : ''}</div>
           <div>${Number(item.quantity)}</div>
           <div>${money(unit)}</div>
-          <div>${money(item.total_price)}</div>
+          <div>${money(Number(item.total_price) - Number(item.discount_amount || 0))}</div>
         </div>`;
       }).join('');
-      const discount = Number(order.discount_amount || 0) + Number(order.points_discount || 0);
-      const discountLabel = [order.discount_reason, Number(order.points_discount) > 0 ? `${Number(order.points_used)} points` : '']
+      // Item discounts show on their lines; the totals show the rest.
+      const itemDiscounts = items.reduce((sum, item) => sum + Number(item.discount_amount || 0), 0);
+      const discount = Number(order.discount_amount || 0) - itemDiscounts + Number(order.points_discount || 0);
+      const discountLabel = [String(order.discount_reason || '').startsWith('Item discounts') ? '' : order.discount_reason, Number(order.points_discount) > 0 ? `${Number(order.points_used)} points` : '']
         .filter(Boolean).join(', ');
       const address = !shopSale && !pickup
         ? [order.delivery_area, ...String(order.delivery_address || '').split('\n')].filter(Boolean).join(', ') : '';
@@ -909,7 +918,7 @@
   <div class="end">
     <div class="totals">
       <div class="totals-line"></div>
-      ${total('Subtotal', `${money(order.subtotal)} QAR`)}
+      ${total('Subtotal', `${money(Number(order.subtotal) - itemDiscounts)} QAR`)}
       ${total('Sale Tax', '0.00 QAR')}
       ${total(`Discount${discountLabel ? ` (${escapeHtml(discountLabel)})` : ''}`, `${discount > 0 ? `− ${money(discount)}` : '0.00'} QAR`)}
       ${!shopSale && !pickup ? total('Delivery', `${money(order.delivery_fee)} QAR`) : ''}
@@ -1010,8 +1019,9 @@
           : '';
         return `<li>
           <span>${escapeHtml(item.product_name)} — ${escapeHtml(item.variant_name)} × ${Number(item.quantity)}
-            ${flavors ? `<span class="custom-box"><span class="custom-label">Customized · per box</span>${flavors}</span>` : ''}</span>
-          <span>${qar(item.total_price)}</span>
+            ${flavors ? `<span class="custom-box"><span class="custom-label">Customized · per box</span>${flavors}</span>` : ''}
+            ${Number(item.discount_amount) > 0 ? `<span class="item-disc">${escapeHtml(item.discount_label || 'Discount')}: − ${qar(item.discount_amount)}</span>` : ''}</span>
+          <span>${qar(Number(item.total_price) - Number(item.discount_amount || 0))}</span>
         </li>`;
       }).join('');
 
@@ -1476,7 +1486,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
     };
     const NO_DELIVERY_FEE = 30;  // until an area is picked
     let catalog = null;      // products with their sizes, loaded when the form opens
-    let draftItems = [];     // [{ variant_id, label, price, quantity }]
+    let draftItems = [];     // [{ variant_id, label, price, quantity, flavors, discount: { mode, value } }]
+    let openItemDiscount = null; // index of the line whose discount is being edited
     let noGiftWasOn = false;
 
     // Flavours of the Premium and Luxury boxes (same as the box pages on the website).
@@ -1513,12 +1524,14 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
       if (activeFilter !== 'new') return;
       const edit = editingOrder;
+      openItemDiscount = null;
       draftItems = edit ? (edit.order_items || []).filter(i => i.variant_id).map(i => ({
         variant_id: i.variant_id,
         label: `${i.product_name} — ${i.variant_name}`,
         price: Number(i.total_price) / Math.max(Number(i.quantity) || 1, 1),
         quantity: Number(i.quantity),
-        flavors: Array.isArray(i.customization) && i.customization.length ? i.customization : null
+        flavors: Array.isArray(i.customization) && i.customization.length ? i.customization : null,
+        discount: discountFromLabel(i.discount_label, i.discount_amount)
       })) : [];
       noGiftWasOn = !!(edit && edit.is_gift);
       const options = catalog.map(v => `<option value="${v.id}" ${v.soldOut ? 'disabled' : ''}>${escapeHtml(v.label)} · ${qar(v.price)}${v.soldOut ? ' (sold out)' : ''}</option>`).join('');
@@ -1575,7 +1588,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <div class="no-section">
             <div class="block-label">Price</div>
             <div class="no-grid">
-              <div class="no-field"><label for="noDiscount">Discount %</label><input id="noDiscount" type="number" min="0" max="100" step="any" value="0"></div>
+              <div class="no-field"><label for="noDiscount">Discount on the whole bill</label>
+                <div class="no-disc"><select id="noDiscountMode" aria-label="Discount type"><option value="percent">%</option><option value="amount">QAR</option></select><input id="noDiscount" type="number" min="0" step="any" value="0"></div></div>
               <div class="no-field" id="noFeeField"><label for="noFee">Delivery charge (QAR)</label><input id="noFee" type="number" min="0" step="1" value="${NO_DELIVERY_FEE}"></div>
               <div class="no-field"><label for="noPayment">Payment</label><select id="noPayment">
                 <option value="cash_on_delivery">Cash on delivery / pickup</option>
@@ -1602,8 +1616,16 @@ ${escapeHtml(order.delivery_address)}</div>`}
         if (area) document.getElementById('noFee').value = Number(area.fee);
       });
       if (edit) fillEditForm(edit);
-      form.addEventListener('input', updateNewOrder);
-      form.addEventListener('change', updateNewOrder);
+      const itemDiscountInput = event => {
+        const i = event.target.dataset.discValue ?? event.target.dataset.discMode;
+        if (i === undefined || !draftItems[i]) return;
+        const item = draftItems[Number(i)];
+        item.discount = { mode: 'percent', value: '', ...item.discount };
+        if (event.target.dataset.discMode !== undefined) item.discount.mode = event.target.value;
+        else item.discount.value = event.target.value;
+      };
+      form.addEventListener('input', event => { itemDiscountInput(event); updateNewOrder(event); });
+      form.addEventListener('change', event => { itemDiscountInput(event); updateNewOrder(event); });
       form.addEventListener('submit', event => { event.preventDefault(); submitNewOrder(); });
       updateNewOrder();
     }
@@ -1626,8 +1648,18 @@ ${escapeHtml(order.delivery_address)}</div>`}
       set('noGiftPhone', order.gift_recipient_phone);
       set('noGiftMessage', order.gift_message);
       set('noDate', order.scheduled_date || qatarDayOffset(1));
-      const subtotal = Number(order.subtotal) || 0;
-      set('noDiscount', subtotal > 0 ? Math.round(Number(order.discount_amount || 0) / subtotal * 10000) / 100 : 0);
+      // The bill discount is what is left after the item discounts.
+      const itemPart = (order.order_items || []).reduce((sum, i) => sum + Number(i.discount_amount || 0), 0);
+      const billPart = Math.round((Number(order.discount_amount || 0) - itemPart) * 100) / 100;
+      const percentMatch = String(order.discount_reason || '').match(/^([\d.]+)% off/);
+      const billBase = (Number(order.subtotal) || 0) - itemPart;
+      if (billPart > 0 && percentMatch && Math.abs(billBase * Number(percentMatch[1]) / 100 - billPart) < 0.02) {
+        set('noDiscountMode', 'percent'); set('noDiscount', Number(percentMatch[1]));
+      } else if (billPart > 0) {
+        set('noDiscountMode', 'amount'); set('noDiscount', billPart);
+      } else {
+        set('noDiscountMode', 'percent'); set('noDiscount', 0);
+      }
       set('noFee', pickup ? NO_DELIVERY_FEE : Number(order.delivery_fee || 0));
       if (order.payment_method === 'card_online') {
         document.getElementById('noPayment').insertAdjacentHTML('beforeend', '<option value="card_online">Card (paid online)</option>');
@@ -1641,16 +1673,39 @@ ${escapeHtml(order.delivery_address)}</div>`}
     const noValue = id => document.getElementById(id).value.trim();
     const noPickup = () => document.querySelector('input[name="noFulfillment"]:checked')?.value === 'pickup';
 
-    function noTotals() {
-      const subtotal = draftItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-      const percent = Math.min(Math.max(Number(noValue('noDiscount')) || 0, 0), 100);
-      const discount = Math.round(subtotal * percent) / 100;
-      const delivery = noPickup() ? 0 : Math.max(Number(noValue('noFee')) || 0, 0);
-      const points = editingOrder ? Number(editingOrder.points_discount || 0) : 0;
-      return { subtotal, percent, discount, delivery, points, total: subtotal - discount - points + delivery };
+    // Item discount: % of the line or QAR off the line (never more than the line), like the till.
+    function lineDiscount(item) {
+      const value = Math.max(Number(item.discount?.value) || 0, 0);
+      if (!value) return 0;
+      const line = item.price * item.quantity;
+      const amount = item.discount.mode === 'amount' ? Math.min(value, line) : line * Math.min(value, 100) / 100;
+      return Math.round(amount * 100) / 100;
+    }
+    const lineDiscountLabel = item => lineDiscount(item)
+      ? (item.discount.mode === 'amount' ? `${Number(item.discount.value)} QAR off` : `${Number(item.discount.value)}% off`) : '';
+    function discountFromLabel(label, amount) {
+      const m = String(label || '').match(/^([\d.]+)\s*(%|QAR)/);
+      if (m) return { mode: m[2] === '%' ? 'percent' : 'amount', value: m[1] };
+      return Number(amount) > 0 ? { mode: 'amount', value: String(Number(amount)) } : null;
     }
 
-    function updateNewOrder() {
+    function noTotals() {
+      const subtotal = draftItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const itemDiscounts = Math.round(draftItems.reduce((sum, item) => sum + lineDiscount(item), 0) * 100) / 100;
+      const base = subtotal - itemDiscounts;
+      const mode = document.getElementById('noDiscountMode')?.value === 'amount' ? 'amount' : 'percent';
+      const value = Math.max(Number(noValue('noDiscount')) || 0, 0);
+      const percent = mode === 'percent' ? Math.min(value, 100) : 0;
+      const billDiscount = Math.round((mode === 'amount' ? Math.min(value, base) : base * percent / 100) * 100) / 100;
+      const discount = Math.round((itemDiscounts + billDiscount) * 100) / 100;
+      const delivery = noPickup() ? 0 : Math.max(Number(noValue('noFee')) || 0, 0);
+      const points = editingOrder ? Number(editingOrder.points_discount || 0) : 0;
+      return { subtotal, itemDiscounts, mode, value, percent, billDiscount, discount, delivery, points,
+        billLabel: mode === 'amount' ? `${value} QAR off` : `${percent}% off`,
+        total: subtotal - discount - points + delivery };
+    }
+
+    function updateNewOrder(event) {
       const pickup = noPickup();
       document.getElementById('noAddress').hidden = pickup;
       document.getElementById('noGiftRow').hidden = pickup;
@@ -1673,16 +1728,35 @@ ${escapeHtml(order.delivery_address)}</div>`}
         slotSelect.dataset.slots = slots.join();
       }
 
-      document.getElementById('noItems').innerHTML = draftItems.map((item, i) => `
-        <li><span>${escapeHtml(item.label)} × ${item.quantity}${item.flavors
-          ? `<span class="no-flv-list">${item.flavors.map(f => `${escapeHtml(f.name)} × ${f.quantity}`).join(', ')}</span>`
-          : (catalog.find(v => v.id === item.variant_id)?.flavours ? `<span class="no-flv-list">Chef's selection</span>` : '')}</span>
-          <span>${qar(item.price * item.quantity)} <button type="button" data-no="remove" data-index="${i}">Remove</button></span></li>`).join('');
+      const typingItemDiscount = event && event.target && event.target.closest && event.target.closest('#noItems');
+      if (!typingItemDiscount) {
+        document.getElementById('noItems').innerHTML = draftItems.map((item, i) => `
+          <li><span>${escapeHtml(item.label)} × ${item.quantity}${item.flavors
+            ? `<span class="no-flv-list">${item.flavors.map(f => `${escapeHtml(f.name)} × ${f.quantity}`).join(', ')}</span>`
+            : (catalog.find(v => v.id === item.variant_id)?.flavours ? `<span class="no-flv-list">Chef's selection</span>` : '')}
+            <span class="item-disc" data-disc-note="${i}">${lineDiscount(item) ? `${escapeHtml(lineDiscountLabel(item))}: − ${qar(lineDiscount(item))}` : ''}</span></span>
+            <span><span data-line-total="${i}">${qar(item.price * item.quantity - lineDiscount(item))}</span>
+              <button type="button" data-no="item-disc" data-index="${i}">${lineDiscount(item) ? 'Edit discount' : 'Discount'}</button>
+              <button type="button" data-no="remove" data-index="${i}">Remove</button></span>
+            ${openItemDiscount === i ? `<div class="no-disc no-item-disc">
+              <select data-disc-mode="${i}" aria-label="Discount type"><option value="percent" ${item.discount?.mode !== 'amount' ? 'selected' : ''}>%</option><option value="amount" ${item.discount?.mode === 'amount' ? 'selected' : ''}>QAR</option></select>
+              <input type="number" min="0" step="any" data-disc-value="${i}" value="${escapeHtml(item.discount?.value ?? '')}" placeholder="Discount on this item">
+              <button type="button" data-no="item-disc-done" data-index="${i}">Done</button>
+            </div>` : ''}</li>`).join('');
+      } else {
+        draftItems.forEach((item, i) => {
+          const note = document.querySelector(`[data-disc-note="${i}"]`);
+          const line = document.querySelector(`[data-line-total="${i}"]`);
+          if (note) note.textContent = lineDiscount(item) ? `${lineDiscountLabel(item)}: − ${qar(lineDiscount(item))}` : '';
+          if (line) line.textContent = qar(item.price * item.quantity - lineDiscount(item));
+        });
+      }
 
       const t = noTotals();
       document.getElementById('noTotals').innerHTML = `
         <div><span>Subtotal</span><span>${qar(t.subtotal)}</span></div>
-        ${t.discount > 0 ? `<div><span>Discount ${t.percent}%</span><span>− ${qar(t.discount)}</span></div>` : ''}
+        ${t.itemDiscounts > 0 ? `<div><span>Item discounts</span><span>− ${qar(t.itemDiscounts)}</span></div>` : ''}
+        ${t.billDiscount > 0 ? `<div><span>Discount on the bill (${escapeHtml(t.billLabel)})</span><span>− ${qar(t.billDiscount)}</span></div>` : ''}
         ${t.points > 0 ? `<div><span>Points</span><span>− ${qar(t.points)}</span></div>` : ''}
         <div><span>${pickup ? 'Pickup' : 'Delivery'}</span><span>${pickup ? 'Free' : qar(t.delivery)}</span></div>
         <div class="grand"><span>Total</span><span>${qar(t.total)}</span></div>`;
@@ -1759,6 +1833,15 @@ ${escapeHtml(order.delivery_address)}</div>`}
         renderFlavours();
       } else if (button.dataset.no === 'remove') {
         draftItems.splice(Number(button.dataset.index), 1);
+        openItemDiscount = null;
+      } else if (button.dataset.no === 'item-disc') {
+        const i = Number(button.dataset.index);
+        openItemDiscount = openItemDiscount === i ? null : i;
+        updateNewOrder();
+        document.querySelector(`[data-disc-value="${i}"]`)?.focus();
+        return;
+      } else if (button.dataset.no === 'item-disc-done') {
+        openItemDiscount = null;
       }
       updateNewOrder();
     }
@@ -1795,10 +1878,16 @@ ${escapeHtml(order.delivery_address)}</div>`}
         p_apartment: pickup ? null : noValue('noApartment'),
         p_scheduled_date: noValue('noDate'),
         p_time_slot: document.getElementById('noSlot').value,
-        p_items: draftItems.map(item => ({ variant_id: item.variant_id, quantity: item.quantity, flavors: item.flavors || null })),
+        p_items: draftItems.map(item => ({
+          variant_id: item.variant_id, quantity: item.quantity, flavors: item.flavors || null,
+          ...(lineDiscount(item) ? { discount_mode: item.discount.mode, discount_value: String(Number(item.discount.value)) } : {})
+        })),
         p_discount_percent: t.percent,
-        p_discount_reason: t.percent > 0
-          ? (editing && editing.discount_reason && Math.abs(t.discount - Number(editing.discount_amount || 0)) < 0.01 ? editing.discount_reason : `${t.percent}% off${editing && editing.source !== 'whatsapp' ? '' : ' · WhatsApp'}`)
+        ...(t.mode === 'amount' && t.billDiscount > 0 ? { p_discount_amount: t.billDiscount } : {}),
+        p_discount_reason: t.discount > 0
+          ? (editing && editing.discount_reason && Math.abs(t.discount - Number(editing.discount_amount || 0)) < 0.01
+              ? editing.discount_reason
+              : `${t.billDiscount > 0 ? t.billLabel : 'Item discounts'}${editing && editing.source !== 'whatsapp' ? '' : ' · WhatsApp'}`)
           : null,
         p_delivery_fee: t.delivery,
         p_payment_method: document.getElementById('noPayment').value,
@@ -1814,8 +1903,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
       if (error) {
         console.error('Could not save order:', error);
-        message.textContent = /admin_update_order|admin_create_order/.test(error.message || '')
-          ? `Run ${editing ? '035_admin_edit_delete_order.sql' : '027_admin_new_order.sql'} in Supabase first.`
+        message.textContent = /admin_update_order|admin_create_order|discount_mode|qavera_line_discount/.test(error.message || '')
+          ? 'Run 038_admin_item_discounts.sql in Supabase first.'
           : (error.message || 'Could not save this order.');
         return;
       }
