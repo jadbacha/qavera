@@ -7,7 +7,7 @@
   'use strict';
 
   const { qar, escapeHtml } = window.QaveraFormat;
-  const SIZE_ORDER = ['small', 'medium', 'large'];
+  const SIZE_ORDER = ['mini', 'small', 'medium', 'large'];
 
   const sb = window.supabase.createClient(
     'https://rhwajaceuhpfwughlgpd.supabase.co',
@@ -45,14 +45,22 @@
     return state.variants[size]?.price ?? BOX.sizes[size].price;
   }
 
+  // Sizes on this page. A size marked needsDb (the Mini) only shows once it
+  // exists in the database, so it can't be ordered before it is set up.
+  function visibleSizes() {
+    return SIZE_ORDER.filter(size => BOX.sizes[size] && (!BOX.sizes[size].needsDb || state.variants[size]));
+  }
+
   function renderSizes() {
-    el('sizes').innerHTML = SIZE_ORDER.map(size => {
+    const sizes = visibleSizes();
+    el('sizes').classList.toggle('has-4', sizes.length === 4);
+    el('sizes').innerHTML = sizes.map(size => {
       const s = BOX.sizes[size];
       return `
         <button type="button" class="size" role="radio" aria-checked="${size === state.size}" data-size="${size}">
           <span class="swatch" style="background:${s.swatch}"></span>
           <span class="pieces">${s.pieces}<small>pieces</small></span>
-          <span class="colour caption">${escapeHtml(s.colour)} box</span>
+          <span class="colour caption">${s.label ? `${escapeHtml(s.label)} · ` : ''}${escapeHtml(s.colour)} box</span>
           <span class="price">${qar(priceFor(size))}</span>
         </button>`;
     }).join('');
@@ -168,7 +176,7 @@
       product_name: state.productName,
       variant_name: variant?.name || s.dbVariant,
       display_name: BOX.displayName,
-      display_detail: `${s.pieces} pieces · ${s.colour} box`,
+      display_detail: `${s.label ? `${s.label} · ` : ''}${s.pieces} pieces · ${s.colour} box`,
       name: `${BOX.displayName} — ${s.cartLabel}${custom ? ' — Customized' : ''}`,
       price: priceFor(size),
       image: s.images[0],
@@ -213,7 +221,7 @@
         .from('product_variants').select('id, name, price, active').eq('product_id', product.id).eq('active', true);
       if (vError || !variants) return;
 
-      SIZE_ORDER.forEach(size => {
+      SIZE_ORDER.filter(size => BOX.sizes[size]).forEach(size => {
         const words = BOX.sizes[size].variantNames;
         const match = variants.find(v => {
           const n = String(v.name || '').trim().toLowerCase();

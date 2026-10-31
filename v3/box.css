@@ -30,6 +30,7 @@
 .step-label b { color: var(--sand); font-weight: 400; }
 
 .sizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+.sizes.has-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .size {
   position: relative;
   text-align: left;
@@ -127,6 +128,7 @@
 
 @media (max-width: 600px) {
   .sizes { gap: .5rem; }
+  .sizes.has-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .size { padding: .9rem .7rem .8rem; }
   .size .pieces { font-size: 2rem; }
   .size .swatch { top: .8rem; right: .7rem; width: 11px; height: 11px; }
