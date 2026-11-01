@@ -390,6 +390,7 @@
     .dc-card h3 { margin: 0 0 10px; font-size: 1rem; }
     .dc-card .sales-table td { padding: 7px 4px; }
     .dc-zero td { color: #aaa; }
+    .dc-day { cursor: pointer; } .dc-day:hover td { background: #faf6ee; }
     .dc-note { color: #888; font-size: .78rem; margin: 6px 0 0; }
     .dc-out { list-style: none; margin: 0; padding: 0; }
     .dc-out li { padding: 6px 0; border-bottom: 1px solid #f0ebe0; font-size: .9rem; }
@@ -1417,6 +1418,81 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     // ---- Day close: the same daily report as the till (cash out and closing are done in the till) ----
     let closeDay = qatarDayOffset(0);
+    let closeMode = 'day';  // 'day' | 'month'
+    let closeMonth = qatarDayOffset(0).slice(0, 7);
+    const closeSwitch = () => `<div class="sales-bar">
+      <button type="button" class="filter ${closeMode === 'day' ? 'active' : ''}" data-close-mode="day">Day</button>
+      <button type="button" class="filter ${closeMode === 'month' ? 'active' : ''}" data-close-mode="month">Month</button></div>`;
+    function bindCloseSwitch() {
+      content.querySelectorAll('[data-close-mode]').forEach(b => b.addEventListener('click', () => { closeMode = b.dataset.closeMode; renderDayClose(); }));
+    }
+    const signedQar = d => d === null || d === undefined ? '–' : Number(d) === 0 ? 'Exact' : Number(d) > 0 ? `+ ${qar(d)}` : `− ${qar(-d)}`;
+    const diffCls = d => d === null || d === undefined ? '' : Number(d) === 0 ? 'dc-ok' : Number(d) > 0 ? 'dc-over' : 'dc-minus';
+
+    async function renderMonthClose() {
+      content.innerHTML = '<div class="notice"><p>Loading the month close…</p></div>';
+      const { data: r, error } = await adminSupabase.rpc('month_report', { p_month: `${closeMonth}-01` });
+      if (activeFilter !== 'dayclose' || closeMode !== 'month') return;
+      if (error) {
+        content.innerHTML = `${closeSwitch()}<div class="notice"><h2>Could not load the month close</h2><p>${escapeHtml(/month_report/.test(error.message || '') ? 'Run 041_month_close.sql in Supabase first.' : error.message)}</p></div>`;
+        bindCloseSwitch();
+        return;
+      }
+      const line = key => r.lines?.[key] || { count: 0, total: 0 };
+      const monthLabel = new Date(`${closeMonth}-15T12:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+      const shortDay = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
+      content.innerHTML = `
+        <div id="dayClosePanel" class="dayclose">
+          ${closeSwitch()}
+          <div class="sales-bar">
+            <button type="button" class="filter" data-month-shift="-1">‹ Previous month</button>
+            <label>Month <input type="month" id="closeMonth" value="${closeMonth}" max="${qatarDayOffset(0).slice(0, 7)}"></label>
+            <button type="button" class="filter" data-month-shift="1" ${closeMonth >= qatarDayOffset(0).slice(0, 7) ? 'disabled' : ''}>Next month ›</button>
+          </div>
+          <h2 class="sales-range">${escapeHtml(monthLabel)}</h2>
+          <div class="sales-cards">
+            <div class="sales-card big"><span>Total sales</span><strong>${qar(r.total_sales)}</strong></div>
+            <div class="sales-card"><span>Cash into drawer</span><strong>${qar(r.drawer_cash_in)}</strong></div>
+            <div class="sales-card"><span>Cash out</span><strong class="dc-minus">− ${qar(r.cash_out_total)}</strong></div>
+            <div class="sales-card"><span>Difference · ${Number(r.days_closed)} day${Number(r.days_closed) === 1 ? '' : 's'} closed</span><strong class="${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</strong></div>
+          </div>
+          <div class="dc-grid">
+            <div class="dc-card">
+              <h3>Sales by payment</h3>
+              <table class="sales-table"><tbody>
+                ${CLOSE_LINES.map(([key, label, note]) => `<tr class="${line(key).count ? '' : 'dc-zero'}"><td>${label}${note ? `<div class="dc-note">${note}</div>` : ''}</td><td class="r">${line(key).count}</td><td class="r">${qar(line(key).total)}</td></tr>`).join('')}
+              </tbody><tfoot><tr><td>Total sales</td><td></td><td class="r">${qar(r.total_sales)}</td></tr></tfoot></table>
+            </div>
+            <div class="dc-card">
+              <h3>Cash out</h3>
+              ${(r.cash_out || []).length ? `<ul class="dc-out">${r.cash_out.map(o => `<li><b>− ${qar(o.amount)}</b> ${escapeHtml(o.reason)}<span>${escapeHtml(shortDay(o.day))}${o.by ? ` · ${escapeHtml(o.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cash taken out.</p>'}
+            </div>
+          </div>
+          <div class="dc-card" style="margin-top:18px;">
+            <h3>Day by day</h3>
+            ${(r.days || []).length ? `<div class="sales-table-wrap"><table class="sales-table">
+              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash in drawer</th><th class="r">Cash out</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
+              <tbody>${r.days.map(d => `<tr class="dc-day" data-open-day="${d.day}"><td>${escapeHtml(shortDay(d.day))}${d.closed ? '' : '<div class="dc-note">not closed</div>'}</td>
+                <td class="r">${qar(d.total_sales)}</td><td class="r">${qar(d.drawer_cash_in)}</td>
+                <td class="r">${Number(d.cash_out) ? `<span class="dc-minus">− ${qar(d.cash_out)}</span>` : '–'}</td>
+                <td class="r">${d.closed ? qar(d.expected_cash) : '–'}</td><td class="r">${d.closed ? qar(d.counted_cash) : '–'}</td>
+                <td class="r ${d.closed ? diffCls(d.difference) : ''}">${d.closed ? signedQar(d.difference) : '–'}</td></tr>`).join('')}</tbody>
+              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
+            </table></div>` : '<p class="dc-note">Nothing this month yet.</p>'}
+          </div>
+        </div>`;
+      bindCloseSwitch();
+      document.getElementById('closeMonth').addEventListener('change', e => { closeMonth = e.target.value || qatarDayOffset(0).slice(0, 7); renderMonthClose(); });
+      content.querySelectorAll('[data-month-shift]').forEach(b => b.addEventListener('click', () => {
+        const d = new Date(`${closeMonth}-15T12:00:00Z`);
+        d.setUTCMonth(d.getUTCMonth() + Number(b.dataset.monthShift));
+        const next = d.toISOString().slice(0, 7);
+        if (next <= qatarDayOffset(0).slice(0, 7)) { closeMonth = next; renderMonthClose(); }
+      }));
+      content.querySelectorAll('[data-open-day]').forEach(row => row.addEventListener('click', () => {
+        closeDay = row.dataset.openDay; closeMode = 'day'; renderDayClose();
+      }));
+    }
     const CLOSE_LINES = [
       ['shop_cash', 'Shop · cash'], ['shop_card', 'Shop · card'],
       ['cash_on_pickup', 'Website · cash on pickup'], ['card_on_pickup', 'Website · card on pickup'],
@@ -1424,9 +1500,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
       ['fawran', 'Website · Fawran'], ['card_online', 'Website · card online']
     ];
     async function renderDayClose() {
+      if (closeMode === 'month') { renderMonthClose(); return; }
       content.innerHTML = '<div class="notice"><p>Loading the day close…</p></div>';
       const { data: r, error } = await adminSupabase.rpc('day_report', { p_day: closeDay });
-      if (activeFilter !== 'dayclose') return;
+      if (activeFilter !== 'dayclose' || closeMode !== 'day') return;
       if (error) {
         content.innerHTML = `<div class="notice"><h2>Could not load the day close</h2><p>${escapeHtml(/day_report/.test(error.message || '') ? 'Run 040_day_close.sql in Supabase first.' : error.message)}</p></div>`;
         return;
@@ -1437,6 +1514,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       const diffText = diff === null ? 'Not closed yet' : diff === 0 ? 'Exact' : diff > 0 ? `+ ${qar(diff)} over` : `− ${qar(-diff)} short`;
       content.innerHTML = `
         <div id="dayClosePanel" class="dayclose">
+          ${closeSwitch()}
           <div class="sales-bar">
             <button type="button" class="filter" data-close-shift="-1">‹ Previous day</button>
             <label>Day <input type="date" id="closeDay" value="${closeDay}" max="${qatarDayOffset(0)}"></label>
@@ -1465,6 +1543,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
             </div>
           </div>
         </div>`;
+      bindCloseSwitch();
       document.getElementById('closeDay').addEventListener('change', e => { closeDay = e.target.value || qatarDayOffset(0); renderDayClose(); });
       content.querySelectorAll('[data-close-shift]').forEach(b => b.addEventListener('click', () => {
         const d = new Date(`${closeDay}T12:00:00Z`);
