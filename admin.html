@@ -395,6 +395,7 @@
     .dc-out { list-style: none; margin: 0; padding: 0; }
     .dc-out li { padding: 6px 0; border-bottom: 1px solid #f0ebe0; font-size: .9rem; }
     .dc-out li b { color: #b00020; margin-right: 6px; }
+    .dc-out li b.dc-ok { color: #2e7d32; }
     .dc-out li span { display: block; color: #888; font-size: .75rem; }
     .dc-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid #f0ebe0; font-size: .9rem; }
     .dc-total { font-weight: 700; border-bottom: 1.5px solid #1a1713; }
@@ -1426,6 +1427,9 @@ ${escapeHtml(order.delivery_address)}</div>`}
     function bindCloseSwitch() {
       content.querySelectorAll('[data-close-mode]').forEach(b => b.addEventListener('click', () => { closeMode = b.dataset.closeMode; renderDayClose(); }));
     }
+    // Cash in and cash out together, in order.
+    const moves = r => [...(r.cash_in || []).map(o => ({ ...o, kind: 'in' })), ...(r.cash_out || []).map(o => ({ ...o, kind: 'out' }))]
+      .sort((a, b) => String(a.day || '').localeCompare(String(b.day || '')) || new Date(a.created_at) - new Date(b.created_at));
     const signedQar = d => d === null || d === undefined ? '–' : Number(d) === 0 ? 'Exact' : Number(d) > 0 ? `+ ${qar(d)}` : `− ${qar(-d)}`;
     const diffCls = d => d === null || d === undefined ? '' : Number(d) === 0 ? 'dc-ok' : Number(d) > 0 ? 'dc-over' : 'dc-minus';
 
@@ -1452,8 +1456,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <h2 class="sales-range">${escapeHtml(monthLabel)}</h2>
           <div class="sales-cards">
             <div class="sales-card big"><span>Total sales</span><strong>${qar(r.total_sales)}</strong></div>
-            <div class="sales-card"><span>Cash into drawer</span><strong>${qar(r.drawer_cash_in)}</strong></div>
-            <div class="sales-card"><span>Cash out</span><strong class="dc-minus">− ${qar(r.cash_out_total)}</strong></div>
+            <div class="sales-card"><span>Cash sales (into drawer)</span><strong>${qar(r.drawer_cash_in)}</strong></div>
+            <div class="sales-card"><span>Cash in / out</span><strong><span class="dc-ok">+ ${qar(r.cash_in_total || 0)}</span> <span class="dc-minus">− ${qar(r.cash_out_total)}</span></strong></div>
             <div class="sales-card"><span>Difference · ${Number(r.days_closed)} day${Number(r.days_closed) === 1 ? '' : 's'} closed</span><strong class="${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</strong></div>
           </div>
           <div class="dc-grid">
@@ -1464,20 +1468,21 @@ ${escapeHtml(order.delivery_address)}</div>`}
               </tbody><tfoot><tr><td>Total sales</td><td></td><td class="r">${qar(r.total_sales)}</td></tr></tfoot></table>
             </div>
             <div class="dc-card">
-              <h3>Cash out</h3>
-              ${(r.cash_out || []).length ? `<ul class="dc-out">${r.cash_out.map(o => `<li><b>− ${qar(o.amount)}</b> ${escapeHtml(o.reason)}<span>${escapeHtml(shortDay(o.day))}${o.by ? ` · ${escapeHtml(o.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cash taken out.</p>'}
+              <h3>Cash in &amp; out</h3>
+              ${moves(r).length ? `<ul class="dc-out">${moves(r).map(o => `<li><b class="${o.kind === 'in' ? 'dc-ok' : ''}">${o.kind === 'in' ? '+' : '−'} ${qar(o.amount)}</b> ${escapeHtml(o.reason)}<span>${escapeHtml(shortDay(o.day))}${o.by ? ` · ${escapeHtml(o.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cash added or taken out.</p>'}
             </div>
           </div>
           <div class="dc-card" style="margin-top:18px;">
             <h3>Day by day</h3>
             ${(r.days || []).length ? `<div class="sales-table-wrap"><table class="sales-table">
-              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash in drawer</th><th class="r">Cash out</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
+              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash sales</th><th class="r">Cash in</th><th class="r">Cash out</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
               <tbody>${r.days.map(d => `<tr class="dc-day" data-open-day="${d.day}"><td>${escapeHtml(shortDay(d.day))}${d.closed ? '' : '<div class="dc-note">not closed</div>'}</td>
                 <td class="r">${qar(d.total_sales)}</td><td class="r">${qar(d.drawer_cash_in)}</td>
+                <td class="r">${Number(d.cash_in) ? `<span class="dc-ok">+ ${qar(d.cash_in)}</span>` : '–'}</td>
                 <td class="r">${Number(d.cash_out) ? `<span class="dc-minus">− ${qar(d.cash_out)}</span>` : '–'}</td>
                 <td class="r">${d.closed ? qar(d.expected_cash) : '–'}</td><td class="r">${d.closed ? qar(d.counted_cash) : '–'}</td>
                 <td class="r ${d.closed ? diffCls(d.difference) : ''}">${d.closed ? signedQar(d.difference) : '–'}</td></tr>`).join('')}</tbody>
-              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
+              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">+ ${qar(r.cash_in_total || 0)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
             </table></div>` : '<p class="dc-note">Nothing this month yet.</p>'}
           </div>
         </div>`;
@@ -1530,11 +1535,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <p class="dc-note">Website orders count on the day the money comes in.</p>
             </div>
             <div class="dc-card">
-              <h3>Cash out</h3>
-              ${(r.cash_out || []).length ? `<ul class="dc-out">${r.cash_out.map(o => `<li><b>− ${qar(o.amount)}</b> ${escapeHtml(o.reason)}<span>${new Date(o.created_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' })}${o.by ? ` · ${escapeHtml(o.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cash taken out.</p>'}
+              <h3>Cash in &amp; out</h3>
+              ${moves(r).length ? `<ul class="dc-out">${moves(r).map(o => `<li><b class="${o.kind === 'in' ? 'dc-ok' : ''}">${o.kind === 'in' ? '+' : '−'} ${qar(o.amount)}</b> ${escapeHtml(o.reason)}<span>${new Date(o.created_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' })}${o.by ? ` · ${escapeHtml(o.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cash added or taken out.</p>'}
               <h3 style="margin-top:18px;">Cash drawer</h3>
               <div class="dc-row"><span>Opening cash</span><span>${qar(c ? c.opening_cash : r.opening_cash)}</span></div>
               <div class="dc-row"><span>+ Cash sales (shop cash + cash on pickup)</span><span>${qar(r.drawer_cash_in)}</span></div>
+              <div class="dc-row"><span>+ Cash in</span><span class="dc-ok">+ ${qar(r.cash_in_total || 0)}</span></div>
               <div class="dc-row"><span>− Cash out</span><span class="dc-minus">− ${qar(r.cash_out_total)}</span></div>
               <div class="dc-row dc-total"><span>= Expected cash</span><span>${qar(c ? c.expected_cash : r.expected_cash)}</span></div>
               <div class="dc-row"><span>Counted cash</span><span>${c ? qar(c.counted_cash) : '–'}</span></div>
