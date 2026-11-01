@@ -1439,19 +1439,57 @@ ${escapeHtml(order.delivery_address)}</div>`}
         ? new Date(`${m.day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
         : new Date(m.created_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
       return `<div class="dc-card" style="margin-top:18px;">
-        <h3>Bank account</h3>
+        <h3>Bank account · card</h3>
         <div class="dc-grid">
           <table class="sales-table"><tbody>
             ${CLOSE_LINES.filter(([key]) => BANK_KEYS.includes(key)).map(([key, label]) => `<tr class="${line(key).count ? '' : 'dc-zero'}"><td>${label}</td><td class="r">${line(key).count}</td><td class="r">${qar(line(key).total)}</td></tr>`).join('')}
           </tbody><tfoot><tr><td>Card &amp; Fawran sales</td><td></td><td class="r">${qar(r.bank_sales || 0)}</td></tr></tfoot></table>
           <div>
-            ${moves.length ? `<ul class="dc-out">${moves.map(m => `<li><b class="${m.kind === 'in' ? 'dc-ok' : ''}">${m.kind === 'in' ? '+' : '−'} ${qar(m.amount)}</b> ${escapeHtml(m.reason)}<span>${escapeHtml(when(m))}${m.by ? ` · ${escapeHtml(m.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No bank in or out.</p>'}
+            ${moves.length ? `<ul class="dc-out">${moves.map(m => `<li><b class="${m.kind === 'in' ? 'dc-ok' : ''}">${m.kind === 'in' ? '+' : '−'} ${qar(m.amount)}</b> ${escapeHtml(m.reason)}<span>${escapeHtml(when(m))}${m.by ? ` · ${escapeHtml(m.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No card in or out.</p>'}
             <div class="dc-row"><span>Card &amp; Fawran sales</span><span>${qar(r.bank_sales || 0)}</span></div>
-            <div class="dc-row"><span>+ Bank in</span><span class="dc-ok">+ ${qar(r.bank_in_total || 0)}</span></div>
-            <div class="dc-row"><span>− Bank out</span><span class="dc-minus">− ${qar(r.bank_out_total || 0)}</span></div>
+            <div class="dc-row"><span>+ Card in</span><span class="dc-ok">+ ${qar(r.bank_in_total || 0)}</span></div>
+            <div class="dc-row"><span>− Card out</span><span class="dc-minus">− ${qar(r.bank_out_total || 0)}</span></div>
             <div class="dc-row dc-total"><span>= Bank total</span><span>${qar(r.bank_total || 0)}</span></div>
           </div>
         </div>
+      </div>`;
+    }
+    // Cheques in / out (read-only here; added in the till).
+    function chequeCard(r, showDay) {
+      if (!r.cheque_moves) return '';
+      const when = m => showDay
+        ? new Date(`${m.day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+        : new Date(m.created_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
+      return `<div class="dc-card" style="margin-top:18px;">
+        <h3>Cheques in &amp; out</h3>
+        ${r.cheque_moves.length ? `<ul class="dc-out">${r.cheque_moves.map(m => `<li><b class="${m.kind === 'in' ? 'dc-ok' : ''}">${m.kind === 'in' ? '+' : '−'} ${qar(m.amount)}</b> ${escapeHtml(m.reason)}<span>${escapeHtml(when(m))}${m.by ? ` · ${escapeHtml(m.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No cheques in or out.</p>'}
+        <div class="dc-row"><span>+ Cheques in</span><span class="dc-ok">+ ${qar(r.cheque_in_total || 0)}</span></div>
+        <div class="dc-row"><span>− Cheques out</span><span class="dc-minus">− ${qar(r.cheque_out_total || 0)}</span></div>
+        <div class="dc-row dc-total"><span>= Cheques total</span><span>${qar(r.cheque_total || 0)}</span></div>
+      </div>`;
+    }
+    const plusMinus = v => Number(v) < 0 ? `− ${qar(-v)}` : `+ ${qar(v)}`;
+    // Total balance: starting balance + the change of every closed day (read-only here).
+    function balanceCard(r) {
+      const b = r.balance;
+      if (!b) return '';
+      const c = r.closing;
+      const fromLabel = new Date(`${b.from_day}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+      const rows = !b.counts
+        ? `<p class="dc-note">This day is before ${escapeHtml(fromLabel)}, so it doesn't change the balance.</p>`
+        : c
+          ? `<div class="dc-row"><span>Cash (counted − opening)</span><span>${plusMinus(Number(c.counted_cash) - Number(c.opening_cash))}</span></div>
+             <div class="dc-row"><span>Bank total</span><span>${plusMinus(r.bank_total || 0)}</span></div>
+             <div class="dc-row"><span>Cheques total</span><span>${plusMinus(r.cheque_total || 0)}</span></div>
+             <div class="dc-row dc-total"><span>This day</span><span>${plusMinus(c.balance_change || 0)}</span></div>
+             <div class="dc-row dc-total"><span>= Balance after this day</span><span>${qar(Number(b.before) + Number(c.balance_change || 0))}</span></div>`
+          : '<p class="dc-note">Not closed yet: the balance changes when the day is closed in the till.</p>';
+      return `<div class="dc-card" style="margin-top:18px;">
+        <h3>Total balance</h3>
+        <div class="dc-row"><span>Balance before this day</span><span>${qar(b.before)}</span></div>
+        ${rows}
+        <div class="dc-row"><span>Total balance now</span><span><b>${qar(b.total)}</b></span></div>
+        <p class="dc-note">Starting balance ${qar(b.start_amount)} from ${escapeHtml(fromLabel)}. It only changes when a day is closed.</p>
       </div>`;
     }
     const signedQar = d => d === null || d === undefined ? '–' : Number(d) === 0 ? 'Exact' : Number(d) > 0 ? `+ ${qar(d)}` : `− ${qar(-d)}`;
@@ -1482,6 +1520,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
             <div class="sales-card big"><span>Total sales</span><strong>${qar(r.total_sales)}</strong></div>
             <div class="sales-card"><span>Cash sales (into drawer)</span><strong>${qar(r.drawer_cash_in)}</strong></div>
             <div class="sales-card"><span>Bank total</span><strong>${qar(r.bank_total || 0)}</strong></div>
+            ${r.cheque_moves ? `<div class="sales-card"><span>Cheques total</span><strong>${qar(r.cheque_total || 0)}</strong></div>` : ''}
+            ${r.balance_end !== undefined ? `<div class="sales-card"><span>Total balance · start → end</span><strong>${qar(r.balance_start)} → ${qar(r.balance_end)}</strong></div>` : ''}
             <div class="sales-card"><span>Cash in / out</span><strong><span class="dc-ok">+ ${qar(r.cash_in_total || 0)}</span> <span class="dc-minus">− ${qar(r.cash_out_total)}</span></strong></div>
             <div class="sales-card"><span>Difference · ${Number(r.days_closed)} day${Number(r.days_closed) === 1 ? '' : 's'} closed</span><strong class="${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</strong></div>
           </div>
@@ -1500,18 +1540,20 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <div class="dc-card" style="margin-top:18px;">
             <h3>Day by day</h3>
             ${(r.days || []).length ? `<div class="sales-table-wrap"><table class="sales-table">
-              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash sales</th><th class="r">Cash in</th><th class="r">Cash out</th><th class="r">Bank</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
+              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash sales</th><th class="r">Cash in</th><th class="r">Cash out</th><th class="r">Bank</th>${r.cheque_moves ? '<th class="r">Cheques</th>' : ''}<th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
               <tbody>${r.days.map(d => `<tr class="dc-day" data-open-day="${d.day}"><td>${escapeHtml(shortDay(d.day))}${d.closed ? '' : '<div class="dc-note">not closed</div>'}</td>
                 <td class="r">${qar(d.total_sales)}</td><td class="r">${qar(d.drawer_cash_in)}</td>
                 <td class="r">${Number(d.cash_in) ? `<span class="dc-ok">+ ${qar(d.cash_in)}</span>` : '–'}</td>
                 <td class="r">${Number(d.cash_out) ? `<span class="dc-minus">− ${qar(d.cash_out)}</span>` : '–'}</td>
                 <td class="r">${qar(Number(d.bank_sales || 0) + Number(d.bank_in || 0) - Number(d.bank_out || 0))}</td>
+                ${r.cheque_moves ? `<td class="r">${Number(d.cheque_in || 0) - Number(d.cheque_out || 0) ? qar(Number(d.cheque_in || 0) - Number(d.cheque_out || 0)) : '–'}</td>` : ''}
                 <td class="r">${d.closed ? qar(d.expected_cash) : '–'}</td><td class="r">${d.closed ? qar(d.counted_cash) : '–'}</td>
                 <td class="r ${d.closed ? diffCls(d.difference) : ''}">${d.closed ? signedQar(d.difference) : '–'}</td></tr>`).join('')}</tbody>
-              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">+ ${qar(r.cash_in_total || 0)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td class="r">${qar(r.bank_total || 0)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
+              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">+ ${qar(r.cash_in_total || 0)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td class="r">${qar(r.bank_total || 0)}</td>${r.cheque_moves ? `<td class="r">${qar(r.cheque_total || 0)}</td>` : ''}<td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
             </table></div>` : '<p class="dc-note">Nothing this month yet.</p>'}
           </div>
           ${bankCard(r, true)}
+          ${chequeCard(r, true)}
         </div>`;
       bindCloseSwitch();
       document.getElementById('closeMonth').addEventListener('change', e => { closeMonth = e.target.value || qatarDayOffset(0).slice(0, 7); renderMonthClose(); });
@@ -1572,10 +1614,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="dc-row dc-total"><span>= Expected cash</span><span>${qar(c ? c.expected_cash : r.expected_cash)}</span></div>
               <div class="dc-row"><span>Counted cash</span><span>${c ? qar(c.counted_cash) : '–'}</span></div>
               <div class="dc-row"><span>Difference</span><span class="${diff === null ? '' : diff === 0 ? 'dc-ok' : diff > 0 ? 'dc-over' : 'dc-minus'}">${diffText}</span></div>
-              ${c ? `<p class="dc-note">Closed by ${escapeHtml(c.by || '-')} · ${new Date(c.closed_at).toLocaleString('en-GB', { timeZone: 'Asia/Qatar', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${c.note ? ` · ${escapeHtml(c.note)}` : ''}</p>` : '<p class="dc-note">Cash in / out, bank in / out and closing the day are done in the till (Day close tab).</p>'}
+              ${c ? `<p class="dc-note">Closed by ${escapeHtml(c.by || '-')} · ${new Date(c.closed_at).toLocaleString('en-GB', { timeZone: 'Asia/Qatar', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${c.note ? ` · ${escapeHtml(c.note)}` : ''}</p>` : '<p class="dc-note">Cash, card and cheques in / out and closing the day are done in the till (Day close tab).</p>'}
             </div>
           </div>
           ${bankCard(r, false)}
+          ${chequeCard(r, false)}
+          ${balanceCard(r)}
         </div>`;
       bindCloseSwitch();
       document.getElementById('closeDay').addEventListener('change', e => { closeDay = e.target.value || qatarDayOffset(0); renderDayClose(); });
