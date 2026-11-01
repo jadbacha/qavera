@@ -1430,6 +1430,30 @@ ${escapeHtml(order.delivery_address)}</div>`}
     // Cash in and cash out together, in order.
     const moves = r => [...(r.cash_in || []).map(o => ({ ...o, kind: 'in' })), ...(r.cash_out || []).map(o => ({ ...o, kind: 'out' }))]
       .sort((a, b) => String(a.day || '').localeCompare(String(b.day || '')) || new Date(a.created_at) - new Date(b.created_at));
+    // Bank account: card and Fawran sales, plus bank in / out (read-only here).
+    const BANK_KEYS = ['shop_card', 'card_on_pickup', 'card_on_delivery', 'fawran', 'card_online'];
+    function bankCard(r, showDay) {
+      const line = key => r.lines?.[key] || { count: 0, total: 0 };
+      const moves = r.bank_moves || [];
+      const when = m => showDay
+        ? new Date(`${m.day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
+        : new Date(m.created_at).toLocaleTimeString('en-GB', { timeZone: 'Asia/Qatar', hour: '2-digit', minute: '2-digit' });
+      return `<div class="dc-card" style="margin-top:18px;">
+        <h3>Bank account</h3>
+        <div class="dc-grid">
+          <table class="sales-table"><tbody>
+            ${CLOSE_LINES.filter(([key]) => BANK_KEYS.includes(key)).map(([key, label]) => `<tr class="${line(key).count ? '' : 'dc-zero'}"><td>${label}</td><td class="r">${line(key).count}</td><td class="r">${qar(line(key).total)}</td></tr>`).join('')}
+          </tbody><tfoot><tr><td>Card &amp; Fawran sales</td><td></td><td class="r">${qar(r.bank_sales || 0)}</td></tr></tfoot></table>
+          <div>
+            ${moves.length ? `<ul class="dc-out">${moves.map(m => `<li><b class="${m.kind === 'in' ? 'dc-ok' : ''}">${m.kind === 'in' ? '+' : '−'} ${qar(m.amount)}</b> ${escapeHtml(m.reason)}<span>${escapeHtml(when(m))}${m.by ? ` · ${escapeHtml(m.by)}` : ''}</span></li>`).join('')}</ul>` : '<p class="dc-note">No bank in or out.</p>'}
+            <div class="dc-row"><span>Card &amp; Fawran sales</span><span>${qar(r.bank_sales || 0)}</span></div>
+            <div class="dc-row"><span>+ Bank in</span><span class="dc-ok">+ ${qar(r.bank_in_total || 0)}</span></div>
+            <div class="dc-row"><span>− Bank out</span><span class="dc-minus">− ${qar(r.bank_out_total || 0)}</span></div>
+            <div class="dc-row dc-total"><span>= Bank total</span><span>${qar(r.bank_total || 0)}</span></div>
+          </div>
+        </div>
+      </div>`;
+    }
     const signedQar = d => d === null || d === undefined ? '–' : Number(d) === 0 ? 'Exact' : Number(d) > 0 ? `+ ${qar(d)}` : `− ${qar(-d)}`;
     const diffCls = d => d === null || d === undefined ? '' : Number(d) === 0 ? 'dc-ok' : Number(d) > 0 ? 'dc-over' : 'dc-minus';
 
@@ -1457,6 +1481,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <div class="sales-cards">
             <div class="sales-card big"><span>Total sales</span><strong>${qar(r.total_sales)}</strong></div>
             <div class="sales-card"><span>Cash sales (into drawer)</span><strong>${qar(r.drawer_cash_in)}</strong></div>
+            <div class="sales-card"><span>Bank total</span><strong>${qar(r.bank_total || 0)}</strong></div>
             <div class="sales-card"><span>Cash in / out</span><strong><span class="dc-ok">+ ${qar(r.cash_in_total || 0)}</span> <span class="dc-minus">− ${qar(r.cash_out_total)}</span></strong></div>
             <div class="sales-card"><span>Difference · ${Number(r.days_closed)} day${Number(r.days_closed) === 1 ? '' : 's'} closed</span><strong class="${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</strong></div>
           </div>
@@ -1475,16 +1500,18 @@ ${escapeHtml(order.delivery_address)}</div>`}
           <div class="dc-card" style="margin-top:18px;">
             <h3>Day by day</h3>
             ${(r.days || []).length ? `<div class="sales-table-wrap"><table class="sales-table">
-              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash sales</th><th class="r">Cash in</th><th class="r">Cash out</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
+              <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Cash sales</th><th class="r">Cash in</th><th class="r">Cash out</th><th class="r">Bank</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Difference</th></tr></thead>
               <tbody>${r.days.map(d => `<tr class="dc-day" data-open-day="${d.day}"><td>${escapeHtml(shortDay(d.day))}${d.closed ? '' : '<div class="dc-note">not closed</div>'}</td>
                 <td class="r">${qar(d.total_sales)}</td><td class="r">${qar(d.drawer_cash_in)}</td>
                 <td class="r">${Number(d.cash_in) ? `<span class="dc-ok">+ ${qar(d.cash_in)}</span>` : '–'}</td>
                 <td class="r">${Number(d.cash_out) ? `<span class="dc-minus">− ${qar(d.cash_out)}</span>` : '–'}</td>
+                <td class="r">${qar(Number(d.bank_sales || 0) + Number(d.bank_in || 0) - Number(d.bank_out || 0))}</td>
                 <td class="r">${d.closed ? qar(d.expected_cash) : '–'}</td><td class="r">${d.closed ? qar(d.counted_cash) : '–'}</td>
                 <td class="r ${d.closed ? diffCls(d.difference) : ''}">${d.closed ? signedQar(d.difference) : '–'}</td></tr>`).join('')}</tbody>
-              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">+ ${qar(r.cash_in_total || 0)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
+              <tfoot><tr><td>Month</td><td class="r">${qar(r.total_sales)}</td><td class="r">${qar(r.drawer_cash_in)}</td><td class="r">+ ${qar(r.cash_in_total || 0)}</td><td class="r">− ${qar(r.cash_out_total)}</td><td class="r">${qar(r.bank_total || 0)}</td><td></td><td></td><td class="r ${diffCls(r.difference_total)}">${signedQar(r.difference_total)}</td></tr></tfoot>
             </table></div>` : '<p class="dc-note">Nothing this month yet.</p>'}
           </div>
+          ${bankCard(r, true)}
         </div>`;
       bindCloseSwitch();
       document.getElementById('closeMonth').addEventListener('change', e => { closeMonth = e.target.value || qatarDayOffset(0).slice(0, 7); renderMonthClose(); });
@@ -1545,9 +1572,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
               <div class="dc-row dc-total"><span>= Expected cash</span><span>${qar(c ? c.expected_cash : r.expected_cash)}</span></div>
               <div class="dc-row"><span>Counted cash</span><span>${c ? qar(c.counted_cash) : '–'}</span></div>
               <div class="dc-row"><span>Difference</span><span class="${diff === null ? '' : diff === 0 ? 'dc-ok' : diff > 0 ? 'dc-over' : 'dc-minus'}">${diffText}</span></div>
-              ${c ? `<p class="dc-note">Closed by ${escapeHtml(c.by || '-')} · ${new Date(c.closed_at).toLocaleString('en-GB', { timeZone: 'Asia/Qatar', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${c.note ? ` · ${escapeHtml(c.note)}` : ''}</p>` : '<p class="dc-note">Cash out and closing the day are done in the till (Day close tab).</p>'}
+              ${c ? `<p class="dc-note">Closed by ${escapeHtml(c.by || '-')} · ${new Date(c.closed_at).toLocaleString('en-GB', { timeZone: 'Asia/Qatar', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}${c.note ? ` · ${escapeHtml(c.note)}` : ''}</p>` : '<p class="dc-note">Cash in / out, bank in / out and closing the day are done in the till (Day close tab).</p>'}
             </div>
           </div>
+          ${bankCard(r, false)}
         </div>`;
       bindCloseSwitch();
       document.getElementById('closeDay').addEventListener('change', e => { closeDay = e.target.value || qatarDayOffset(0); renderDayClose(); });
