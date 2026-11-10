@@ -14,6 +14,10 @@
 // Optional: WHATSAPP_ALERTS: WhatsApp alert for each new website order, sent
 //   free through CallMeBot. Format "phone:apikey", several separated by commas,
 //   e.g. "97455555555:1234567,97466666666:7654321".
+// Optional: PUSHOVER_TOKEN + PUSHOVER_USER: phone alarm (Pushover app) for
+//   each new website order. Emergency priority: it rings again every 30
+//   seconds until someone taps Acknowledge in the app (stops after 3 hours).
+//   PUSHOVER_USER can be a user key or a group key (several phones).
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 type OrderItem = {
@@ -201,6 +205,34 @@ async function sendWhatsAppAlerts(text: string) {
   }
 }
 
+async function sendPushoverAlert(title: string, text: string) {
+  const token = Deno.env.get("PUSHOVER_TOKEN");
+  const user = Deno.env.get("PUSHOVER_USER");
+  if (!token || !user) return;
+  try {
+    const response = await fetch("https://api.pushover.net/1/messages.json", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        user,
+        title: title.slice(0, 250),
+        message: text.replace(/\*/g, "").slice(0, 1000),
+        priority: 2,      // emergency: repeats until acknowledged
+        retry: 30,        // every 30 seconds
+        expire: 10800,    // for up to 3 hours
+        sound: "persistent",
+        url: `${SITE_URL}/admin.html`,
+        url_title: "Open orders",
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) console.error(`Pushover alert failed: ${response.status} ${await response.text()}`);
+  } catch (error) {
+    console.error("Pushover alert failed:", error);
+  }
+}
+
 async function sendEmail(to: string, subject: string, text: string, html: string | null, replyTo?: string) {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -271,7 +303,7 @@ async function handleNewOrder(order: Record<string, any>) {
   // WhatsApp alert for orders from the website (orders added on the admin
   // page were entered by the team, so no alert).
   if (order.source !== "whatsapp") {
-    tasks.push(sendWhatsAppAlerts([
+    const alertText = [
       `*New QAVERA order ${order.order_number}*`,
       `${isPickup(order) ? "Pickup" : "Delivery"}: ${when || "no date chosen"}`,
       order.is_gift ? `Gift for ${order.gift_recipient_name}` : null,
@@ -284,7 +316,12 @@ async function handleNewOrder(order: Record<string, any>) {
       isFawran(order) ? "Fawran: check it has arrived before preparing." : null,
       "",
       `${SITE_URL}/admin.html`,
-    ].filter((line) => line !== null).join("\n")));
+    ].filter((line) => line !== null).join("\n");
+    tasks.push(sendWhatsAppAlerts(alertText));
+    tasks.push(sendPushoverAlert(
+      `New order ${order.order_number} · ${qar(order.total)}`,
+      alertText.split("\n").slice(1).join("\n").trim(),
+    ));
   }
 
   // 2. Confirmation to the customer.
