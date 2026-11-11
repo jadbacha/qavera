@@ -48,7 +48,7 @@
     .check input { width: 18px; height: 18px; accent-color: var(--sand); cursor: pointer; }
     .check input:disabled { cursor: not-allowed; }
     .check:has(input:disabled) { opacity: .45; cursor: not-allowed; }
-    #fullName { text-transform: capitalize; }
+    #fullName, #giftName { text-transform: capitalize; }
 
     .points { display: grid; grid-template-columns: auto 1fr; gap: 1.4rem; align-items: center; padding: 1.4rem; border: 1px solid rgba(196,169,128,.35); }
     .points .big { font-family: var(--display); font-size: 2.6rem; line-height: 1; color: var(--sand); }
@@ -1368,6 +1368,7 @@
 
     document.getElementById('countryCode').addEventListener('change', updatePhoneLimits);
     document.getElementById('fullName').addEventListener('blur', function () { this.value = titleCaseName(this.value); });
+    document.getElementById('giftName').addEventListener('blur', function () { this.value = titleCaseName(this.value); });
 
     document.getElementById('confirmOrder').addEventListener('click', async function () {
       if (!validateCheckout()) return;
@@ -1517,7 +1518,7 @@
           // Sent only for gifts, so ordinary orders don't depend on the gift fields.
           ...(gift ? {
             p_gift: true,
-            p_gift_name: document.getElementById('giftName').value.trim(),
+            p_gift_name: titleCaseName(document.getElementById('giftName').value),
             p_gift_phone: document.getElementById('giftPhone').value.trim(),
             p_gift_message: document.getElementById('giftMessage').value.trim() || null
           } : {})
