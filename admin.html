@@ -390,6 +390,7 @@
     .cust-suggest button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 12px; cursor: pointer; font: inherit; font-size: .85rem; }
     .cust-suggest button:hover { background: #f4efe4; }
     .cust-suggest span { color: #555; margin-left: 6px; }
+    #noName, #noGiftName { text-transform: capitalize; }
     .cust-suggest em { display: block; font-style: normal; color: #888; font-size: .75rem; margin-top: 2px; }
     .no-disc { display: flex; gap: 6px; }
     .no-disc select { width: auto; flex: none; }
@@ -1627,6 +1628,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       });
       if (edit) fillEditForm(edit);
       setupCustomerLookup();
+      ['noName', 'noGiftName'].forEach(id => document.getElementById(id)?.addEventListener('blur', e => { e.target.value = nameCase(e.target.value); }));
       const itemDiscountInput = event => {
         const i = event.target.dataset.discValue ?? event.target.dataset.discMode;
         if (i === undefined || !draftItems[i]) return;
@@ -1686,6 +1688,14 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     // Returning customers: typing a name or phone shows past customers (from
     // their orders); picking one fills in the name, phone and last address.
+    // "jad BACHA" -> "Jad Bacha", like the checkout and the till.
+    const nameCase = value => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase()
+      .replace(/(^|[\s'-])([a-zà-ÿ])/g, (_, separator, letter) => separator + letter.toUpperCase());
+    // A past customer's last address on one line.
+    const custAddress = c => c.delivery_area
+      ? [c.delivery_area, ...String(c.delivery_address || '').split('\n').map(s => s.replace(/^Building \/ Villa:\s*/, 'Building ').replace(/^Apartment \/ Floor:\s*/, 'Apt ').trim()).filter(s => s && !/^(Building|Apt)$/.test(s))].join(', ')
+      : '';
+
     function setupCustomerLookup() {
       let timer = null;
       let lastQuery = '';
@@ -1697,7 +1707,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         if (!rows.length) { list.hidden = true; list.innerHTML = ''; return; }
         list.innerHTML = rows.map((c, i) => `<li><button type="button" data-cust="${i}">
           <strong>${escapeHtml(c.customer_name)}</strong> <span>${escapeHtml(c.customer_phone)}</span>
-          <em>${c.delivery_area ? escapeHtml(c.delivery_area) + ' · ' : ''}${c.order_count} order${c.order_count === 1 ? '' : 's'}</em></button></li>`).join('');
+          <em>${custAddress(c) ? escapeHtml(custAddress(c)) : 'No delivery address yet'} · ${c.order_count} order${c.order_count === 1 ? '' : 's'}</em></button></li>`).join('');
         list.hidden = false;
       };
       ['noName', 'noPhone'].forEach(id => {
@@ -1727,8 +1737,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
           const set = (field, value) => { document.getElementById(field).value = value ?? ''; };
           set('noName', c.customer_name);
           set('noPhone', c.customer_phone);
-          // Last delivery address, only into empty address fields.
-          if (c.delivery_area && !noValue('noArea') && !noValue('noStreet')) {
+          // Their last delivery address.
+          if (c.delivery_area) {
             const raw = String(c.delivery_address || '');
             set('noArea', c.delivery_area);
             set('noStreet', raw.split(/\nBuilding \/ Villa:|\nApartment \/ Floor:/)[0].trim());
@@ -1938,7 +1948,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       const editing = editingOrder;
       const { data, error } = await adminSupabase.rpc(editing ? 'admin_update_order' : 'admin_create_order', {
         ...(editing ? { p_order_id: editing.id } : {}),
-        p_customer_name: noValue('noName'),
+        p_customer_name: nameCase(noValue('noName')),
         p_customer_phone: noValue('noPhone'),
         p_fulfillment: pickup ? 'pickup' : 'delivery',
         p_delivery_area: pickup ? null : noValue('noArea'),
@@ -1963,7 +1973,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         p_notes: noValue('noNotes') || null,
         ...(gift ? {
           p_gift: true,
-          p_gift_name: noValue('noGiftName'),
+          p_gift_name: nameCase(noValue('noGiftName')),
           p_gift_phone: noValue('noGiftPhone'),
           p_gift_message: noValue('noGiftMessage') || null
         } : {})
