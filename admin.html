@@ -828,7 +828,7 @@
           : '';
         const unit = Number(item.total_price) / Math.max(Number(item.quantity) || 1, 1);
         return `<tr>
-          <td>${escapeHtml(receiptItemName(item))}${flavours ? ' (Customized)' : ''}${flavours ? `<div class="flavours">${flavours}</div>` : ''}${Number(item.discount_amount) > 0 ? `<div class="flavours">Discount ${escapeHtml(item.discount_label || '')}: − ${money(item.discount_amount)}</div>` : ''}</td>
+          <td>${escapeHtml(`${item.product_name || ''}${item.variant_name ? ` · ${item.variant_name}` : ''}`)}${flavours ? ' (Customized)' : ''}${flavours ? `<div class="flavours">${flavours}</div>` : ''}${Number(item.discount_amount) > 0 ? `<div class="flavours">Discount ${escapeHtml(item.discount_label || '')}: − ${money(item.discount_amount)}</div>` : ''}</td>
           <td>${Number(item.quantity)}</td>
           <td>${money(unit)}</td>
           <td>${money(Number(item.total_price) - Number(item.discount_amount || 0))}</td>
@@ -839,8 +839,12 @@
       const discount = Number(order.discount_amount || 0) - itemDiscounts + Number(order.points_discount || 0);
       const discountLabel = [String(order.discount_reason || '').startsWith('Item discounts') ? '' : order.discount_reason, Number(order.points_discount) > 0 ? `${Number(order.points_used)} points` : '']
         .filter(Boolean).join(', ');
-      const address = !shopSale && !pickup
-        ? [order.delivery_area, ...String(order.delivery_address || '').split('\n')].filter(Boolean).join(', ') : '';
+      const address = !shopSale && !pickup ? (custAddress(order) || order.delivery_area || '') : '';
+      // Delivery / pickup time like the till: "Sat, Nov 14, 12 pm – 4 pm".
+      const when = order.scheduled_date
+        ? [new Date(`${order.scheduled_date}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }),
+           String(SLOT_LABELS[order.time_slot] || order.time_slot || '').toLowerCase()].filter(Boolean).join(', ')
+        : '';
       const title = paid ? 'Receipt' : 'Invoice';
       const total = (label, value) => `<tr><td>${label}</td><td>${value}</td></tr>`;
 
@@ -877,6 +881,13 @@
   .items tr { page-break-inside: avoid; break-inside: avoid; }
   .flavours { margin-top: 3px; font-size: 10.5px; color: #666; }
   .fawran { margin-top: 6mm; padding: 3mm 4mm; border: 1px solid #C4A980; font-size: 12px; line-height: 1.5; }
+  /* The page is one table: items at the top, totals at the bottom (like the
+     till). Its height leaves room for the margins browsers and printers add. */
+  .page { width: 100%; height: 265mm; }
+  .page > tbody > tr > td, .page > tr > td { padding: 0; }
+  .page-main { vertical-align: top; }
+  .page-end { vertical-align: bottom; height: 1px; }
+  .xlong .page { height: auto; }
   .end { margin-top: 10mm; page-break-inside: avoid; break-inside: avoid; }
   .totals { width: 85mm; margin-left: auto; font-size: 13px; border-top: 0.3mm solid #222; }
   .totals td { padding: 1.2mm 0; }
@@ -888,11 +899,12 @@
   .long .logo img { width: 150px; } .long hr { margin: 8px 0 10px; } .long h1 { margin: 1mm 0 2mm; font-size: 24px; }
   .long .items td { padding: 1.2mm 1mm; } .long .end { margin-top: 6mm; } .long .order, .long .company { font-size: 12px; line-height: 1.35; }
   .xlong .logo img { width: 120px; } .xlong .items td { font-size: 10px; padding: 0.8mm 1mm; } .xlong .flavours { font-size: 9.5px; margin-top: 1px; } .xlong h1 { font-size: 20px; }
-  @media print { .bar { display: none; } .sheet { width: auto; padding: 0; } }
+  @media print { .bar { display: none; } .sheet { width: auto; padding: 0; } .page { height: 240mm; } .long .page { height: 200mm; } .xlong .page { height: auto; } }
   @media screen and (max-width: 820px) { .sheet { width: 100%; padding: 16px; } .top td { display: block; width: 100% !important; padding: 0 0 10px !important; } .logo { text-align: left; } .items col.qty { width: 12mm; } .items col.price, .items col.total { width: 20mm; } .totals { width: 100%; } }
 </style></head><body>
 <div class="bar">Print it, or choose <strong>Save as PDF</strong> in the print window to send it. <button type="button" onclick="window.print()">Print / Save PDF</button></div>
-<div class="sheet${items.length > 12 ? ' long xlong' : items.length > 5 ? ' long' : ''}">
+<div class="sheet${items.length > 10 ? ' long xlong' : items.length > 5 ? ' long' : ''}">
+<table class="page"><tr><td class="page-main">
   <table class="top"><tr>
     <td class="order">
       <div class="num"><strong>Order ${escapeHtml(order.order_number)}</strong></div>
@@ -900,7 +912,7 @@
       <div>Name: ${escapeHtml(order.customer_name || 'Walk-in Customer')}</div>
       <div>Phone: ${escapeHtml(order.customer_phone || '-')}</div>
       ${address ? `<div>Address: ${escapeHtml(address)}</div>` : ''}
-      ${!shopSale && scheduleLabel(order) ? `<div>${pickup ? 'Pickup' : 'Delivery'}: ${escapeHtml(scheduleLabel(order))}</div>` : ''}
+      ${!shopSale && when ? `<div>${pickup ? 'Pickup' : 'Delivery'}: ${escapeHtml(when)}</div>` : ''}
       ${order.is_gift ? `<div>Gift for: ${escapeHtml(order.gift_recipient_name || '')}${order.gift_recipient_phone ? `, ${escapeHtml(order.gift_recipient_phone)}` : ''}</div>` : ''}
       <div>Date: ${escapeHtml(date)}</div>
       <div>Time: ${escapeHtml(time)}</div>
@@ -927,6 +939,7 @@
 
   ${fawranDue ? `<div class="fawran"><strong>Please send ${money(order.total)} QAR by Fawran</strong> to ${escapeHtml(FAWRAN_DETAILS)}, with ${escapeHtml(order.order_number)} in the note. We will prepare your order as soon as we receive it.</div>` : ''}
 
+</td></tr><tr><td class="page-end">
   <div class="end">
     <table class="totals">
       ${total('Subtotal', `${money(Number(order.subtotal) - itemDiscounts)} QAR`)}
@@ -942,6 +955,7 @@
       <p>W E &nbsp; A P P R E C I A T E &nbsp; Y O U R &nbsp; S U P P O R T</p>
     </div>
   </div>
+</td></tr></table>
 </div>
 <script>
   // Open the print window once the logo and font are ready.
