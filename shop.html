@@ -73,6 +73,18 @@
     .range .bonbon { width: 56px; flex-shrink: 0; }
 
     /* Home teaser */
+    /* Custom design: ordered on WhatsApp */
+    .custom { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(1.6rem, 4vw, 4rem); align-items: center; text-decoration: none; color: var(--ink); }
+    .custom-photo { background: #fff; padding: clamp(10px, 1.6vw, 18px); box-shadow: 0 30px 60px -40px rgba(15,14,14,.6); transition: transform .9s var(--ease); }
+    .custom-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    .custom:hover .custom-photo { transform: translateY(-6px); }
+    .custom h3 { font-family: var(--display); font-weight: 400; font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.05; }
+    .custom h3 em { color: var(--oxblood); }
+    .custom p { color: var(--muted-light); line-height: 1.7; margin-top: 1rem; max-width: 30rem; }
+    .custom-price { display: block; font-family: var(--mono); font-size: .8rem; color: var(--oxblood); margin-top: 1.4rem; letter-spacing: .08em; }
+    .custom .btn { margin-top: 1.8rem; }
+    @media (max-width: 800px) { .custom { grid-template-columns: 1fr; } }
+
     .teaser { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
     .teaser img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
     .teaser img:nth-child(2) { margin-top: 3rem; }
@@ -97,6 +109,7 @@
       <nav class="jump reveal d3" aria-label="Collections">
         <a href="#boxes">Signature boxes</a>
         <a href="#pantry">The pantry</a>
+        <a href="#custom">Custom design</a>
         <a href="#home">The Home</a>
       </nav>
     </header>
@@ -186,6 +199,28 @@
           <span class="link">Shop Spreads <span class="arrow">→</span></span>
         </a>
       </div>
+    </section>
+
+    <section class="v3-section light" id="custom">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Made for you</p>
+          <h2 class="display reveal d1">Custom <em>design</em>.</h2>
+        </div>
+        <p class="reveal d2">Your colours, your pattern, your occasion: bonbons hand-painted to your design. Ordered personally on WhatsApp.</p>
+      </div>
+
+      <a class="custom reveal" href="https://wa.me/97450968968?text=Hello%20QAVERA%2C%20I%27d%20like%20to%20order%20custom%20design%20chocolates." target="_blank" rel="noopener">
+        <div class="custom-photo">
+          <img src="bonbon design.webp" alt="Hand-painted custom design bonbons by QAVERA" loading="lazy">
+        </div>
+        <div>
+          <h3>Custom Design <em>Chocolate</em></h3>
+          <p>Tell us the occasion, the colours and how many pieces you need, and we will plan your design with you on WhatsApp.</p>
+          <span class="custom-price">QAR 10 per piece</span>
+          <span class="btn btn-solid">Order on WhatsApp <span class="arrow">→</span></span>
+        </div>
+      </a>
     </section>
 
     <section class="v3-section forest" id="home">
