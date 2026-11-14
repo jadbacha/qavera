@@ -387,6 +387,25 @@
     /* =====================================================
        THE HOME
     ===================================================== */
+    /* Custom design: made to order on WhatsApp */
+    .custom {
+      background: var(--silver);
+      color: var(--ink);
+      padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+      display: grid;
+      grid-template-columns: 1fr minmax(0, .8fr);
+      gap: clamp(3rem, 6vw, 7rem);
+      align-items: center;
+    }
+    .custom .caption { color: var(--oxblood); margin-bottom: 1.4rem; }
+    .custom h2 { font-size: clamp(2.6rem, 5vw, 4.6rem); }
+    .custom h2 em { color: var(--oxblood); }
+    .custom p:not(.caption) { color: rgba(15,14,14,.72); max-width: 30rem; margin: 1.6rem 0 0; line-height: 1.7; }
+    .custom .custom-price { display: block; font-family: var(--mono); font-size: .8rem; letter-spacing: .08em; color: var(--oxblood); margin: 1.4rem 0 2.4rem; }
+    .custom .actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .custom-photo { background: #fff; padding: clamp(10px, 1.6vw, 18px); box-shadow: 0 30px 60px -40px rgba(15,14,14,.6); }
+    .custom-photo img { display: block; width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+
     .house {
       background: var(--forest);
       padding: clamp(5rem, 9vw, 8rem) var(--gutter);
@@ -475,6 +494,7 @@
       .menu-list a:hover { padding-left: 0; padding-right: 0; background: none; }
 
       .house { grid-template-columns: 1fr; }
+      .custom { grid-template-columns: 1fr; }
 
       .rewards { grid-template-columns: 1fr; }
       .reward + .reward { border-left: 0; border-top: 1px solid rgba(15,14,14,.2); }
@@ -484,7 +504,7 @@
     @media (max-width: 560px) {
       .flavours { grid-template-columns: repeat(2, 1fr); }
       .flavour { padding: 1.4rem .8rem 1.2rem; }
-      .hero-actions .btn, .build .btn, .house .actions .btn { flex: 1 1 100%; justify-content: center; }
+      .hero-actions .btn, .build .btn, .house .actions .btn, .custom .actions .btn { flex: 1 1 100%; justify-content: center; }
     }
   </style>
 </head>
@@ -665,6 +685,25 @@
           <span class="price">QAR 50<small>280 G</small></span>
         </a></li>
       </ul>
+    </section>
+
+    <!-- =====================================================
+         CUSTOM DESIGN
+    ===================================================== -->
+    <section class="custom" id="custom-design">
+      <div>
+        <p class="caption reveal">Made for you</p>
+        <h2 class="display reveal d1">Your logo,<br>in <em>chocolate</em>.</h2>
+        <p class="reveal d2">Custom design chocolates for weddings, birthdays, brands and events: your logo, your colours, your occasion. Tell us what you have in mind and how many pieces you need, and we will plan it with you on WhatsApp.</p>
+        <span class="custom-price reveal d2">QAR 10 per piece</span>
+        <div class="actions reveal d3">
+          <a href="https://wa.me/97450968968?text=Hello%20QAVERA%2C%20I%27d%20like%20to%20order%20custom%20design%20chocolates." target="_blank" rel="noopener" class="btn btn-solid">Order on WhatsApp <span class="arrow">→</span></a>
+          <a href="shop.html#custom" class="btn btn-solid">See custom design</a>
+        </div>
+      </div>
+      <div class="custom-photo reveal d2">
+        <img src="custom design.webp" alt="Custom design chocolates with a client's logo by QAVERA" loading="lazy">
+      </div>
     </section>
 
     <!-- =====================================================
