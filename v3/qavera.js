@@ -16,6 +16,7 @@
     shop: 'shop.html',
     premium: 'premium.html',
     luxury: 'luxury.html',
+    customDesign: 'shop.html#custom',
     assorted: 'assorted.html',
     slabs: 'slabs.html',
     spreads: 'spreads.html',
@@ -88,6 +89,7 @@
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury</a>
+        <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-drop${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-drop-toggle" aria-expanded="false" aria-controls="v3PantryMenu">Pantry<span aria-hidden="true">▾</span></button>
           <div class="v3-drop-panel" id="v3PantryMenu">
@@ -117,6 +119,7 @@
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.premium}"${current('premium')}>Premium Box</a>
         <a href="${PAGES.luxury}"${current('luxury')}>Luxury Box</a>
+        <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-mobile-group${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-mobile-group-toggle" aria-expanded="false" aria-controls="v3MobilePantry">Pantry<span aria-hidden="true">+</span></button>
           <div class="v3-mobile-group-panel" id="v3MobilePantry">
@@ -499,6 +502,7 @@
               <h4>Shop</h4>
               <a href="${PAGES.premium}">Premium Box</a>
               <a href="${PAGES.luxury}">Luxury Box</a>
+              <a href="${PAGES.customDesign}">Custom Design</a>
               <a href="${PAGES.assorted}">Wrapped Chocolate</a>
               <a href="${PAGES.slabs}">Slabs</a>
               <a href="${PAGES.spreads}">Spreads</a>
