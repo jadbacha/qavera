@@ -539,8 +539,11 @@
       { label: 'Slabs', match: p => p.category === 'slabs' },
       { label: 'Spreads', match: p => p.category === 'spreads' },
       { label: 'Infused chocolate', match: p => p.category === 'infused' },
+      { label: 'Mendiant', match: p => p.category === 'mendiant' },
+      { label: 'Bites', match: p => p.category === 'bites' },
+      { label: 'Pâtes de fruits', match: p => p.category === 'pates' },
       { label: 'Custom design', match: p => p.category === 'custom' },
-      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'infused', 'custom'].includes(p.category) }
+      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'infused', 'mendiant', 'bites', 'pates', 'custom'].includes(p.category) }
     ];
 
     const PAYMENT_LABELS = {

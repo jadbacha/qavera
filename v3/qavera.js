@@ -22,6 +22,9 @@
     slabs: 'slabs.html',
     spreads: 'spreads.html',
     infused: 'infused.html',
+    mendiant: 'mendiant.html',
+    bites: 'bites.html',
+    pates: 'pates-de-fruits.html',
     homeCollection: 'home-collection.html',
     story: 'ourstory.html',
     contact: 'contactus.html',
@@ -43,7 +46,7 @@
   document.documentElement.classList.add('v3-js');
 
   const current = key => (key === page ? ' aria-current="page"' : '');
-  const PANTRY = ['assorted', 'slabs', 'spreads', 'infused'];
+  const PANTRY = ['assorted', 'slabs', 'spreads', 'infused', 'mendiant', 'bites', 'pates'];
   const icon = {
     user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
     bag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
@@ -98,6 +101,9 @@
             <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 80</small></a>
             <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>280 G · QAR 50</small></a>
             <a href="${PAGES.infused}"${current('infused')}><span>Infused Chocolate</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.mendiant}"${current('mendiant')}><span>Mendiant</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.bites}"${current('bites')}><span>Bites</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.pates}"${current('pates')}><span>Pâtes de Fruits</span><small>100 G · QAR 60</small></a>
             <a class="v3-drop-all" href="${PAGES.shop}#pantry">View the pantry →</a>
           </div>
         </div>
@@ -129,6 +135,9 @@
               <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
               <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
               <a href="${PAGES.infused}"${current('infused')}>Infused Chocolate</a>
+              <a href="${PAGES.mendiant}"${current('mendiant')}>Mendiant</a>
+              <a href="${PAGES.bites}"${current('bites')}>Bites</a>
+              <a href="${PAGES.pates}"${current('pates')}>Pâtes de Fruits</a>
             </div>
           </div>
         </div>
@@ -507,6 +516,9 @@
               <a href="${PAGES.slabs}">Slabs</a>
               <a href="${PAGES.spreads}">Spreads</a>
               <a href="${PAGES.infused}">Infused Chocolate</a>
+              <a href="${PAGES.mendiant}">Mendiant</a>
+              <a href="${PAGES.bites}">Bites</a>
+              <a href="${PAGES.pates}">Pâtes de Fruits</a>
               <a href="${PAGES.homeCollection}">The Home</a>
             </div>
             <div class="v3-footer-col">
