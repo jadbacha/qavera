@@ -117,14 +117,19 @@
   }
 
   // Random mix: every flavour at least once (when the box holds enough
-  // pieces), the rest spread at random.
+  // pieces), the rest spread at random. In the 25 and 48 boxes no flavour
+  // gets more than 8 pieces.
   function randomCounts() {
     const n = BOX.flavours.length;
     const pieces = target();
+    const cap = pieces > 12 ? 8 : pieces;
     const counts = Array(n).fill(0);
     if (pieces >= n) {
       counts.fill(1);
-      for (let left = pieces - n; left > 0; left--) counts[Math.floor(Math.random() * n)]++;
+      for (let left = pieces - n; left > 0; left--) {
+        const open = counts.map((c, i) => (c < cap ? i : -1)).filter(i => i >= 0);
+        counts[open[Math.floor(Math.random() * open.length)]]++;
+      }
     } else {
       const order = [...Array(n).keys()].sort(() => Math.random() - 0.5);
       order.slice(0, pieces).forEach(i => { counts[i] = 1; });
