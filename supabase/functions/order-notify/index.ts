@@ -309,7 +309,11 @@ async function handleNewOrder(order: Record<string, any>) {
       order.is_gift ? `Gift for ${order.gift_recipient_name}` : null,
       "",
       `${order.customer_name} · ${order.customer_phone}`,
-      ...items.map((item) => `- ${item.product_name} (${item.variant_name}) x${item.quantity}`),
+      ...items.map((item) => {
+        const flavors = (item.customization || []).filter((f) => Number(f.quantity) > 0);
+        return `- ${item.product_name} (${item.variant_name}) x${item.quantity}` +
+          (flavors.length ? `\n   ${flavors.map((f) => `${f.quantity} ${f.name}`).join(", ")}` : "");
+      }),
       "",
       `Total: ${qar(order.total)} · ${payment}`,
       isPickup(order) ? null : `To: ${order.delivery_area}`,

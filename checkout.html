@@ -16,7 +16,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="v3/qavera.css?v=20261114">
+  <link rel="stylesheet" href="v3/qavera.css?v=20261115">
   <style>
     .co-head { padding: clamp(2.6rem, 5vw, 4rem) var(--gutter) 0; }
     .co-head .caption { color: var(--sand); }
@@ -168,7 +168,7 @@
   </style>
 </head>
 <body data-page="checkout" data-no-loader>
-  <script src="v3/qavera.js?v=20261114"></script>
+  <script src="v3/qavera.js?v=20261115"></script>
 
   <main class="v3-main">
     <header class="co-head">
@@ -556,7 +556,7 @@
     const deliveryFee = () => (isPickup() ? 0 : Number(findArea(document.getElementById('area').value)?.fee || 0));
 
     // Dates are counted in Qatar time, up to 30 days ahead. Same day is allowed,
-    // except for Premium / Luxury boxes (made to order: from tomorrow).
+    // except for boxes of bonbons (made to order: from tomorrow).
     function qatarDate(offsetDays) {
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
       const date = new Date(`${today}T12:00:00Z`);
@@ -589,8 +589,8 @@
 
     function cartHasBox() {
       return cart.some(item =>
-        ['premium', 'luxury'].includes(String(item.product_name || '').trim().toLowerCase())
-        || /^(premium|luxury)-box-/.test(String(item.id || '')));
+        ['premium', 'luxury', 'chocolate bonbons'].includes(String(item.product_name || '').trim().toLowerCase())
+        || /^(premium|luxury|bonbons)-box-/.test(String(item.id || '')));
     }
 
     function slotOpen(slot, date) {
@@ -613,7 +613,7 @@
       document.getElementById('whenNote').textContent = normalMin < FIRST_DELIVERY_DATE
         ? OPENING_NOTE
         : hasBox
-          ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
+          ? 'Your order includes a box of Chocolate Bonbons. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
           : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
 
       document.querySelectorAll('input[name="timeSlot"]').forEach((input, i) => {
@@ -1044,7 +1044,7 @@
         dateError.textContent = dateValue < FIRST_DELIVERY_DATE
           ? OPENING_NOTE
           : cartHasBox()
-          ? 'Your order includes a Premium or Luxury box. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
+          ? 'Your order includes a box of Chocolate Bonbons. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
           : 'Today is fully booked now. Please choose another day.';
         dateError.classList.add('show');
         hasError = true;

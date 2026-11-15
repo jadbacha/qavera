@@ -11,8 +11,9 @@
 
   const RANGES = [
     { key: 'assorted', title: 'Wrapped Chocolate', meta: '1 KG · QAR 380', paint: 'p1' },
-    { key: 'slabs', title: 'Slabs', meta: '100 G · QAR 60', paint: 'p4' },
-    { key: 'spreads', title: 'Spreads', meta: '280 G · QAR 50', paint: 'p8' }
+    { key: 'slabs', title: 'Slabs', meta: '100 G · QAR 80', paint: 'p4' },
+    { key: 'spreads', title: 'Spreads', meta: '280 G · QAR 50', paint: 'p8' },
+    { key: 'infused', title: 'Infused Chocolate', meta: '100 G · QAR 60', paint: 'p11' }
   ];
 
   // Same id rule as the original pages, so carts stay compatible.

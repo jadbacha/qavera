@@ -1,5 +1,7 @@
-/* QAVERA v3 — signature box pages (Premium, Luxury).
-   The page defines BOX before loading this file (see premium.html).
+/* QAVERA v3 — signature box page (Chocolate Bonbons; earlier Premium, Luxury).
+   BOX.alwaysCustom: the customer always chooses how many of each flavour
+   (no toggle), with a Random mix button.
+   The page defines BOX before loading this file (see bonbons.html).
    Sizes/prices come from Supabase (products + product_variants); the numbers
    in BOX are only a fallback while loading. Cart items match what checkout
    and create_qavera_order expect: variant_id + optional flavors. */
@@ -17,7 +19,7 @@
   const state = {
     size: 'small',
     image: 0,
-    customize: false,
+    customize: !!BOX.alwaysCustom,
     counts: [],
     productId: null,
     productName: BOX.dbName,
@@ -109,7 +111,25 @@
   }
 
   function resetCounts() {
-    state.counts = [...BOX.sizes[state.size].defaults];
+    state.counts = BOX.alwaysCustom
+      ? BOX.flavours.map(() => 0)
+      : [...BOX.sizes[state.size].defaults];
+  }
+
+  // Random mix: every flavour at least once (when the box holds enough
+  // pieces), the rest spread at random.
+  function randomCounts() {
+    const n = BOX.flavours.length;
+    const pieces = target();
+    const counts = Array(n).fill(0);
+    if (pieces >= n) {
+      counts.fill(1);
+      for (let left = pieces - n; left > 0; left--) counts[Math.floor(Math.random() * n)]++;
+    } else {
+      const order = [...Array(n).keys()].sort(() => Math.random() - 0.5);
+      order.slice(0, pieces).forEach(i => { counts[i] = 1; });
+    }
+    return counts;
   }
 
   // ---------- events ----------
@@ -130,7 +150,7 @@
     renderGallery();
   });
 
-  el('customToggle').addEventListener('change', event => {
+  if (el('customToggle')) el('customToggle').addEventListener('change', event => {
     state.customize = event.target.checked;
     el('customiser').classList.toggle('open', state.customize);
     el('customiser').setAttribute('aria-hidden', String(!state.customize));
@@ -149,7 +169,8 @@
     renderCustomiser();
   });
 
-  el('customEven').addEventListener('click', () => { resetCounts(); el('customMsg').textContent = ''; renderCustomiser(); });
+  if (el('customEven')) el('customEven').addEventListener('click', () => { resetCounts(); el('customMsg').textContent = ''; renderCustomiser(); });
+  if (el('customRandom')) el('customRandom').addEventListener('click', () => { state.counts = randomCounts(); el('customMsg').textContent = ''; renderCustomiser(); });
   el('customClear').addEventListener('click', () => { state.counts = state.counts.map(() => 0); el('customMsg').textContent = ''; renderCustomiser(); });
 
   el('addToBox').addEventListener('click', () => {
