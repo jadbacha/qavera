@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>QAVERA | Handmade Chocolate & Bonbons in Qatar</title>
-  <meta name="description" content="Luxury handmade chocolate in Qatar. Hand-painted bonbons, Premium and Luxury chocolate boxes, gifts and build-your-own boxes, delivered across Doha and Qatar.">
+  <meta name="description" content="Luxury handmade chocolate in Qatar. Hand-painted chocolate bonbons in boxes you fill with your own flavours, custom design chocolate and gifts, delivered across Doha and Qatar.">
   <link rel="canonical" href="https://www.qavera.qa/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="QAVERA">
   <meta property="og:title" content="QAVERA | Handmade Chocolate & Bonbons in Qatar">
-  <meta property="og:description" content="Luxury handmade chocolate in Qatar. Hand-painted bonbons, Premium and Luxury chocolate boxes, gifts and build-your-own boxes, delivered across Doha and Qatar.">
+  <meta property="og:description" content="Luxury handmade chocolate in Qatar. Hand-painted chocolate bonbons in boxes you fill with your own flavours, custom design chocolate and gifts, delivered across Doha and Qatar.">
   <meta property="og:url" content="https://www.qavera.qa/">
   <meta property="og:image" content="https://www.qavera.qa/hero-boxes.webp">
   <meta property="og:locale" content="en_QA">
@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Jost:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="v3/qavera.css?v=20261114">
+  <link rel="stylesheet" href="v3/qavera.css?v=20261115">
   <style>
     /* =====================================================
        HERO
@@ -154,6 +154,10 @@
 
     .room-ink { background: var(--ink); border-right: 1px solid rgba(196,169,128,.18); }
     .room-forest { background: var(--forest); }
+    .rooms.single { grid-template-columns: 1fr; }
+    .room-single { display: grid; grid-template-columns: minmax(0, .8fr) 1fr; gap: clamp(2.4rem, 6vw, 6rem); align-items: center; border-right: 0; }
+    .room-single .room-body { display: flex; flex-direction: column; }
+    .room-single h3 { margin-top: 0; }
 
     .room-head { display: flex; justify-content: space-between; color: var(--sand); margin-bottom: 2.4rem; }
 
@@ -224,7 +228,7 @@
 
     .flavours {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       border-top: 1px solid rgba(15,14,14,.2);
       border-left: 1px solid rgba(15,14,14,.2);
     }
@@ -481,6 +485,7 @@
 
       .rooms { grid-template-columns: 1fr; }
       .room-ink { border-right: 0; border-bottom: 1px solid rgba(196,169,128,.18); }
+      .room-single { grid-template-columns: 1fr; }
 
       .build { grid-template-columns: 1fr; }
 
@@ -510,7 +515,7 @@
 </head>
 
 <body class="v3-overlay-header" data-page="home">
-  <script src="v3/qavera.js?v=20261114"></script>
+  <script src="v3/qavera.js?v=20261115"></script>
 
   <main class="v3-main">
 
@@ -552,41 +557,25 @@
     <!-- =====================================================
          COLLECTIONS
     ===================================================== -->
-    <section class="rooms" id="collections" aria-label="Collections">
-      <a href="premium.html" class="room room-ink">
+    <section class="rooms single" id="collections" aria-label="Collections">
+      <a href="bonbons.html" class="room room-ink room-single">
         <div class="canvas reveal">
           <div class="canvas-inner">
-            <img src="black box.jpg" alt="QAVERA Premium Box">
-            <img src="black box hover.jpg" alt="" aria-hidden="true">
+            <img src="burgundy box fitted.webp" alt="QAVERA Chocolate Bonbons box">
+            <img src="burgundy box hover.jpg" alt="" aria-hidden="true">
           </div>
         </div>
-        <h3 class="display">The <em>Premium</em> Box</h3>
-        <p>Artistic bonbon shells in premium Belgian chocolate, in the black box. Choose our selection or pick every flavour yourself.</p>
-        <ul class="sizes">
-          <li><span>Mini · 2 pieces</span><span>QAR 10</span></li>
-          <li><span>12 pieces</span><span>QAR 75</span></li>
-          <li><span>25 pieces</span><span>QAR 150</span></li>
-          <li><span>48 pieces</span><span>QAR 290</span></li>
-        </ul>
-        <span class="link">Discover Premium <span class="arrow">→</span></span>
-      </a>
-
-      <a href="luxury.html" class="room room-forest">
-        <div class="canvas reveal d1">
-          <div class="canvas-inner">
-            <img src="green box fitted.webp" alt="QAVERA Luxury Box">
-            <img src="green box hover.jpg" alt="" aria-hidden="true">
-          </div>
+        <div class="room-body">
+          <h3 class="display">Chocolate <em>Bonbons</em></h3>
+          <p>Artistic bonbon shells in premium Belgian chocolate, in eight flavours. Choose how many pieces of each flavour you want, or let us pick a random mix.</p>
+          <ul class="sizes">
+            <li><span>Mini · 2 pieces</span><span>QAR 15</span></li>
+            <li><span>12 pieces</span><span>QAR 100</span></li>
+            <li><span>25 pieces</span><span>QAR 210</span></li>
+            <li><span>48 pieces</span><span>QAR 390</span></li>
+          </ul>
+          <span class="link">Build your box <span class="arrow">→</span></span>
         </div>
-        <h3 class="display">The <em>Luxury</em> Box</h3>
-        <p>Hand-painted bonbons in the forest-green box. Choose our selection or pick every flavour yourself.</p>
-        <ul class="sizes">
-          <li><span>Mini · 2 pieces</span><span>QAR 15</span></li>
-          <li><span>12 pieces</span><span>QAR 100</span></li>
-          <li><span>25 pieces</span><span>QAR 210</span></li>
-          <li><span>48 pieces</span><span>QAR 390</span></li>
-        </ul>
-        <span class="link">Discover Luxury <span class="arrow">→</span></span>
       </a>
     </section>
 
@@ -597,24 +586,20 @@
       <div class="section-head">
         <div>
           <p class="caption reveal">The catalogue</p>
-          <h2 class="display reveal d1">Twelve <em>flavours</em>,<br>twelve colours.</h2>
+          <h2 class="display reveal d1">Eight <em>flavours</em>,<br>eight colours.</h2>
         </div>
-        <p class="reveal d2">Six in the Premium Box, six in the Luxury Box. Each shell colour tells you the flavour inside. Illustrated here; the real bonbons are painted by hand, so no two are alike.</p>
+        <p class="reveal d2">Mix them any way you like in your box. Each shell colour tells you the flavour inside. Illustrated here; the real bonbons are painted by hand, so no two are alike.</p>
       </div>
 
       <div class="flavours">
-        <a class="flavour reveal" href="premium.html"><span class="caption">Nº 01</span><div class="bonbon" style="--a:rgb(54, 33, 20);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Carmelitto Di QAVERA</h4><span class="fl-meta caption">Premium · Brown shell</span></a>
-        <a class="flavour reveal d1" href="premium.html"><span class="caption">Nº 02</span><div class="bonbon" style="--a:rgb(13, 12, 11);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Noccelle Di QAVERA</h4><span class="fl-meta caption">Premium · Black shell</span></a>
-        <a class="flavour reveal d2" href="premium.html"><span class="caption">Nº 03</span><div class="bonbon" style="--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Pistachio Royal</h4><span class="fl-meta caption">Premium · Green shell</span></a>
-        <a class="flavour reveal d3" href="premium.html"><span class="caption">Nº 04</span><div class="bonbon" style="--a:rgb(62, 35, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Caffezinho</h4><span class="fl-meta caption">Premium · Purple shell</span></a>
-        <a class="flavour reveal" href="premium.html"><span class="caption">Nº 05</span><div class="bonbon" style="--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Manga Di QAVERA</h4><span class="fl-meta caption">Premium · Yellow shell</span></a>
-        <a class="flavour reveal d1" href="premium.html"><span class="caption">Nº 06</span><div class="bonbon" style="--a:rgb(82, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Fragola Di QAVERA</h4><span class="fl-meta caption">Premium · Red shell</span></a>
-        <a class="flavour reveal d2" href="luxury.html"><span class="caption">Nº 07</span><div class="bonbon" style="--a:rgb(33, 53, 75);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mouhalabia Fustuq</h4><span class="fl-meta caption">Luxury · Blue shell</span></a>
-        <a class="flavour reveal d3" href="luxury.html"><span class="caption">Nº 08</span><div class="bonbon" style="--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Cheesecake</h4><span class="fl-meta caption">Luxury · White shell</span></a>
-        <a class="flavour reveal" href="luxury.html"><span class="caption">Nº 09</span><div class="bonbon" style="--a:rgb(108, 44, 82);--b:#F062B8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Nocciolla Coffee</h4><span class="fl-meta caption">Luxury · Pink shell</span></a>
-        <a class="flavour reveal d1" href="luxury.html"><span class="caption">Nº 10</span><div class="bonbon" style="--a:rgb(49, 13, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Raspberry Dunkel</h4><span class="fl-meta caption">Luxury · Burgundy shell</span></a>
-        <a class="flavour reveal d2" href="luxury.html"><span class="caption">Nº 11</span><div class="bonbon" style="--a:rgb(103, 104, 13);--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mango Passion</h4><span class="fl-meta caption">Luxury · Yellow shell</span></a>
-        <a class="flavour reveal d3" href="luxury.html"><span class="caption">Nº 12</span><div class="bonbon" style="--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Matcha-cha</h4><span class="fl-meta caption">Luxury · Green shell</span></a>
+        <a class="flavour reveal" href="bonbons.html"><span class="caption">Nº 01</span><div class="bonbon" style="--a:rgb(55, 33, 21);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Carmelitto Di QAVERA</h4><span class="fl-meta caption">Brown shell</span></a>
+        <a class="flavour reveal d1" href="bonbons.html"><span class="caption">Nº 02</span><div class="bonbon" style="--a:rgb(62, 36, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Caffezinho</h4><span class="fl-meta caption">Purple shell</span></a>
+        <a class="flavour reveal d2" href="bonbons.html"><span class="caption">Nº 03</span><div class="bonbon" style="--a:rgb(13, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Noccelle Di QAVERA</h4><span class="fl-meta caption">Black shell</span></a>
+        <a class="flavour reveal d3" href="bonbons.html"><span class="caption">Nº 04</span><div class="bonbon" style="--a:rgb(48, 64, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Pistachio Royal</h4><span class="fl-meta caption">Green shell</span></a>
+        <a class="flavour reveal" href="bonbons.html"><span class="caption">Nº 05</span><div class="bonbon" style="--a:rgb(33, 53, 76);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mouhalabia Fustuq</h4><span class="fl-meta caption">Blue shell</span></a>
+        <a class="flavour reveal d1" href="bonbons.html"><span class="caption">Nº 06</span><div class="bonbon" style="--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Cheesecake</h4><span class="fl-meta caption">White shell</span></a>
+        <a class="flavour reveal d2" href="bonbons.html"><span class="caption">Nº 07</span><div class="bonbon" style="--a:#bdb6a8;--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Mango Passion</h4><span class="fl-meta caption">Yellow shell</span></a>
+        <a class="flavour reveal d3" href="bonbons.html"><span class="caption">Nº 08</span><div class="bonbon" style="--a:#bdb6a8;--b:#E8892B;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"></div><h4>Piña Colada</h4><span class="fl-meta caption">Orange shell</span></a>
       </div>
 
       <p class="flavour-note reveal">
@@ -630,13 +615,12 @@
       <div>
         <h2 class="display reveal d1">Build your<br><em>own</em> box.</h2>
         <ol class="steps reveal d2">
-          <li><div><strong>Choose your box</strong><span>Premium or Luxury, from the 2-piece Mini to 48 pieces.</span></div></li>
-          <li><div><strong>Pick every flavour</strong><span>Mix Caffezinho with Pistachio Royal, or fill it with your favourite.</span></div></li>
+          <li><div><strong>Choose your box</strong><span>From the 2-piece Mini to 48 pieces.</span></div></li>
+          <li><div><strong>Pick every flavour</strong><span>Choose how many of each of the eight flavours, or tap Random mix.</span></div></li>
           <li><div><strong>We paint and fill it by hand</strong><span>Then deliver it anywhere in Qatar.</span></div></li>
         </ol>
         <div class="hero-actions reveal d3">
-          <a href="premium.html" class="btn btn-solid">Build a Premium box <span class="arrow">→</span></a>
-          <a href="luxury.html" class="btn btn-solid">Build a Luxury box</a>
+          <a href="bonbons.html" class="btn btn-solid">Build your box <span class="arrow">→</span></a>
         </div>
       </div>
 
@@ -662,27 +646,51 @@
           <p class="caption reveal">Everyday indulgence</p>
           <h2 class="display reveal d1">The <em>pantry</em>.</h2>
         </div>
-        <p class="reveal d2">For the days in between: wrapped chocolates, slabs and spreads, all made in the same atelier.</p>
+        <p class="reveal d2">For the days in between: wrapped chocolates, slabs, spreads, infused chocolate, mendiant, bites and pâtes de fruits, all made in the same atelier.</p>
       </div>
 
       <ul class="menu-list">
         <li class="reveal"><a href="assorted.html">
           <span class="caption">Nº 04</span>
           <h3>Wrapped Chocolate</h3>
-          <p>Hazelnut and almond mendiants, crispy pistachio, crispy hazelnut and a mixed assortment.</p>
+          <p>Hazelnut and almond rocher, crispy pistachio, crispy hazelnut, crunchy lotus, pecan praline and a mixed assortment.</p>
           <span class="price">QAR 380<small>1 KG</small></span>
         </a></li>
         <li class="reveal"><a href="slabs.html">
           <span class="caption">Nº 05</span>
           <h3>Slabs</h3>
-          <p>White chocolate with almond and raspberry, and milk chocolate with whole hazelnuts.</p>
-          <span class="price">QAR 60<small>100 G</small></span>
+          <p>White chocolate with almond and raspberry, milk chocolate with whole hazelnuts, and pretzels in milk chocolate.</p>
+          <span class="price">QAR 80<small>100 G</small></span>
         </a></li>
         <li class="reveal"><a href="spreads.html">
           <span class="caption">Nº 06</span>
           <h3>Spreads</h3>
           <p>Hazelnut, pistachio and Lotus.</p>
           <span class="price">QAR 50<small>280 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="infused.html">
+          <span class="caption">Nº 07</span>
+          <h3>Infused Chocolate</h3>
+          <p>Round chocolate chips infused with strawberry, mango or salted caramel. No ganache, just chocolate and flavour.</p>
+          <span class="price">QAR 60<small>100 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="mendiant.html">
+          <span class="caption">Nº 08</span>
+          <h3>Mendiant</h3>
+          <p>Chocolate chips with dried fruit, or with nuts.</p>
+          <span class="price">QAR 60<small>100 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="bites.html">
+          <span class="caption">Nº 09</span>
+          <h3>Bites</h3>
+          <p>Almonds with milk or dark chocolate, pistachio in white chocolate, pecan with milk chocolate and hazelnut in milk chocolate.</p>
+          <span class="price">QAR 60<small>100 G</small></span>
+        </a></li>
+        <li class="reveal"><a href="pates-de-fruits.html">
+          <span class="caption">Nº 10</span>
+          <h3>Pâtes de Fruits</h3>
+          <p>Jelly candy made with fresh pineapple or guava.</p>
+          <span class="price">QAR 60<small>100 G</small></span>
         </a></li>
       </ul>
     </section>
@@ -715,7 +723,7 @@
         <img src="white leaf inside.webp" alt="QAVERA Home white leaf dish">
       </div>
       <div>
-        <p class="caption reveal">Nº 08 — The Home</p>
+        <p class="caption reveal">Nº 11 — The Home</p>
         <h2 class="display reveal d1">Objects for<br>the <em>table</em>.</h2>
         <p class="reveal d2">Bowls and trays from the QAVERA Home collection, made to present chocolate beautifully — at home, or as a gift. Order directly on WhatsApp.</p>
         <div class="actions reveal d3">
@@ -752,7 +760,7 @@
     const boxGrid = document.getElementById('boxGrid');
     const boxLabel = document.getElementById('boxLabel');
     const layouts = { 12: 4, 25: 5, 48: 8 };
-    const FLAVOUR_STYLES = ["--a:rgb(54, 33, 20);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(13, 12, 11);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(62, 35, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(97, 76, 18);--b:#D8A928;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(82, 22, 22);--b:#B83232;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(33, 53, 75);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(108, 44, 82);--b:#F062B8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(49, 13, 22);--b:#6E1F32;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(103, 104, 13);--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(48, 63, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"];
+    const FLAVOUR_STYLES = ["--a:rgb(55, 33, 21);--b:#7A4A2E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(62, 36, 108);--b:#8A4FF0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(13, 12, 12);--b:#1E1B1A;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(48, 64, 27);--b:#6B8E3D;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:rgb(33, 53, 76);--b:#4A76A8;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#F5F5F0;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#E6E81E;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);", "--a:#bdb6a8;--b:#E8892B;--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);"];
 
     function fillBox(size) {
       boxGrid.style.setProperty('--cols', layouts[size]);
@@ -762,7 +770,7 @@
         cell.className = 'cell';
         const bonbon = document.createElement('div');
         bonbon.className = 'bonbon';
-        bonbon.setAttribute('style', FLAVOUR_STYLES[(i * 5) % FLAVOUR_STYLES.length]);
+        bonbon.setAttribute('style', FLAVOUR_STYLES[(i * 3) % FLAVOUR_STYLES.length]);
         bonbon.style.animationDelay = `${i * 18}ms`;
         cell.appendChild(bonbon);
         boxGrid.appendChild(cell);

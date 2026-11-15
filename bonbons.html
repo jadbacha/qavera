@@ -3,27 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Luxury Bonbon Chocolate Box | QAVERA Qatar</title>
-  <meta name="description" content="The QAVERA Luxury Box: hand-painted chocolate bonbons in 12, 25 or 48 pieces. Choose our selection or every flavour. Luxury chocolate gifts delivered in Qatar.">
-  <link rel="canonical" href="https://www.qavera.qa/luxury.html">
+  <title>Chocolate Bonbons Box | QAVERA Qatar</title>
+  <meta name="description" content="QAVERA Chocolate Bonbons: hand-painted bonbons in 2, 12, 25 or 48 pieces, filled with the flavours you choose. A luxury chocolate gift, delivered in Qatar.">
+  <link rel="canonical" href="https://www.qavera.qa/bonbons.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="QAVERA">
-  <meta property="og:title" content="Luxury Bonbon Chocolate Box | QAVERA Qatar">
-  <meta property="og:description" content="The QAVERA Luxury Box: hand-painted chocolate bonbons in 12, 25 or 48 pieces. Choose our selection or every flavour. Luxury chocolate gifts delivered in Qatar.">
-  <meta property="og:url" content="https://www.qavera.qa/luxury.html">
+  <meta property="og:title" content="Chocolate Bonbons Box | QAVERA Qatar">
+  <meta property="og:description" content="QAVERA Chocolate Bonbons: hand-painted bonbons in 2, 12, 25 or 48 pieces, filled with the flavours you choose. A luxury chocolate gift, delivered in Qatar.">
+  <meta property="og:url" content="https://www.qavera.qa/bonbons.html">
   <meta property="og:image" content="https://www.qavera.qa/hero-boxes.webp">
   <meta property="og:locale" content="en_QA">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="v3/qavera.css?v=20261114">
-  <link rel="stylesheet" href="v3/box.css?v=20261031">
+  <link rel="stylesheet" href="v3/qavera.css?v=20261115">
+  <link rel="stylesheet" href="v3/box.css?v=20261115">
   <style>
-    .box-page { background: var(--forest); }
+    .box-page { background: var(--ink); }
+    .custom-intro { color: rgba(216,216,216,.72); font-size: .92rem; line-height: 1.6; margin: .2rem 0 1rem; }
+    .custom-intro strong { color: var(--sand); font-weight: 500; }
   </style>
 </head>
-<body data-page="luxury">
-  <script src="v3/qavera.js?v=20261114"></script>
+<body data-page="bonbons">
+  <script src="v3/qavera.js?v=20261115"></script>
 
   <main class="v3-main">
     <section class="box-page">
@@ -34,26 +36,23 @@
       </div>
 
       <div class="buy">
-        <nav class="v3-crumbs caption" aria-label="Breadcrumb"><a href="shop.html">Shop</a><span>/</span><a href="shop.html#boxes">Signature boxes</a><span>/</span><span>Luxury Box</span></nav>
-        <h1 class="display">The <em>Luxury</em> Box</h1>
-        <p class="lead">A refined collection of artistic bonbon shells, crafted from premium Belgian chocolate and filled with sophisticated layers of flavour, for those who appreciate depth, texture and exceptional craftsmanship.</p>
+        <nav class="v3-crumbs caption" aria-label="Breadcrumb"><a href="shop.html">Shop</a><span>/</span><a href="shop.html#boxes">Signature box</a><span>/</span><span>Chocolate Bonbons</span></nav>
+        <h1 class="display">Chocolate <em>Bonbons</em></h1>
+        <p class="lead">Artistic bonbon shells, crafted from premium Belgian chocolate and filled with eight refined flavours. Choose exactly how many of each flavour you want: every box is made just for you.</p>
 
-        <p class="step-label caption"><span>01 · Choose your box</span><b>13–15 g per piece</b></p>
+        <p class="step-label caption"><span>01 · Choose your box</span><b>9 g per piece</b></p>
         <div class="sizes" id="sizes" role="radiogroup" aria-label="Box size"></div>
 
-        <p class="step-label caption"><span>02 · Your flavours</span><b>Optional</b></p>
-        <label class="custom-toggle">
-          <span><strong>Customize my box</strong><span class="hint">Choose exactly how many of each flavour. Otherwise we fill it with an even mix.</span></span>
-          <span class="switch"><input type="checkbox" id="customToggle" aria-controls="customiser"><span></span></span>
-        </label>
-        <div class="customiser" id="customiser" aria-hidden="true">
+        <p class="step-label caption"><span>02 · Choose your flavours</span><b>Fill your box</b></p>
+        <p class="custom-intro">Choose how many pieces of each flavour you want, or tap <strong>Random mix</strong> and we pick for you.</p>
+        <div class="customiser open" id="customiser" aria-hidden="false">
           <div>
             <div class="customiser-inner">
               <div class="progress-row"><span class="caption">Pieces chosen</span><span class="count" id="customCount">0 / 12</span></div>
               <div class="progress"><span id="customBar"></span></div>
               <div id="flavourRows"></div>
               <div class="customiser-foot">
-                <button type="button" class="link" id="customEven">Even mix</button>
+                <button type="button" class="link" id="customRandom">Random mix</button>
                 <button type="button" class="link" id="customClear">Clear all</button>
               </div>
             </div>
@@ -72,10 +71,10 @@
     <section class="v3-section light">
       <div class="section-head">
         <div>
-          <p class="caption reveal">Luxury · The collection</p>
-          <h2 class="display reveal d1">Six <em>flavours</em>, painted by hand.</h2>
+          <p class="caption reveal">Chocolate Bonbons · The collection</p>
+          <h2 class="display reveal d1">Eight <em>flavours</em>, painted by hand.</h2>
         </div>
-        <p class="reveal d2">A collection of artistic bonbon shells of 13 g and 15 g. Each shell colour tells you the flavour inside.</p>
+        <p class="reveal d2">A collection of artistic bonbon shells of 9 g each. Each shell colour tells you the flavour inside.</p>
       </div>
       <div class="collection-grid" id="collection"></div>
     </section>
@@ -97,25 +96,15 @@
       <p class="reveal d2">Because QAVERA chocolates are artisan-made, colours, finishes and individual designs may vary from the photographs. The collection and flavours remain true to the QAVERA experience.</p>
     </section>
 
-    <section class="v3-section ">
-      <a class="other-box reveal" href="premium.html">
-        <div class="canvas"><img src="black box.jpg" alt="QAVERA Premium Box"></div>
-        <div>
-          <p class="caption">Also in the collection</p>
-          <h2 class="display">The <em>Premium</em> Box</h2>
-          <p>A collection of artistic bonbon shells, crafted from premium Belgian chocolate and filled with refined flavours. Each box brings together carefully made creations designed to turn chocolate into an experience.</p>
-          <span class="link">Discover Premium <span class="arrow">→</span></span>
-        </div>
-      </a>
-    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const BOX = {
-  "key": "luxury",
-  "dbName": "Luxury",
-  "displayName": "Luxury Box",
+  "key": "bonbons",
+  "dbName": "Chocolate Bonbons",
+  "displayName": "Chocolate Bonbons",
+  "alwaysCustom": true,
   "sizes": {
     "mini": {
       "pieces": 2,
@@ -134,8 +123,10 @@
       "cartLabel": "Mini, 2 Pieces — White",
       "needsDb": true,
       "defaults": [
-        1,
-        1,
+        0,
+        0,
+        0,
+        0,
         0,
         0,
         0,
@@ -158,12 +149,14 @@
       "dbVariant": "S",
       "cartLabel": "12 Pieces — Burgundy",
       "defaults": [
-        2,
-        2,
-        2,
-        2,
-        2,
-        2
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ]
     },
     "medium": {
@@ -182,12 +175,14 @@
       "dbVariant": "M",
       "cartLabel": "25 Pieces — Green",
       "defaults": [
-        4,
-        4,
-        4,
-        5,
-        4,
-        4
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ]
     },
     "large": {
@@ -206,16 +201,42 @@
       "dbVariant": "L",
       "cartLabel": "48 Pieces — Black",
       "defaults": [
-        8,
-        8,
-        8,
-        8,
-        8,
-        8
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
       ]
     }
   },
   "flavours": [
+    {
+      "name": "Carmelitto Di QAVERA",
+      "shell": "Brown",
+      "colour": "#7A4A2E",
+      "desc": "Salted caramel with hazelnut praline."
+    },
+    {
+      "name": "Caffezinho",
+      "shell": "Purple",
+      "colour": "#8A4FF0",
+      "desc": "Lotus with crunchy speculoos."
+    },
+    {
+      "name": "Noccelle Di QAVERA",
+      "shell": "Black",
+      "colour": "#1E1B1A",
+      "desc": "Hazelnut praline."
+    },
+    {
+      "name": "Pistachio Royal",
+      "shell": "Green",
+      "colour": "#6B8E3D",
+      "desc": "Pistachio praline."
+    },
     {
       "name": "Mouhalabia Fustuq",
       "shell": "Blue",
@@ -226,19 +247,7 @@
       "name": "Cheesecake",
       "shell": "White",
       "colour": "#F5F5F0",
-      "desc": "Cheesecake ganache with mixed berry jelly."
-    },
-    {
-      "name": "Nocciolla Coffee",
-      "shell": "Pink",
-      "colour": "#F062B8",
-      "desc": "Hazelnut praline with coffee ganache."
-    },
-    {
-      "name": "Raspberry Dunkel",
-      "shell": "Burgundy",
-      "colour": "#6E1F32",
-      "desc": "Raspberry jelly with dark chocolate ganache."
+      "desc": "Cheesecake ganache with mixed berry jelly and a crunchy digestive layer."
     },
     {
       "name": "Mango Passion",
@@ -247,14 +256,14 @@
       "desc": "Passion fruit jelly with mango ganache."
     },
     {
-      "name": "Matcha-cha",
-      "shell": "Green",
-      "colour": "#6B8E3D",
-      "desc": "Matcha ganache with crunchy feuilletine."
+      "name": "Piña Colada",
+      "shell": "Orange",
+      "colour": "#E8892B",
+      "desc": "Pineapple jelly with coconut ganache."
     }
   ]
 };
   </script>
-  <script src="v3/box.js?v=20261031"></script>
+  <script src="v3/box.js?v=20261115"></script>
 </body>
 </html>

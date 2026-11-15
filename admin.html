@@ -538,8 +538,12 @@
       { label: 'Wrapped Chocolate', match: p => p.category === 'assorted' },
       { label: 'Slabs', match: p => p.category === 'slabs' },
       { label: 'Spreads', match: p => p.category === 'spreads' },
+      { label: 'Infused chocolate', match: p => p.category === 'infused' },
+      { label: 'Mendiant', match: p => p.category === 'mendiant' },
+      { label: 'Bites', match: p => p.category === 'bites' },
+      { label: 'Pâtes de fruits', match: p => p.category === 'pates' },
       { label: 'Custom design', match: p => p.category === 'custom' },
-      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'custom'].includes(p.category) }
+      { label: 'Other', match: p => !!p.category && !['assorted', 'slabs', 'spreads', 'infused', 'mendiant', 'bites', 'pates', 'custom'].includes(p.category) }
     ];
 
     const PAYMENT_LABELS = {
@@ -808,7 +812,7 @@
     // Box sizes read like the till: "Premium — 12 Pieces".
     const BOX_SIZE_NAMES = { s: '12 Pieces', m: '25 Pieces', l: '48 Pieces', mini: 'Mini, 2 Pieces' };
     function receiptItemName(item) {
-      const box = /^(premium|luxury)$/i.test(String(item.product_name || '').trim());
+      const box = /^(premium|luxury|chocolate bonbons)$/i.test(String(item.product_name || '').trim());
       const size = box ? BOX_SIZE_NAMES[String(item.variant_name || '').trim().toLowerCase()] : null;
       return `${item.product_name || ''}${item.variant_name ? ` — ${size || item.variant_name}` : ''}`;
     }
@@ -1517,10 +1521,12 @@ ${escapeHtml(order.delivery_address)}</div>`}
     let openItemDiscount = null; // index of the line whose discount is being edited
     let noGiftWasOn = false;
 
-    // Flavours of the Premium and Luxury boxes (same as the box pages on the website).
+    // Box flavours (same as the box page on the website). Chocolate Bonbons is the
+    // box on sale; Premium / Luxury stay for editing older orders.
     const BOX_FLAVOURS = {
       Premium: ['Carmelitto Di QAVERA', 'Noccelle Di QAVERA', 'Pistachio Royal', 'Caffezinho', 'Manga Di QAVERA', 'Fragola Di QAVERA'],
-      Luxury: ['Mouhalabia Fustuq', 'Cheesecake', 'Nocciolla Coffee', 'Raspberry Dunkel', 'Mango Passion', 'Matcha-cha']
+      Luxury: ['Mouhalabia Fustuq', 'Cheesecake', 'Nocciolla Coffee', 'Raspberry Dunkel', 'Mango Passion', 'Matcha-cha'],
+      'Chocolate Bonbons': ['Carmelitto Di QAVERA', 'Caffezinho', 'Noccelle Di QAVERA', 'Pistachio Royal', 'Mouhalabia Fustuq', 'Cheesecake', 'Mango Passion', 'Piña Colada']
     };
     let flavourCounts = [];
 
@@ -1869,6 +1875,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         <div class="no-flv-head">
           <strong>Flavours</strong> <span>${total} / ${variant.pieces} pieces · leave at 0 for chef's selection</span>
           <button type="button" data-no="flv-even">Even mix</button>
+          <button type="button" data-no="flv-random">Random mix</button>
           <button type="button" data-no="flv-clear">Clear</button>
         </div>
         ${variant.flavours.map((name, i) => `<div class="no-flv-row">
@@ -1900,6 +1907,16 @@ ${escapeHtml(order.delivery_address)}</div>`}
           const i = Number(button.dataset.i), d = Number(button.dataset.d);
           if (d > 0 && total < variant.pieces) flavourCounts[i] += 1;
           if (d < 0 && flavourCounts[i] > 0) flavourCounts[i] -= 1;
+        } else if (button.dataset.no === 'flv-random') {
+          // Every flavour at least once (when the box holds enough), the rest at random.
+          const n = variant.flavours.length;
+          flavourCounts = Array(n).fill(0);
+          if (variant.pieces >= n) {
+            flavourCounts.fill(1);
+            for (let left = variant.pieces - n; left > 0; left--) flavourCounts[Math.floor(Math.random() * n)]++;
+          } else {
+            [...Array(n).keys()].sort(() => Math.random() - 0.5).slice(0, variant.pieces).forEach(i => { flavourCounts[i] = 1; });
+          }
         } else if (button.dataset.no === 'flv-even') {
           const n = variant.flavours.length;
           flavourCounts = variant.flavours.map((_, i) => Math.floor(variant.pieces / n) + (i < variant.pieces % n ? 1 : 0));

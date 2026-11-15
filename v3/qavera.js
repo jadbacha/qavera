@@ -14,12 +14,17 @@
   const PAGES = {
     home: 'home.html',
     shop: 'shop.html',
-    premium: 'premium.html',
-    luxury: 'luxury.html',
+    bonbons: 'bonbons.html',
+    premium: 'bonbons.html',  // old Premium / Luxury pages are now one box
+    luxury: 'bonbons.html',
     customDesign: 'shop.html#custom',
     assorted: 'assorted.html',
     slabs: 'slabs.html',
     spreads: 'spreads.html',
+    infused: 'infused.html',
+    mendiant: 'mendiant.html',
+    bites: 'bites.html',
+    pates: 'pates-de-fruits.html',
     homeCollection: 'home-collection.html',
     story: 'ourstory.html',
     contact: 'contactus.html',
@@ -41,7 +46,7 @@
   document.documentElement.classList.add('v3-js');
 
   const current = key => (key === page ? ' aria-current="page"' : '');
-  const PANTRY = ['assorted', 'slabs', 'spreads'];
+  const PANTRY = ['assorted', 'slabs', 'spreads', 'infused', 'mendiant', 'bites', 'pates'];
   const icon = {
     user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
     bag: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
@@ -87,15 +92,18 @@
       </button>
       <nav class="v3-nav" aria-label="Main">
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
-        <a href="${PAGES.premium}"${current('premium')}>Premium</a>
-        <a href="${PAGES.luxury}"${current('luxury')}>Luxury</a>
+        <a href="${PAGES.bonbons}"${current('bonbons')}>Chocolate Bonbons</a>
         <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-drop${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-drop-toggle" aria-expanded="false" aria-controls="v3PantryMenu">Pantry<span aria-hidden="true">▾</span></button>
           <div class="v3-drop-panel" id="v3PantryMenu">
             <a href="${PAGES.assorted}"${current('assorted')}><span>Wrapped Chocolate</span><small>1 KG · QAR 380</small></a>
-            <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.slabs}"${current('slabs')}><span>Slabs</span><small>100 G · QAR 80</small></a>
             <a href="${PAGES.spreads}"${current('spreads')}><span>Spreads</span><small>280 G · QAR 50</small></a>
+            <a href="${PAGES.infused}"${current('infused')}><span>Infused Chocolate</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.mendiant}"${current('mendiant')}><span>Mendiant</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.bites}"${current('bites')}><span>Bites</span><small>100 G · QAR 60</small></a>
+            <a href="${PAGES.pates}"${current('pates')}><span>Pâtes de Fruits</span><small>100 G · QAR 60</small></a>
             <a class="v3-drop-all" href="${PAGES.shop}#pantry">View the pantry →</a>
           </div>
         </div>
@@ -117,8 +125,7 @@
       <nav aria-label="Mobile">
         <a href="${PAGES.home}"${current('home')}>Home</a>
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
-        <a href="${PAGES.premium}"${current('premium')}>Premium Box</a>
-        <a href="${PAGES.luxury}"${current('luxury')}>Luxury Box</a>
+        <a href="${PAGES.bonbons}"${current('bonbons')}>Chocolate Bonbons</a>
         <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-mobile-group${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-mobile-group-toggle" aria-expanded="false" aria-controls="v3MobilePantry">Pantry<span aria-hidden="true">+</span></button>
@@ -127,6 +134,10 @@
               <a href="${PAGES.assorted}"${current('assorted')}>Wrapped Chocolate</a>
               <a href="${PAGES.slabs}"${current('slabs')}>Slabs</a>
               <a href="${PAGES.spreads}"${current('spreads')}>Spreads</a>
+              <a href="${PAGES.infused}"${current('infused')}>Infused Chocolate</a>
+              <a href="${PAGES.mendiant}"${current('mendiant')}>Mendiant</a>
+              <a href="${PAGES.bites}"${current('bites')}>Bites</a>
+              <a href="${PAGES.pates}"${current('pates')}>Pâtes de Fruits</a>
             </div>
           </div>
         </div>
@@ -243,17 +254,16 @@
       { name: 'Hazelnut Spread', display: 'Hazelnut Spread', size: '280 G', price: 50, image: 'spread-hazelnut.webp', paint: 'p2', kind: 'spread' },
       { name: 'Pistachio Spread', display: 'Pistachio Spread', size: '280 G', price: 50, image: 'spread-pistachio.webp', paint: 'p4', kind: 'spread' },
       { name: 'Lotus Spread', display: 'Lotus Spread', size: '280 G', price: 50, image: 'spread-lotus.webp', paint: 'p6', kind: 'spread' },
-      { name: 'White Chocolate with Almond and Raspberry', display: 'White Chocolate Slab', size: '100 G', price: 60, image: 'slab-white-raspberry.webp', paint: 'p3', kind: 'slab' },
-      { name: 'Milk Chocolate with Hazelnuts', display: 'Milk Chocolate Slab', size: '100 G', price: 60, image: 'slab-milk-hazelnut.webp', paint: 'p12', kind: 'slab' }
+      { name: 'White Chocolate with Almond and Raspberry', display: 'White Chocolate Slab', size: '100 G', price: 80, image: 'slab-white-raspberry.webp', paint: 'p3', kind: 'slab' },
+      { name: 'Milk Chocolate with Hazelnuts', display: 'Milk Chocolate Slab', size: '100 G', price: 80, image: 'slab-milk-hazelnut.webp', paint: 'p12', kind: 'slab' }
     ],
     boxes: [
-      { name: 'Premium', display: 'The Premium Box', meta: '12, 25 or 48 pieces', from: 75, image: 'black box.jpg', href: PAGES.premium },
-      { name: 'Luxury', display: 'The Luxury Box', meta: '12, 25 or 48 pieces', from: 100, image: 'green box fitted.webp', href: PAGES.luxury }
+      { name: 'Chocolate Bonbons', display: 'Chocolate Bonbons', meta: '2, 12, 25 or 48 pieces', from: 15, image: 'burgundy box fitted.webp', href: PAGES.bonbons }
     ]
   };
   const pantryId = name => name.toLowerCase().replace(/\s+/g, '-');
-  const isBoxItem = item => ['premium', 'luxury'].includes(String(item.product_name || '').trim().toLowerCase())
-    || /^(premium|luxury)-box-/.test(String(item.id || ''));
+  const isBoxItem = item => ['premium', 'luxury', 'chocolate bonbons'].includes(String(item.product_name || '').trim().toLowerCase())
+    || /^(premium|luxury|bonbons)-box-/.test(String(item.id || ''));
 
   // Products an admin marked sold out (loaded once; nothing is hidden if this fails).
   let soldOut = new Set();
@@ -358,7 +368,7 @@
         <div class="v3-cart-empty">
           <div class="bonbon p9" style="margin:0 auto"></div>
           <p class="display">Your cart is <em>empty</em>.</p>
-          <p>Start with a Premium or Luxury box, or something from the pantry.</p>
+          <p>Start with a box of Chocolate Bonbons, or something from the pantry.</p>
           <a class="btn btn-line" href="${PAGES.shop}">Explore the collection</a>
         </div>`;
       cartFootEl.hidden = true;
@@ -500,12 +510,15 @@
             </div>
             <div class="v3-footer-col">
               <h4>Shop</h4>
-              <a href="${PAGES.premium}">Premium Box</a>
-              <a href="${PAGES.luxury}">Luxury Box</a>
+              <a href="${PAGES.bonbons}">Chocolate Bonbons</a>
               <a href="${PAGES.customDesign}">Custom Design</a>
               <a href="${PAGES.assorted}">Wrapped Chocolate</a>
               <a href="${PAGES.slabs}">Slabs</a>
               <a href="${PAGES.spreads}">Spreads</a>
+              <a href="${PAGES.infused}">Infused Chocolate</a>
+              <a href="${PAGES.mendiant}">Mendiant</a>
+              <a href="${PAGES.bites}">Bites</a>
+              <a href="${PAGES.pates}">Pâtes de Fruits</a>
               <a href="${PAGES.homeCollection}">The Home</a>
             </div>
             <div class="v3-footer-col">
