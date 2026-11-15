@@ -1912,8 +1912,13 @@ ${escapeHtml(order.delivery_address)}</div>`}
           const n = variant.flavours.length;
           flavourCounts = Array(n).fill(0);
           if (variant.pieces >= n) {
+            // In the 25 and 48 boxes no flavour gets more than 8 pieces.
+            const cap = variant.pieces > 12 ? 8 : variant.pieces;
             flavourCounts.fill(1);
-            for (let left = variant.pieces - n; left > 0; left--) flavourCounts[Math.floor(Math.random() * n)]++;
+            for (let left = variant.pieces - n; left > 0; left--) {
+              const open = flavourCounts.map((c, i) => (c < cap ? i : -1)).filter(i => i >= 0);
+              flavourCounts[open[Math.floor(Math.random() * open.length)]]++;
+            }
           } else {
             [...Array(n).keys()].sort(() => Math.random() - 0.5).slice(0, variant.pieces).forEach(i => { flavourCounts[i] = 1; });
           }
