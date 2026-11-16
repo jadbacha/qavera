@@ -57,13 +57,14 @@
     .name h2 em { color: var(--sand); }
     .equation {
       display: grid;
-      grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.3fr);
+      grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1.3fr);
       align-items: start;
       gap: clamp(1rem, 3vw, 3rem);
       margin: clamp(3.5rem, 7vw, 6rem) auto 0;
-      max-width: 1100px;
+      max-width: 1240px;
     }
-    .term .big { font-family: var(--display); font-size: clamp(3.4rem, 7.2vw, 7.4rem); line-height: .9; color: var(--silver); }
+    .term .big { font-family: var(--display); font-size: clamp(2.6rem, 4.6vw, 5.4rem); line-height: .9; color: var(--silver); }
+    .term { min-width: 0; }
     .term .big em { color: var(--sand); }
     .term p { color: var(--muted-dark); margin-top: 1.2rem; font-size: .98rem; }
     .term .caption { color: var(--sand); display: block; margin-top: .8rem; }
@@ -128,7 +129,7 @@
 
     <section class="v3-section name">
       <p class="caption reveal">II. The name</p>
-      <h2 class="display reveal d1">A name built on <em>authenticity</em>.</h2>
+      <h2 class="display reveal d1">A name with a <em>meaning</em>.</h2>
 
       <div class="equation">
         <div class="term reveal">
@@ -138,19 +139,25 @@
         </div>
         <div class="op reveal d1">+</div>
         <div class="term reveal d1">
-          <div class="big"><em>Vera</em></div>
-          <span class="caption">Latin</span>
-          <p>Meaning authentic.</p>
+          <div class="big"><em>V</em></div>
+          <span class="caption">Velvet</span>
+          <p>The smooth, velvety texture of our chocolate.</p>
+        </div>
+        <div class="op reveal d1">+</div>
+        <div class="term reveal d2">
+          <div class="big">ERA</div>
+          <span class="caption">A new era</span>
+          <p>A new generation of chocolate.</p>
         </div>
         <div class="op reveal d2">=</div>
         <div class="term reveal d2">
           <div class="big">QAVERA</div>
           <span class="caption">Founded in Qatar</span>
-          <p>An authentic chocolate house.</p>
+          <p>Velvet chocolate for a new generation.</p>
         </div>
       </div>
 
-      <p class="name-result reveal">Together, the name represents an authentic chocolate house, founded and based in Qatar.</p>
+      <p class="name-result reveal">QA for Qatar, V for velvet, and ERA for a new generation of chocolate.</p>
     </section>
 
     <section class="v3-section oxblood">
