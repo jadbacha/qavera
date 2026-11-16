@@ -26,7 +26,7 @@
     variants: {} // size -> { id, name, price }
   };
 
-  // ---------- painted bonbon in a flavour's shell colour ----------
+  // ---------- painted bonbon (illustration only: real shell colours vary) ----------
   function shade(hex, amount) {
     const n = parseInt(hex.slice(1), 16);
     const mix = c => Math.round(c * (1 - amount));
@@ -90,7 +90,7 @@
     el('flavourRows').innerHTML = BOX.flavours.map((f, i) => `
       <div class="flavour-row">
         <div class="bonbon" style="${bonbonStyle(f.colour)}"></div>
-        <div><strong>${escapeHtml(f.name)}</strong><span class="caption">${escapeHtml(f.shell)} shell</span></div>
+        <div><strong>${escapeHtml(f.name)}</strong><span class="flavour-desc">${escapeHtml(f.desc)}</span></div>
         <div class="v3-qty">
           <button type="button" data-flavour="${i}" data-change="-1" aria-label="One less ${escapeHtml(f.name)}" ${state.counts[i] <= 0 ? 'disabled' : ''}>−</button>
           <span>${state.counts[i]}</span>
@@ -217,7 +217,7 @@
     <article class="flavour-card reveal${i % 3 ? ' d' + (i % 3) : ''}">
       <div class="bonbon" style="${bonbonStyle(f.colour)}"></div>
       <div>
-        <span class="caption">Nº ${String(i + 1).padStart(2, '0')} · ${escapeHtml(f.shell)} shell</span>
+        <span class="caption">Nº ${String(i + 1).padStart(2, '0')}</span>
         <h3>${escapeHtml(f.name)}</h3>
         <p>${escapeHtml(f.desc)}</p>
       </div>
