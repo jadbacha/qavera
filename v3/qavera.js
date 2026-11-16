@@ -258,7 +258,7 @@
       { name: 'Milk Chocolate with Hazelnuts', display: 'Milk Chocolate Slab', size: '100 G', price: 80, image: 'slab-milk-hazelnut.webp', paint: 'p12', kind: 'slab' }
     ],
     boxes: [
-      { name: 'Chocolate Bonbons', display: 'Chocolate Bonbons', meta: '2, 12, 25 or 48 pieces', from: 15, image: 'burgundy box fitted.webp', href: PAGES.bonbons }
+      { name: 'Chocolate Bonbons', display: 'Chocolate Bonbons', meta: '2, 12, 25 or 48 pieces', from: 20, image: 'burgundy box fitted.webp', href: PAGES.bonbons }
     ]
   };
   const pantryId = name => name.toLowerCase().replace(/\s+/g, '-');
