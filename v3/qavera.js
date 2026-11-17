@@ -15,6 +15,7 @@
     home: 'home.html',
     shop: 'shop.html',
     bonbons: 'bonbons.html',
+    justChocolate: 'just-chocolate.html',
     premium: 'bonbons.html',  // old Premium / Luxury pages are now one box
     luxury: 'bonbons.html',
     customDesign: 'shop.html#custom',
@@ -46,6 +47,7 @@
   document.documentElement.classList.add('v3-js');
 
   const current = key => (key === page ? ' aria-current="page"' : '');
+  const BOXES = ['bonbons', 'justChocolate'];
   const PANTRY = ['assorted', 'slabs', 'spreads', 'infused', 'mendiant', 'bites', 'pates'];
   const icon = {
     user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
@@ -92,7 +94,14 @@
       </button>
       <nav class="v3-nav" aria-label="Main">
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
-        <a href="${PAGES.bonbons}"${current('bonbons')}>Chocolate Bonbons</a>
+        <div class="v3-drop${BOXES.includes(page) ? ' is-current' : ''}">
+          <button type="button" class="v3-drop-toggle" aria-expanded="false" aria-controls="v3BoxesMenu">Boxes<span aria-hidden="true">▾</span></button>
+          <div class="v3-drop-panel" id="v3BoxesMenu">
+            <a href="${PAGES.bonbons}"${current('bonbons')}><span>Chocolate Bonbons</span><small>2 – 48 pcs · from QAR 20</small></a>
+            <a href="${PAGES.justChocolate}"${current('justChocolate')}><span>Just Chocolate</span><small>12 – 48 pcs · from QAR 60</small></a>
+            <a class="v3-drop-all" href="${PAGES.shop}#boxes">View the boxes →</a>
+          </div>
+        </div>
         <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-drop${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-drop-toggle" aria-expanded="false" aria-controls="v3PantryMenu">Pantry<span aria-hidden="true">▾</span></button>
@@ -126,6 +135,7 @@
         <a href="${PAGES.home}"${current('home')}>Home</a>
         <a href="${PAGES.shop}"${current('shop')}>Shop all</a>
         <a href="${PAGES.bonbons}"${current('bonbons')}>Chocolate Bonbons</a>
+        <a href="${PAGES.justChocolate}"${current('justChocolate')}>Just Chocolate</a>
         <a href="${PAGES.customDesign}">Custom Design</a>
         <div class="v3-mobile-group${PANTRY.includes(page) ? ' is-current' : ''}">
           <button type="button" class="v3-mobile-group-toggle" aria-expanded="false" aria-controls="v3MobilePantry">Pantry<span aria-hidden="true">+</span></button>
@@ -258,12 +268,13 @@
       { name: 'Milk Chocolate with Hazelnuts', display: 'Milk Chocolate Slab', size: '100 G', price: 80, image: 'slab-milk-hazelnut.webp', paint: 'p12', kind: 'slab' }
     ],
     boxes: [
-      { name: 'Chocolate Bonbons', display: 'Chocolate Bonbons', meta: '2, 12, 25 or 48 pieces', from: 20, image: 'burgundy box fitted.webp', href: PAGES.bonbons }
+      { name: 'Chocolate Bonbons', display: 'Chocolate Bonbons', meta: '2, 12, 25 or 48 pieces', from: 20, image: 'burgundy box fitted.webp', href: PAGES.bonbons },
+      { name: 'Just Chocolate', display: 'Just Chocolate', meta: '12, 25 or 48 pieces', from: 60, image: 'just-chocolate-12.webp', href: PAGES.justChocolate }
     ]
   };
   const pantryId = name => name.toLowerCase().replace(/\s+/g, '-');
-  const isBoxItem = item => ['premium', 'luxury', 'chocolate bonbons'].includes(String(item.product_name || '').trim().toLowerCase())
-    || /^(premium|luxury|bonbons)-box-/.test(String(item.id || ''));
+  const isBoxItem = item => ['premium', 'luxury', 'chocolate bonbons', 'just chocolate'].includes(String(item.product_name || '').trim().toLowerCase())
+    || /^(premium|luxury|bonbons|justchocolate)-box-/.test(String(item.id || ''));
 
   // Products an admin marked sold out (loaded once; nothing is hidden if this fails).
   let soldOut = new Set();
@@ -511,6 +522,7 @@
             <div class="v3-footer-col">
               <h4>Shop</h4>
               <a href="${PAGES.bonbons}">Chocolate Bonbons</a>
+              <a href="${PAGES.justChocolate}">Just Chocolate</a>
               <a href="${PAGES.customDesign}">Custom Design</a>
               <a href="${PAGES.assorted}">Wrapped Chocolate</a>
               <a href="${PAGES.slabs}">Slabs</a>
