@@ -812,7 +812,7 @@
     // Box sizes read like the till: "Premium — 12 Pieces".
     const BOX_SIZE_NAMES = { s: '12 Pieces', m: '25 Pieces', l: '48 Pieces', mini: 'Mini, 2 Pieces' };
     function receiptItemName(item) {
-      const box = /^(premium|luxury|chocolate bonbons)$/i.test(String(item.product_name || '').trim());
+      const box = /^(premium|luxury|chocolate bonbons|just chocolate)$/i.test(String(item.product_name || '').trim());
       const size = box ? BOX_SIZE_NAMES[String(item.variant_name || '').trim().toLowerCase()] : null;
       return `${item.product_name || ''}${item.variant_name ? ` — ${size || item.variant_name}` : ''}`;
     }

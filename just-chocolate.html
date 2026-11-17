@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Just Chocolate Box | QAVERA Qatar</title>
+  <meta name="description" content="QAVERA Just Chocolate: smooth milk chocolate pieces in an even mix of hazelnut, pistachio, pecan, gianduja and Lotus. Boxes of 12, 25 or 48 pieces, delivered in Qatar.">
+  <link rel="canonical" href="https://www.qavera.qa/just-chocolate.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="QAVERA">
+  <meta property="og:title" content="Just Chocolate Box | QAVERA Qatar">
+  <meta property="og:description" content="QAVERA Just Chocolate: smooth milk chocolate pieces in an even mix of hazelnut, pistachio, pecan, gianduja and Lotus. Boxes of 12, 25 or 48 pieces, delivered in Qatar.">
+  <meta property="og:url" content="https://www.qavera.qa/just-chocolate.html">
+  <meta property="og:image" content="https://www.qavera.qa/just-chocolate-25.webp">
+  <meta property="og:locale" content="en_QA">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400;1,6..96,500&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="v3/qavera.css?v=20261118">
+  <link rel="stylesheet" href="v3/box.css?v=20261115">
+  <style>
+    .box-page { background: var(--ink); }
+    .mix-list { list-style: none; margin: .4rem 0 1.4rem; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem 1.2rem; }
+    .mix-list li { display: flex; align-items: center; gap: .6rem; color: rgba(216,216,216,.85); font-size: .95rem; }
+    .mix-list .dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--sand); flex: none; }
+  </style>
+</head>
+<body data-page="justChocolate">
+  <script src="v3/qavera.js?v=20261118"></script>
+
+  <main class="v3-main">
+    <section class="box-page">
+      <div class="gallery">
+        <div class="gallery-stage" id="galleryStage"></div>
+        <div class="gallery-thumbs" id="galleryThumbs"></div>
+        <p class="gallery-note caption">Images are for presentation. Chocolate shapes may differ.</p>
+      </div>
+
+      <div class="buy">
+        <nav class="v3-crumbs caption" aria-label="Breadcrumb"><a href="shop.html">Shop</a><span>/</span><a href="shop.html#boxes">Boxes</a><span>/</span><span>Just Chocolate</span></nav>
+        <h1 class="display">Just <em>Chocolate</em></h1>
+        <p class="lead">Smooth milk chocolate pieces, crafted from premium Belgian chocolate, in five favourite flavours. Every box comes with an even mix, packed by us.</p>
+
+        <p class="step-label caption"><span>01 · Choose your box</span><b>12 · 25 · 48 pieces</b></p>
+        <div class="sizes" id="sizes" role="radiogroup" aria-label="Box size"></div>
+
+        <p class="step-label caption"><span>02 · Inside every box</span><b>An even mix</b></p>
+        <ul class="mix-list" id="mixList"></ul>
+        <p class="custom-msg" id="customMsg" role="alert"></p>
+
+        <div class="buy-row">
+          <div class="total"><small>Total</small><span id="buyTotal">QAR 0</span></div>
+          <button type="button" class="btn btn-solid" id="addToBox">Add to cart <span class="arrow">→</span></button>
+        </div>
+        <p class="buy-note">We pack an even mix of all five flavours in every box. Box colours, chocolate shapes and finishes may differ from the images shown.</p>
+      </div>
+    </section>
+
+    <section class="v3-section light">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Just Chocolate · The flavours</p>
+          <h2 class="display reveal d1">Five <em>flavours</em>, one box.</h2>
+        </div>
+        <p class="reveal d2">No choosing needed: every box holds an even mix of all five.</p>
+      </div>
+      <div class="collection-grid" id="collection"></div>
+    </section>
+
+    <section class="v3-section pairs">
+      <div class="section-head">
+        <div>
+          <p class="caption reveal">Pairs well with</p>
+          <h2 class="display reveal d1">Add a <em>spread</em> or a <em>slab</em>.</h2>
+        </div>
+        <p class="reveal d2">Complete the gift with something from the pantry.</p>
+      </div>
+      <div class="pair-grid" data-pairs="pantry"></div>
+    </section>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const BOX = {
+  "key": "justchocolate",
+  "dbName": "Just Chocolate",
+  "displayName": "Just Chocolate",
+  "noChoice": true,
+  "plain": true,
+  "sizes": {
+    "small": {
+      "pieces": 12,
+      "colour": "Burgundy",
+      "swatch": "#3D030A",
+      "price": 60,
+      "images": [
+        "just-chocolate-12.webp"
+      ],
+      "variantNames": [
+        "s",
+        "small"
+      ],
+      "dbVariant": "S",
+      "cartLabel": "12 Pieces — Burgundy"
+    },
+    "medium": {
+      "pieces": 25,
+      "colour": "Green",
+      "swatch": "#1A2D28",
+      "price": 160,
+      "images": [
+        "just-chocolate-25.webp"
+      ],
+      "variantNames": [
+        "m",
+        "medium"
+      ],
+      "dbVariant": "M",
+      "cartLabel": "25 Pieces — Green"
+    },
+    "large": {
+      "pieces": 48,
+      "colour": "Black",
+      "swatch": "#0F0E0E",
+      "price": 290,
+      "images": [
+        "just-chocolate-48.webp"
+      ],
+      "variantNames": [
+        "l",
+        "large"
+      ],
+      "dbVariant": "L",
+      "cartLabel": "48 Pieces — Black"
+    }
+  },
+  "flavours": [
+    {
+      "name": "Hazelnuts",
+      "colour": "#7B4A2C",
+      "desc": ""
+    },
+    {
+      "name": "Pistachio",
+      "colour": "#7B4A2C",
+      "desc": ""
+    },
+    {
+      "name": "Pecan",
+      "colour": "#7B4A2C",
+      "desc": ""
+    },
+    {
+      "name": "Chocolate Gianduja",
+      "colour": "#7B4A2C",
+      "desc": ""
+    },
+    {
+      "name": "Lotus",
+      "colour": "#7B4A2C",
+      "desc": ""
+    }
+  ]
+};
+    document.getElementById('mixList').innerHTML = BOX.flavours.map(f => `<li><span class="dot"></span>${f.name}</li>`).join('');
+  </script>
+  <script src="v3/box.js?v=20261118"></script>
+</body>
+</html>

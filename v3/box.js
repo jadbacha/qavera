@@ -1,6 +1,9 @@
 /* QAVERA v3 — signature box page (Chocolate Bonbons; earlier Premium, Luxury).
    BOX.alwaysCustom: the customer always chooses how many of each flavour
    (no toggle), with a Random mix button.
+   BOX.noChoice: no flavour choice at all (an even mix we pack, e.g. Just
+   Chocolate); the flavours are only listed. BOX.plain: plain chocolate
+   pieces in the flavour list (not painted).
    The page defines BOX before loading this file (see bonbons.html).
    Sizes/prices come from Supabase (products + product_variants); the numbers
    in BOX are only a fallback while loading. Cart items match what checkout
@@ -35,6 +38,7 @@
   }
 
   function bonbonStyle(colour) {
+    if (BOX.plain) return `--a:${shade(colour, .45)};--b:${colour};--paint:none;`;
     const light = parseInt(colour.slice(1), 16) > 0xdddddd;
     const a = light ? '#bdb6a8' : shade(colour, .55);
     return `--a:${a};--b:${colour};--paint:linear-gradient(35deg, transparent 46%, rgba(196,169,128,.55) 46% 50%, transparent 50%);`;
@@ -82,6 +86,7 @@
   function totalCount() { return state.counts.reduce((a, b) => a + b, 0); }
 
   function renderCustomiser() {
+    if (BOX.noChoice) return;
     const total = totalCount();
     const goal = target();
     el('customCount').textContent = `${total} / ${goal}`;
@@ -111,7 +116,7 @@
   }
 
   function resetCounts() {
-    state.counts = BOX.alwaysCustom
+    state.counts = (BOX.alwaysCustom || BOX.noChoice)
       ? BOX.flavours.map(() => 0)
       : [...BOX.sizes[state.size].defaults];
   }
@@ -162,7 +167,7 @@
     el('customMsg').textContent = '';
   });
 
-  el('flavourRows').addEventListener('click', event => {
+  if (el('flavourRows')) el('flavourRows').addEventListener('click', event => {
     const button = event.target.closest('[data-flavour]');
     if (!button || button.disabled) return;
     const i = Number(button.dataset.flavour);
@@ -176,12 +181,12 @@
 
   if (el('customEven')) el('customEven').addEventListener('click', () => { resetCounts(); el('customMsg').textContent = ''; renderCustomiser(); });
   if (el('customRandom')) el('customRandom').addEventListener('click', () => { state.counts = randomCounts(); el('customMsg').textContent = ''; renderCustomiser(); });
-  el('customClear').addEventListener('click', () => { state.counts = state.counts.map(() => 0); el('customMsg').textContent = ''; renderCustomiser(); });
+  if (el('customClear')) el('customClear').addEventListener('click', () => { state.counts = state.counts.map(() => 0); el('customMsg').textContent = ''; renderCustomiser(); });
 
   el('addToBox').addEventListener('click', () => {
     const size = state.size;
     const s = BOX.sizes[size];
-    const custom = state.customize;
+    const custom = state.customize && !BOX.noChoice;
 
     if (custom && totalCount() !== s.pieces) {
       const left = s.pieces - totalCount();
@@ -219,7 +224,7 @@
       <div>
         <span class="caption">Nº ${String(i + 1).padStart(2, '0')}</span>
         <h3>${escapeHtml(f.name)}</h3>
-        <p>${escapeHtml(f.desc)}</p>
+        ${f.desc ? `<p>${escapeHtml(f.desc)}</p>` : ''}
       </div>
     </article>`).join('');
 
