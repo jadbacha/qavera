@@ -169,8 +169,10 @@ function orderSummaryHtml(order: Record<string, any>, items: OrderItem[]): strin
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
       ${row("Subtotal", qar(order.subtotal))}
       ${Number(order.points_discount) > 0 ? row(`Points (${Number(order.points_used)})`, `− ${qar(order.points_discount)}`) : ""}
-      ${Number(order.discount_amount) > 0 ? row("Discount", `− ${qar(order.discount_amount)}`) : ""}
-      ${isPickup(order) ? row("Pickup", "Free") : row("Delivery", qar(order.delivery_fee))}
+      ${Number(order.discount_amount) > 0 ? row(order.promo_code ? `Offer · ${escapeHtml(order.promo_code)}` : "Discount", `− ${qar(order.discount_amount)}`) : ""}
+      ${isPickup(order) ? row("Pickup", "Free") : Number(order.delivery_waived) > 0
+        ? row(`Delivery · free${order.promo_code ? ` (${escapeHtml(order.promo_code)})` : ""}`, `<s>${qar(order.delivery_waived)}</s> ${qar(0)}`)
+        : row("Delivery", qar(order.delivery_fee))}
       ${row("Total", qar(order.total), true)}
       ${row("Payment", escapeHtml(paymentLabel(order)))}
     </table>
@@ -282,7 +284,10 @@ async function handleNewOrder(order: Record<string, any>) {
     `Subtotal: ${qar(order.subtotal)}`,
     Number(order.points_discount) > 0 ? `Points:   -${qar(order.points_discount)} (${order.points_used} points)` : null,
     Number(order.discount_amount) > 0 ? `Discount: -${qar(order.discount_amount)}${order.discount_reason ? ` (${order.discount_reason})` : ""}` : null,
-    isPickup(order) ? "Pickup:   free" : `Delivery: ${qar(order.delivery_fee)}`,
+    isPickup(order) ? "Pickup:   free" : Number(order.delivery_waived) > 0
+      ? `Delivery: free (was ${qar(order.delivery_waived)}, ${order.promo_code || "offer"})`
+      : `Delivery: ${qar(order.delivery_fee)}`,
+    order.promo_code ? `Offer code: ${order.promo_code}${order.promo_member ? ` · member ${order.promo_member}` : ""}` : null,
     `TOTAL:    ${qar(order.total)}`,
     `Payment:  ${payment}`,
     "",
