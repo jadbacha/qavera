@@ -55,6 +55,28 @@
     .points .big small { font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(216,216,216,.5); display: block; margin-top: .3rem; }
     .points .note { font-size: .8rem; color: rgba(216,216,216,.45); margin-top: .4rem; }
 
+    /* Offer codes (partners) and hotel delivery */
+    .hotel-toggle { grid-column: 1 / -1; }
+    body:not(.is-hotel) .hotel-only, body.is-hotel .not-hotel { display: none !important; }
+    .offer { display: grid; gap: 1rem; padding: 1.4rem; border: 1px solid rgba(196,169,128,.35); margin-bottom: 1rem; }
+    .offer [hidden] { display: none !important; }
+    .offer-row { display: grid; grid-template-columns: 1fr auto; gap: .8rem; align-items: end; }
+    .offer-row input { text-transform: uppercase; letter-spacing: .08em; }
+    .offer-row .btn { height: 100%; min-height: 48px; padding-left: 1.4rem; padding-right: 1.4rem; }
+    .offer-applied { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1.1rem; border: 1px solid var(--sand); background: rgba(196,169,128,.1); }
+    .offer-applied strong { font-family: var(--mono); font-weight: 500; letter-spacing: .14em; color: var(--sand); }
+    .offer-applied span { display: block; margin-top: .25rem; font-size: .85rem; color: var(--muted-dark); }
+    .offer-msg { font-size: .85rem; line-height: 1.5; color: var(--sand); }
+    .offer-msg.err { color: #e39a8e; }
+    .offer-msg:empty { display: none; }
+    .summary-row.offer-discount { color: var(--sand); }
+    .summary-row .fee { text-align: right; }
+    .summary-row .fee s { opacity: .55; margin-right: .35rem; }
+    .summary-row .fee b { font-weight: 500; color: var(--sand); }
+    .summary-row .fee small { display: block; font-size: .72rem; color: var(--sand); }
+    .line.free .price { color: var(--sand); }
+    @media (max-width: 600px) { .offer-row { grid-template-columns: 1fr; } }
+
     .pay { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
     .pay label { position: relative; display: flex; flex-direction: column; gap: .3rem; padding: 1.2rem; border: 1px solid rgba(216,216,216,.22); cursor: pointer; transition: border-color .3s ease, background .3s ease; }
     .pay label:has(input:checked) { border-color: var(--sand); background: rgba(196,169,128,.08); }
@@ -266,17 +288,30 @@
               <div class="area-fee" id="areaFee"></div>
               <div class="required-error" id="areaError">Please choose your delivery area.</div>
             </div>
+            <div class="hotel-toggle delivery-only">
+              <label class="check"><input type="checkbox" id="isHotel"><span>Delivering to a hotel</span></label>
+            </div>
+            <div class="v3-field delivery-only hotel-only">
+              <label for="hotelName">Hotel name *</label>
+              <input type="text" id="hotelName" autocomplete="off">
+              <div class="required-error" id="hotelNameError">Please enter the hotel name.</div>
+            </div>
+            <div class="v3-field delivery-only hotel-only">
+              <label for="hotelRoom">Room number *</label>
+              <input type="text" id="hotelRoom" autocomplete="off">
+              <div class="required-error" id="hotelRoomError">Please enter the room number.</div>
+            </div>
             <div class="v3-field full delivery-only">
-              <label for="address">Street / full address *</label>
+              <label for="address" id="addressLabel">Street / full address *</label>
               <textarea id="address" rows="2" required></textarea>
               <div class="required-error" id="addressError">Please enter your full address.</div>
             </div>
-            <div class="v3-field delivery-only">
+            <div class="v3-field delivery-only not-hotel">
               <label for="building">Building / villa *</label>
               <input type="text" id="building" required>
               <div class="required-error" id="buildingError">Please enter your building / villa number.</div>
             </div>
-            <div class="v3-field delivery-only">
+            <div class="v3-field delivery-only not-hotel">
               <label for="apartment">Apartment / floor *</label>
               <input type="text" id="apartment" required>
               <div class="required-error" id="apartmentError">Please enter your apartment / floor.</div>
@@ -309,7 +344,29 @@
         </div>
 
         <div class="co-step">
-          <div class="co-step-head"><span class="num">03</span><h2>QAVERA Points</h2></div>
+          <div class="co-step-head"><span class="num">03</span><h2>Offer code <em>or</em> points</h2></div>
+          <div class="offer" id="offerBox">
+            <div class="offer-row" id="offerEntry">
+              <div class="v3-field">
+                <label for="promoInput">Offer code</label>
+                <input type="text" id="promoInput" placeholder="e.g. KLAVY10" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="30">
+              </div>
+              <button type="button" class="btn btn-line" id="promoApply">Apply</button>
+            </div>
+            <div class="offer-applied" id="offerApplied" hidden>
+              <div><strong id="offerCode"></strong><span id="offerDesc"></span></div>
+              <button type="button" class="link" id="promoRemove">Remove</button>
+            </div>
+            <div class="v3-field" id="memberField" hidden>
+              <label for="promoMember" id="memberLabel">Membership number *</label>
+              <input type="text" id="promoMember" autocomplete="off" maxlength="40">
+            </div>
+            <div class="v3-field" id="bitesField" hidden>
+              <label for="bitesSelect">Choose your free Bites *</label>
+              <select id="bitesSelect"><option value="">Choose a flavour</option></select>
+            </div>
+            <p class="offer-msg" id="promoMsg" role="status"></p>
+          </div>
           <div class="points">
             <div class="big"><span id="pointsBalance">0 points</span><small>Your balance</small></div>
             <div>
@@ -344,7 +401,8 @@
         <div class="rows">
           <div class="summary-row"><span>Subtotal</span><span id="subtotal">QAR 0</span></div>
           <div class="summary-row points-discount" id="pointsDiscountRow" style="display:none"><span>Points discount</span><span id="pointsDiscount">-QAR 0</span></div>
-          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span id="deliveryFee">Choose your area</span></div>
+          <div class="summary-row offer-discount" id="offerRow" style="display:none"><span id="offerRowLabel">Offer</span><span id="offerRowAmount">-QAR 0</span></div>
+          <div class="summary-row"><span id="deliveryLabel">Delivery across Qatar</span><span class="fee" id="deliveryFee">Choose your area</span></div>
         </div>
         <div class="summary-total"><span>Total</span><span id="total">QAR 0</span></div>
         <button type="button" class="btn btn-solid btn-block" id="confirmOrder">Confirm order</button>
@@ -654,17 +712,182 @@
 
       let discount = 0;
 
-      if (usePointsCheckbox.checked) {
+      if (usePointsCheckbox.checked && !appliedPromo) {
         const maxRedeemablePoints = Math.floor(Math.min(USER_POINTS, subtotal * 10) / 100) * 100;
         discount = maxRedeemablePoints / 10;
       }
 
+      const fee = deliveryFee();
+      const offer = offerState(subtotal, fee);
+      const delivery = fee - offer.waived;
       return {
         subtotal,
         discount,
-        delivery: deliveryFee(),
-        total: subtotal - discount + deliveryFee()
+        fee,
+        offer,
+        delivery,
+        total: Math.round((subtotal - discount - offer.discount + delivery) * 100) / 100
       };
+    }
+
+    // ---- Offer codes (JETOUR Club, Klavy). The database checks everything again. ----
+    // "Doha" = areas charged QAR 50 or less (QAR 70 areas are outside Doha).
+    let promoCodes = [];        // active codes from the database
+    let promoCodesLoaded = false;
+    let bitesOptions = [];      // [{ id, name, price }]
+    let appliedPromo = null;    // one code per order
+    const isHotel = () => !isPickup() && document.getElementById('isHotel').checked;
+    const round2 = n => Math.round(n * 100) / 100;
+
+    function selectedBites() {
+      const id = document.getElementById('bitesSelect').value;
+      return bitesOptions.find(b => b.id === id) || null;
+    }
+
+    function offerState(subtotal, fee) {
+      const none = { discount: 0, waived: 0, waivedNote: '', bites: null, problem: '', note: '' };
+      const p = appliedPromo;
+      if (!p) return none;
+      const pickup = isPickup();
+      const areaKnown = !pickup && !!findArea(document.getElementById('area').value);
+      const doha = fee > 0 && fee <= 50;
+      if (p.kind === 'hotel') {
+        if (pickup) return { ...none, problem: `${p.code} is for delivery to a hotel. Please choose delivery.` };
+        if (!isHotel()) return { ...none, problem: `Tick "Delivering to a hotel" under your delivery area to use ${p.code}.` };
+        if (!areaKnown) return { ...none, note: 'Choose your delivery area to see your free hotel delivery.' };
+        if (!doha) return { ...none, problem: 'Free hotel delivery is for hotels inside Doha.' };
+        return { ...none, waived: fee, waivedNote: 'Free hotel delivery' };
+      }
+      if (p.kind === 'bites') {
+        const min = Number(p.min_subtotal || 0);
+        if (subtotal < min) return { ...none, problem: `Add ${window.QaveraFormat.qar(round2(min - subtotal))} more (not counting delivery) to get your free Bites.` };
+        const bites = selectedBites();
+        return { ...none, bites, note: bites ? '' : 'Choose your free Bites below.' };
+      }
+      const min = p.free_delivery_min == null ? null : Number(p.free_delivery_min);
+      const waived = min != null && !pickup && areaKnown && doha && subtotal >= min ? fee : 0;
+      const note = min != null && !pickup && subtotal < min
+        ? `Free delivery in Doha on orders of QAR ${min} or more.`
+        : min != null && !pickup && areaKnown && !doha ? 'Free delivery is for areas inside Doha.' : '';
+      return {
+        ...none,
+        waived,
+        waivedNote: waived ? `Order over QAR ${min}` : '',
+        discount: round2((subtotal + fee - waived) * Number(p.percent || 0) / 100),
+        note
+      };
+    }
+
+    function renderOffer(totals) {
+      const p = appliedPromo;
+      document.getElementById('offerEntry').hidden = !!p;
+      document.getElementById('offerApplied').hidden = !p;
+      document.getElementById('memberField').hidden = !(p && p.needs_member);
+      document.getElementById('bitesField').hidden = !(p && p.kind === 'bites');
+      if (!p) return;
+      document.getElementById('offerCode').textContent = p.code;
+      document.getElementById('offerDesc').textContent = p.description || '';
+      if (p.needs_member) {
+        const label = String(p.member_label || 'membership number');
+        document.getElementById('memberLabel').textContent = `${label.charAt(0).toUpperCase()}${label.slice(1)} *`;
+      }
+      const msg = document.getElementById('promoMsg');
+      const state = totals.offer;
+      if (state.problem || state.note) {
+        msg.textContent = state.problem || state.note;
+        msg.classList.toggle('err', !!state.problem);
+      } else if (!msg.dataset.keep) {
+        msg.textContent = '';
+        msg.classList.remove('err');
+      }
+    }
+
+    function renderMoney() {
+      const totals = getTotals();
+      const { qar } = window.QaveraFormat;
+      subtotalElement.textContent = qar(totals.subtotal);
+      const feeCell = document.getElementById('deliveryFee');
+      const area = findArea(document.getElementById('area').value);
+      if (isPickup()) {
+        feeCell.textContent = 'Free';
+      } else if (!area) {
+        feeCell.textContent = 'Choose your area';
+      } else if (totals.offer.waived > 0) {
+        feeCell.innerHTML = `<s>${qar(totals.fee)}</s><b>Free</b><small>${window.QaveraFormat.escapeHtml(totals.offer.waivedNote)}</small>`;
+      } else {
+        feeCell.textContent = qar(totals.fee);
+      }
+      const offerRow = document.getElementById('offerRow');
+      if (appliedPromo && totals.offer.discount > 0) {
+        offerRow.style.display = 'flex';
+        document.getElementById('offerRowLabel').textContent = `Offer · ${appliedPromo.code}`;
+        document.getElementById('offerRowAmount').textContent = `-${qar(totals.offer.discount)}`;
+      } else {
+        offerRow.style.display = 'none';
+      }
+      totalElement.textContent = qar(totals.total);
+      renderOffer(totals);
+    }
+
+    function applyPromo(raw, quiet) {
+      const msg = document.getElementById('promoMsg');
+      const code = String(raw || '').trim().toUpperCase();
+      delete msg.dataset.keep;
+      if (!code) return;
+      const found = promoCodes.find(c => c.code === code);
+      if (!found) {
+        msg.textContent = promoCodesLoaded ? "This offer code isn't valid." : 'Loading offers… please try again in a moment.';
+        msg.classList.add('err');
+        return;
+      }
+      appliedPromo = found;
+      document.getElementById('promoInput').value = '';
+      document.getElementById('promoMember').value = '';
+      msg.classList.remove('err');
+      if (usePointsCheckbox.checked) {
+        usePointsCheckbox.checked = false;
+        msg.textContent = 'Your points are not used: an offer code and points can\'t be combined.';
+        msg.dataset.keep = '1';
+      } else if (!quiet) {
+        msg.textContent = '';
+      }
+      if (found.kind === 'hotel' && !isPickup()) {
+        document.getElementById('isHotel').checked = true;
+        applyHotel();
+      }
+      renderOrder();
+    }
+
+    function applyHotel() {
+      const hotel = isHotel();
+      document.body.classList.toggle('is-hotel', document.getElementById('isHotel').checked);
+      document.getElementById('addressLabel').textContent = hotel ? 'Hotel address or landmark (optional)' : 'Street / full address *';
+      ['hotelNameError', 'hotelRoomError', 'addressError', 'buildingError', 'apartmentError'].forEach(id => document.getElementById(id)?.classList.remove('show'));
+    }
+
+    async function loadOffers() {
+      try {
+        const [{ data: codes }, { data: bites }] = await Promise.all([
+          supabaseClient.from('promo_codes')
+            .select('code, partner, kind, percent, free_delivery_min, min_subtotal, needs_member, member_label, first_order_only, description')
+            .eq('active', true),
+          supabaseClient.from('products')
+            .select('name, in_stock, product_variants(id, name, price, active)')
+            .eq('active', true).eq('category', 'bites').order('name')
+        ]);
+        promoCodes = codes || [];
+        bitesOptions = (bites || []).filter(p => p.in_stock !== false).flatMap(p => (p.product_variants || [])
+          .filter(v => v.active !== false)
+          .map(v => ({ id: v.id, name: p.name, size: v.name, price: Number(v.price) })));
+        document.getElementById('bitesSelect').innerHTML = '<option value="">Choose a flavour</option>'
+          + bitesOptions.map(b => `<option value="${b.id}">${window.QaveraFormat.escapeHtml(b.name)} · ${window.QaveraFormat.escapeHtml(b.size)}</option>`).join('');
+      } catch (error) {
+        console.warn('QAVERA: could not load offers', error);
+      }
+      promoCodesLoaded = true;
+      // A link like checkout.html?code=KLAVY10 applies the code.
+      const fromLink = new URLSearchParams(location.search).get('code');
+      if (fromLink && !appliedPromo) applyPromo(fromLink, true);
     }
 
     function renderOrder() {
@@ -710,7 +933,17 @@
       }).join('');
 
       const totals = getTotals();
-      subtotalElement.textContent = `QAR ${totals.subtotal}`;
+      if (totals.offer.bites) {
+        orderItems.insertAdjacentHTML('beforeend', `
+          <div class="line free">
+            <div class="thumb painted"><div class="bonbon p9"></div></div>
+            <div>
+              <h3>${escapeHtml(totals.offer.bites.name)}</h3>
+              <span class="caption">${escapeHtml(totals.offer.bites.size)} · Free Bites · ${escapeHtml(appliedPromo.code)}</span>
+            </div>
+            <span class="price">Free</span>
+          </div>`);
+      }
       updatePointsDiscount(totals.subtotal);
     }
 
@@ -718,12 +951,14 @@
       pointsBalanceElement.textContent = `${USER_POINTS} points`;
 
       const maxRedeemablePoints = Math.floor(Math.min(USER_POINTS, subtotal * 10) / MIN_REDEEMABLE_POINTS) * MIN_REDEEMABLE_POINTS;
-      usePointsCheckbox.disabled = maxRedeemablePoints < MIN_REDEEMABLE_POINTS;
-      if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) usePointsCheckbox.checked = false;
+      usePointsCheckbox.disabled = maxRedeemablePoints < MIN_REDEEMABLE_POINTS || !!appliedPromo;
+      if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS || appliedPromo) usePointsCheckbox.checked = false;
 
       // Explain why the option is locked, or what it is worth.
       const pointsNote = document.getElementById('pointsNote');
-      if (USER_POINTS < MIN_REDEEMABLE_POINTS) {
+      if (appliedPromo) {
+        pointsNote.textContent = "You're using an offer code, so points can't be used on this order. Remove the code to use your points.";
+      } else if (USER_POINTS < MIN_REDEEMABLE_POINTS) {
         pointsNote.textContent = `You can use points from ${MIN_REDEEMABLE_POINTS} (QAR 10 off). You have ${USER_POINTS}. You earn 100 points for every QAR 1,000 when an order is delivered.`;
       } else if (maxRedeemablePoints < MIN_REDEEMABLE_POINTS) {
         pointsNote.textContent = 'Add items to your cart to use your points.';
@@ -734,7 +969,7 @@
       if (!usePointsCheckbox.checked || subtotal <= 0) {
         pointsDiscountRow.style.display = 'none';
         pointsDiscountElement.textContent = '-QAR 0';
-        totalElement.textContent = `QAR ${subtotal + deliveryFee()}`;
+        renderMoney();
         return;
       }
 
@@ -742,7 +977,7 @@
 
       pointsDiscountRow.style.display = 'flex';
       pointsDiscountElement.textContent = `-QAR ${discount}`;
-      totalElement.textContent = `QAR ${subtotal - discount + deliveryFee()}`;
+      renderMoney();
     }
 
     function titleCaseName(value) {
@@ -1014,23 +1249,28 @@
           hasError = true;
         }
 
-        hasError = showFieldError(
-          'address',
-          'addressError',
-          'Please enter your full address.'
-        ) || hasError;
+        if (isHotel()) {
+          hasError = showFieldError('hotelName', 'hotelNameError', 'Please enter the hotel name.') || hasError;
+          hasError = showFieldError('hotelRoom', 'hotelRoomError', 'Please enter the room number.') || hasError;
+        } else {
+          hasError = showFieldError(
+            'address',
+            'addressError',
+            'Please enter your full address.'
+          ) || hasError;
 
-        hasError = showFieldError(
-          'building',
-          'buildingError',
-          'Please enter your building / villa number.'
-        ) || hasError;
+          hasError = showFieldError(
+            'building',
+            'buildingError',
+            'Please enter your building / villa number.'
+          ) || hasError;
 
-        hasError = showFieldError(
-          'apartment',
-          'apartmentError',
-          'Please enter your apartment / floor.'
-        ) || hasError;
+          hasError = showFieldError(
+            'apartment',
+            'apartmentError',
+            'Please enter your apartment / floor.'
+          ) || hasError;
+        }
       }
 
       applyDateRules();
@@ -1136,7 +1376,6 @@
       const areaInput = document.getElementById('area');
       const area = findArea(areaInput.value);
       const typed = areaInput.value.trim();
-      document.getElementById('deliveryFee').textContent = isPickup() ? 'Free' : area ? `QAR ${area.fee}` : 'Choose your area';
       document.getElementById('areaFee').textContent = area
         ? `Delivery to ${area.name}: QAR ${area.fee}`
         : typed && areasLoaded && typed.length >= 3 && document.activeElement !== areaInput && !searchAreas(typed).length
@@ -1357,6 +1596,20 @@
     document.querySelectorAll('input[name="timeSlot"]').forEach(input =>
       input.addEventListener('change', () => document.getElementById('timeSlotError').classList.remove('show')));
 
+    document.getElementById('promoApply').addEventListener('click', () => applyPromo(document.getElementById('promoInput').value));
+    document.getElementById('promoInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); applyPromo(event.target.value); }
+    });
+    document.getElementById('promoRemove').addEventListener('click', () => {
+      appliedPromo = null;
+      const msg = document.getElementById('promoMsg');
+      msg.textContent = '';
+      delete msg.dataset.keep;
+      renderOrder();
+    });
+    document.getElementById('bitesSelect').addEventListener('change', renderOrder);
+    document.getElementById('isHotel').addEventListener('change', () => { applyHotel(); renderOrder(); });
+
     usePointsCheckbox.addEventListener('change', function () {
       const totals = getTotals();
       updatePointsDiscount(totals.subtotal);
@@ -1395,9 +1648,27 @@
         ? 'card_on_delivery'
         : 'cash_on_delivery';
 
-      const pointsUsed = usePointsCheckbox.checked
+      const pointsUsed = usePointsCheckbox.checked && !appliedPromo
         ? Math.floor(Math.min(USER_POINTS, totals.subtotal * 10) / 100) * 100
         : 0;
+
+      const hotel = isHotel();
+      const promoMember = document.getElementById('promoMember').value.trim();
+      if (appliedPromo) {
+        if (totals.offer.problem) {
+          showCheckoutMessage(totals.offer.problem);
+          return;
+        }
+        if (appliedPromo.needs_member && !promoMember) {
+          showCheckoutMessage(`Please enter the ${appliedPromo.member_label || 'membership number'} for ${appliedPromo.code}.`);
+          document.getElementById('promoMember').focus();
+          return;
+        }
+        if (appliedPromo.kind === 'bites' && !totals.offer.bites) {
+          showCheckoutMessage('Please choose your free Bites.');
+          return;
+        }
+      }
 
       // Some older cart entries contain product_id + size but no variant_id.
       // Resolve those entries here without touching the cart loader/rendering.
@@ -1515,6 +1786,17 @@
           p_fulfillment: pickup ? 'pickup' : 'delivery',
           p_scheduled_date: scheduledDate,
           p_time_slot: timeSlot,
+          // Offer code and hotel: sent only when used.
+          ...(appliedPromo ? {
+            p_promo_code: appliedPromo.code,
+            p_promo_member: appliedPromo.needs_member ? promoMember : null,
+            ...(appliedPromo.kind === 'bites' ? { p_free_bites_variant: totals.offer.bites.id } : {})
+          } : {}),
+          ...(hotel ? {
+            p_hotel: true,
+            p_hotel_name: document.getElementById('hotelName').value.trim(),
+            p_hotel_room: document.getElementById('hotelRoom').value.trim()
+          } : {}),
           // Sent only for gifts, so ordinary orders don't depend on the gift fields.
           ...(gift ? {
             p_gift: true,
@@ -1577,6 +1859,7 @@
           details: [
             ['Order number', order.order_number],
             ...(gift ? [['Gift for', document.getElementById('giftName').value.trim()]] : []),
+            ...(appliedPromo ? [['Offer', appliedPromo.code]] : []),
             ...(fawran ? [['Fawran to', FAWRAN_DETAILS]] : []),
             [pickup ? 'Pickup' : 'Delivery', `${formatScheduledDate(scheduledDate)} · ${SLOT_LABELS[timeSlot]}`],
             ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`],
@@ -1619,6 +1902,7 @@
     // was still writing its final localStorage value.
     setTimeout(refreshCartFromStorage, 100);
     setTimeout(refreshCartFromStorage, 500);
+    loadOffers().then(renderOrder);
     loadCheckoutUser().catch((err) => {
       console.error('Checkout initialization failed:', err);
       USER_POINTS = 0;

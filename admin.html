@@ -353,7 +353,16 @@
     .sales-table tr.is-cancelled td { color: var(--text-muted); text-decoration: line-through; }
     .pay-state { font-size: .72rem; padding: 2px 8px; border: 1px solid; white-space: nowrap; }
     .pay-state.paid { color: #2e7d32; } .pay-state.unpaid { color: #b26a00; } .pay-state.cancelled { color: var(--text-muted); }
-    @media print { .sales-bar, .sales-actions { display: none !important; } .sales-table-wrap { overflow: visible; border: 0; } }
+    @media print { .sales-bar, .sales-actions, .offer-codes, .offer-view { display: none !important; } .sales-table-wrap { overflow: visible; border: 0; } }
+    .offer-codes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 22px; }
+    .offer-code { background: var(--beige-light); border: 1px solid var(--border); padding: 12px 14px; display: grid; gap: 6px; }
+    .offer-code.off { opacity: .55; }
+    .offer-code b { font-family: var(--mono); letter-spacing: .12em; }
+    .offer-code small { font-size: .78rem; color: var(--text-muted); line-height: 1.4; }
+    .offer-code .action { margin: 0; justify-self: start; }
+    .offer-view { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+    .offer-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .offer-hint { font-size: .78rem; color: var(--text-muted); margin-top: 4px; }
     .area-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .area-add input, .area-row input { font: inherit; font-size: .9rem; padding: 8px 10px; border: 1px solid var(--border); background: #fff; color: inherit; }
     .area-add #newAreaName { flex: 1 1 200px; }
@@ -527,6 +536,7 @@
       { key: 'all', label: 'All', match: () => true },
       { key: 'stock', label: 'Stock', match: () => false },
       { key: 'sales', label: 'Sales', match: () => false },
+      { key: 'offers', label: 'Offers', match: () => false },
       { key: 'areas', label: 'Delivery areas', match: () => false },
       { key: 'new', label: '+ New order', match: () => false }
     ];
@@ -707,7 +717,7 @@
         const count = filter.key === 'stock'
           ? (products || []).filter(p => p.in_stock === false).length
           : orders.filter(o => dayMatch(o) && filter.match(o)).length;
-        const countLabel = ['new', 'areas', 'sales'].includes(filter.key) ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
+        const countLabel = ['new', 'areas', 'sales', 'offers'].includes(filter.key) ? '' : filter.key === 'stock' ? (count ? `${count} sold out` : '') : count;
         return `<button type="button" class="filter ${filter.key === activeFilter ? 'active' : ''}" data-filter="${filter.key}">
           ${filter.label}<span class="count">${countLabel}</span>
         </button>`;
@@ -1106,7 +1116,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
                 <div><span>Subtotal</span><span>${qar(order.subtotal)}</span></div>
                 ${Number(order.points_discount) > 0 ? `<div><span>Points (${Number(order.points_used)})</span><span>− ${qar(order.points_discount)}</span></div>` : ''}
                 ${Number(order.discount_amount) > 0 ? `<div><span>${isShopSale(order) ? 'Shop discount' : 'Discount'}${order.discount_reason ? ` · ${escapeHtml(order.discount_reason)}` : ''}</span><span>− ${qar(order.discount_amount)}</span></div>` : ''}
-                ${isShopSale(order) ? '' : isPickup(order) ? `<div><span>Pickup</span><span>Free</span></div>` : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
+                ${isShopSale(order) ? '' : isPickup(order) ? `<div><span>Pickup</span><span>Free</span></div>` : Number(order.delivery_waived) > 0
+                  ? `<div><span>Delivery · free (${escapeHtml(order.promo_code || 'offer')})</span><span><s style="opacity:.55">${qar(order.delivery_waived)}</s> ${qar(order.delivery_fee)}</span></div>`
+                  : `<div><span>Delivery</span><span>${qar(order.delivery_fee)}</span></div>`}
+                ${order.promo_code ? `<div class="muted" style="font-size:.8rem"><span>Offer code: <b>${escapeHtml(order.promo_code)}</b>${order.promo_member ? ` · member ${escapeHtml(order.promo_member)}` : ''}</span><span></span></div>` : ''}
                 <div class="grand"><span>Total · ${escapeHtml(isPickup(order) ? String(PAYMENT_LABELS[order.payment_method] || order.payment_method).replace('delivery', 'pickup') : (PAYMENT_LABELS[order.payment_method] || order.payment_method))}</span><span>${qar(order.total)}</span></div>
               </div>
             </div>
@@ -1158,7 +1171,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
 
     function renderDayBar() {
       const bar = document.getElementById('dayBar');
-      bar.hidden = ['stock', 'new', 'areas', 'sales'].includes(activeFilter);
+      bar.hidden = ['stock', 'new', 'areas', 'sales', 'offers'].includes(activeFilter);
       document.getElementById('dayFrom').value = dayFrom;
       document.getElementById('dayTo').value = dayTo;
       bar.querySelectorAll('[data-day]').forEach(b => {
@@ -1183,6 +1196,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
       if (activeFilter === 'areas') {
         if (!document.getElementById('areasPanel')) renderAreas();
+        return;
+      }
+      if (activeFilter === 'offers') {
+        if (!document.getElementById('offersPanel')) renderOffers();
         return;
       }
       if (activeFilter === 'new') {
@@ -1211,6 +1228,197 @@ ${escapeHtml(order.delivery_address)}</div>`}
     let salesFrom = '';
     let salesTo = '';
     let salesShowCancelled = false;
+
+    // ---- Offers: partner codes (JETOUR Club, Klavy) and their report ----
+    let promoCodes = [];
+    let offerOrders = null;
+    let offersFrom = '', offersTo = '';
+    let offersView = 'all';   // 'all' | 'partner:Klavy' | 'code:KLAVY10' …
+    const KLAVY_COMMISSION = 0.05; // 5% of what the customer paid (after discount, delivery included)
+
+    async function loadPromoCodes() {
+      const { data, error } = await adminSupabase.from('promo_codes')
+        .select('code, partner, kind, percent, free_delivery_min, min_subtotal, needs_member, member_label, first_order_only, description, active')
+        .order('partner').order('code');
+      if (error) throw error;
+      return data || [];
+    }
+
+    async function loadOfferOrders() {
+      const all = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await adminSupabase.from('orders')
+          .select('order_number, created_at, source, customer_name, customer_phone, subtotal, discount_amount, delivery_fee, delivery_waived, total, payment_method, payment_status, status, fulfillment_type, promo_code, promo_member')
+          .not('promo_code', 'is', null)
+          .order('created_at', { ascending: false })
+          .range(from, from + 999);
+        if (error) throw error;
+        all.push(...(data || []));
+        if (!data || data.length < 1000) break;
+      }
+      return all;
+    }
+
+    async function renderOffers() {
+      content.innerHTML = '<div class="notice"><p>Loading offers…</p></div>';
+      try {
+        [promoCodes, offerOrders] = await Promise.all([loadPromoCodes(), loadOfferOrders()]);
+      } catch (error) {
+        content.innerHTML = `<div class="notice"><h2>Offers are not set up yet</h2><p>Run <strong>054_offers.sql</strong> in Supabase, then refresh this page.</p><p class="muted">${escapeHtml(error.message || '')}</p></div>`;
+        return;
+      }
+      if (!offersFrom && !offersTo) [offersFrom, offersTo] = presetDates('month');
+      if (activeFilter === 'offers') drawOffers();
+    }
+
+    const partnerOf = code => (promoCodes.find(c => c.code === code) || {}).partner || '';
+    const offerBefore = o => Number(o.subtotal || 0) + Number(o.delivery_fee || 0) + Number(o.delivery_waived || 0);
+    const offerGiven = o => Number(o.discount_amount || 0) + Number(o.delivery_waived || 0);
+    function offersInView() {
+      return (offerOrders || []).filter(o => {
+        const day = qatarDay(o.created_at);
+        if ((offersFrom && day < offersFrom) || (offersTo && day > offersTo)) return false;
+        if (o.status === 'cancelled' || cardUnpaid(o)) return false;
+        if (offersView.startsWith('partner:')) return partnerOf(o.promo_code) === offersView.slice(8);
+        if (offersView.startsWith('code:')) return o.promo_code === offersView.slice(5);
+        return true;
+      });
+    }
+
+    function offerTotals(list) {
+      const m = v => Math.round(v * 100) / 100;
+      const add = f => m(list.reduce((t, o) => t + f(o), 0));
+      const klavy = list.filter(o => partnerOf(o.promo_code) === 'Klavy');
+      return {
+        orders: list.length,
+        before: add(offerBefore),
+        given: add(offerGiven),
+        paid: add(o => Number(o.total || 0)),
+        freeDeliveries: list.filter(o => Number(o.delivery_waived) > 0).length,
+        freeBites: list.filter(o => o.promo_code === 'KLAVYBITES').length,
+        klavyPaid: m(klavy.reduce((t, o) => t + Number(o.total || 0), 0)),
+        commission: m(klavy.reduce((t, o) => t + Number(o.total || 0), 0) * KLAVY_COMMISSION),
+        hasKlavy: klavy.length > 0
+      };
+    }
+
+    function offersViewLabel() {
+      if (offersView === 'all') return 'All offers';
+      if (offersView.startsWith('partner:')) return `All ${offersView.slice(8)} codes`;
+      return offersView.slice(5);
+    }
+
+    function drawOffers() {
+      const list = offersInView();
+      const t = offerTotals(list);
+      const partners = [...new Set(promoCodes.map(c => c.partner))];
+      const views = [['all', 'All'], ...partners.map(p => [`partner:${p}`, `All ${p}`]), ...promoCodes.map(c => [`code:${c.code}`, c.code])];
+      const presets = [['today', 'Today'], ['week', 'Last 7 days'], ['month', 'This month'], ['all', 'All time']];
+      const activePreset = presetFor(offersFrom, offersTo);
+      const rangeText = !offersFrom && !offersTo ? 'All time'
+        : offersFrom === offersTo ? dayLabel(offersFrom) : `${offersFrom ? dayLabel(offersFrom) : 'Start'} to ${offersTo ? dayLabel(offersTo) : 'today'}`;
+      const codesInView = promoCodes.filter(c => offersView === 'all' || offersView === `partner:${c.partner}` || offersView === `code:${c.code}`);
+
+      content.innerHTML = `
+        <div id="offersPanel">
+          <div class="block-label">Offer codes</div>
+          <div class="offer-codes">${promoCodes.map(c => `
+            <div class="offer-code ${c.active ? '' : 'off'}">
+              <div><b>${escapeHtml(c.code)}</b> · ${escapeHtml(c.partner)}</div>
+              <small>${escapeHtml(c.description || '')}${c.needs_member ? ' · needs member number' : ''}${c.first_order_only ? ' · first order only' : ''}</small>
+              <button type="button" class="action" data-offer-toggle="${escapeHtml(c.code)}">${c.active ? 'On · tap to switch off' : 'Off · tap to switch on'}</button>
+            </div>`).join('')}</div>
+
+          <div class="block-label">Report</div>
+          <div class="offer-view">${views.map(([k, l]) => `<button type="button" class="filter ${offersView === k ? 'active' : ''}" data-offer-view="${escapeHtml(k)}">${escapeHtml(l)}</button>`).join('')}</div>
+          <div class="sales-bar">
+            ${presets.map(([k, l]) => `<button type="button" class="filter ${activePreset === k ? 'active' : ''}" data-offer-preset="${k}">${l}</button>`).join('')}
+            <label>From <input type="date" id="offersFrom" value="${offersFrom}"></label>
+            <label>To <input type="date" id="offersTo" value="${offersTo}"></label>
+          </div>
+
+          <h2 class="sales-range">${escapeHtml(offersViewLabel())} · ${escapeHtml(rangeText)}</h2>
+          <div class="sales-cards">
+            <div class="sales-card big"><span>Customers paid</span><strong>${qar(t.paid)}</strong><em>${t.orders} order${t.orders === 1 ? '' : 's'}</em></div>
+            <div class="sales-card"><span>Before discount</span><strong>${qar(t.before)}</strong></div>
+            <div class="sales-card"><span>Discount given</span><strong>${qar(t.given)}</strong></div>
+            <div class="sales-card"><span>Free deliveries</span><strong>${t.freeDeliveries}</strong></div>
+            <div class="sales-card"><span>Free Bites</span><strong>${t.freeBites}</strong></div>
+            ${t.hasKlavy ? `<div class="sales-card"><span>Klavy commission (5%)</span><strong>${qar(t.commission)}</strong><em>of ${qar(t.klavyPaid)} paid</em></div>` : ''}
+          </div>
+
+          ${codesInView.length > 1 ? `<div class="sales-table-wrap" style="margin-bottom:14px"><table class="sales-table">
+            <thead><tr><th>Code</th><th>Partner</th><th class="r">Orders</th><th class="r">Before discount</th><th class="r">Discount given</th><th class="r">Customers paid</th><th class="r">Free deliveries</th></tr></thead>
+            <tbody>${codesInView.map(c => { const ct = offerTotals(list.filter(o => o.promo_code === c.code)); return `<tr>
+              <td><b>${escapeHtml(c.code)}</b></td><td>${escapeHtml(c.partner)}</td><td class="r">${ct.orders}</td>
+              <td class="r">${qar(ct.before)}</td><td class="r">${qar(ct.given)}</td><td class="r">${qar(ct.paid)}</td><td class="r">${ct.freeDeliveries}</td></tr>`; }).join('')}</tbody>
+            <tfoot><tr><td colspan="2">Total</td><td class="r">${t.orders}</td><td class="r">${qar(t.before)}</td><td class="r">${qar(t.given)}</td><td class="r">${qar(t.paid)}</td><td class="r">${t.freeDeliveries}</td></tr></tfoot>
+          </table></div>` : ''}
+
+          <div class="sales-actions">
+            <button type="button" class="action" data-offers-csv>Download for Excel (CSV)</button>
+            <button type="button" class="action" data-offers-print>Print</button>
+          </div>
+
+          ${list.length ? `<div class="sales-table-wrap"><table class="sales-table">
+            <thead><tr><th>Order</th><th>Made</th><th>Code</th><th>Member</th><th>Source</th><th>Customer</th><th class="r">Before discount</th><th class="r">Discount</th><th class="r">Paid</th><th>Payment</th></tr></thead>
+            <tbody>${list.map(o => `<tr>
+              <td>${escapeHtml(o.order_number)}</td><td>${escapeHtml(madeAt(o))}</td><td><b>${escapeHtml(o.promo_code)}</b></td>
+              <td>${escapeHtml(o.promo_member || '')}</td><td>${escapeHtml(SOURCE_LABELS[o.source] || o.source || '')}</td>
+              <td>${escapeHtml(o.customer_name || '')}</td><td class="r">${qar(offerBefore(o))}</td><td class="r">− ${qar(offerGiven(o))}</td>
+              <td class="r">${qar(o.total)}</td><td><span class="pay-state ${isPaid(o) ? 'paid' : 'unpaid'}">${escapeHtml(paymentState(o))}</span></td></tr>`).join('')}</tbody>
+          </table></div>` : '<div class="notice"><p>No orders with this offer in this period.</p></div>'}
+        </div>`;
+
+      document.getElementById('offersFrom').addEventListener('change', e => { offersFrom = e.target.value; if (offersTo && offersFrom > offersTo) offersTo = offersFrom; drawOffers(); });
+      document.getElementById('offersTo').addEventListener('change', e => { offersTo = e.target.value; if (offersFrom && offersTo < offersFrom) offersFrom = offersTo; drawOffers(); });
+    }
+
+    async function offersClick(event) {
+      const view = event.target.closest('[data-offer-view]');
+      if (view) { offersView = view.dataset.offerView; drawOffers(); return; }
+      const preset = event.target.closest('[data-offer-preset]');
+      if (preset) { [offersFrom, offersTo] = presetDates(preset.dataset.offerPreset); drawOffers(); return; }
+      if (event.target.closest('[data-offers-print]')) { window.print(); return; }
+      if (event.target.closest('[data-offers-csv]')) { downloadOffersCsv(); return; }
+      const toggle = event.target.closest('[data-offer-toggle]');
+      if (toggle) {
+        const code = promoCodes.find(c => c.code === toggle.dataset.offerToggle);
+        if (!code) return;
+        toggle.disabled = true;
+        const { error } = await adminSupabase.from('promo_codes').update({ active: !code.active }).eq('code', code.code);
+        if (error) { toggle.disabled = false; toggle.textContent = error.message || 'Could not change it'; return; }
+        code.active = !code.active;
+        drawOffers();
+      }
+    }
+
+    function downloadOffersCsv() {
+      const list = offersInView();
+      const t = offerTotals(list);
+      const m = v => Math.round(Number(v || 0) * 100) / 100;
+      const from = offersFrom || 'start', to = offersTo || qatarDayOffset(0);
+      const rows = [
+        [`QAVERA offers · ${offersViewLabel()} · ${offersFrom ? fullDay(offersFrom) : 'Start'} to ${fullDay(to)}`],
+        ['Amounts in QAR. Cancelled and unpaid card checkouts are not counted.'],
+        [],
+        ['Orders', t.orders], ['Before discount', t.before], ['Discount given', t.given], ['Customers paid', t.paid],
+        ['Free deliveries', t.freeDeliveries], ['Free Bites', t.freeBites],
+        ...(t.hasKlavy ? [['Klavy: customers paid', t.klavyPaid], ['Klavy commission (5%)', t.commission]] : []),
+        [],
+        ['Order', 'Made (Qatar time)', 'Code', 'Partner', 'Member number', 'Came from', 'Customer', 'Phone', 'Before discount', 'Discount', 'Free delivery', 'Paid', 'Payment'],
+        ...list.map(o => [o.order_number, madeAt(o), o.promo_code, partnerOf(o.promo_code), o.promo_member || '', SOURCE_LABELS[o.source] || o.source,
+          o.customer_name, o.customer_phone, m(offerBefore(o)), m(-offerGiven(o)), Number(o.delivery_waived) > 0 ? 'Yes' : '', m(o.total), paymentState(o)])
+      ];
+      const cell = v => typeof v === 'number' ? String(v) : `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const blob = new Blob(['\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `QAVERA offers ${offersViewLabel()} ${from} to ${to}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
 
     async function loadSalesOrders() {
       // All orders (not only the latest 300), in pages of 1000.
@@ -1551,6 +1759,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       try {
         catalog = await loadCatalog();
         areas = await loadAreas().catch(() => areas);
+        promoCodes = await loadPromoCodes().catch(() => promoCodes);
       } catch (error) {
         content.innerHTML = `<div class="notice"><h2>Could not load products</h2><p>${escapeHtml(error.message)}</p></div>`;
         return;
@@ -1623,6 +1832,10 @@ ${escapeHtml(order.delivery_address)}</div>`}
             <div class="no-grid">
               <div class="no-field"><label for="noDiscount">Discount on the whole bill</label>
                 <div class="no-disc"><select id="noDiscountMode" aria-label="Discount type"><option value="percent">%</option><option value="amount">QAR</option></select><input id="noDiscount" type="number" min="0" step="any" value="0"></div></div>
+              <div class="no-field"><label for="noOffer">Offer code</label>
+                <div class="offer-pick"><select id="noOffer"><option value="">No offer</option>${(promoCodes || []).filter(c => c.active || c.code === edit?.promo_code).map(c => `<option value="${escapeHtml(c.code)}">${escapeHtml(c.code)}</option>`).join('')}</select>
+                <input id="noOfferMember" placeholder="Member number" hidden></div>
+                <div class="offer-hint" id="noOfferHint"></div></div>
               <div class="no-field" id="noFeeField"><label for="noFee">Delivery charge (QAR)</label><input id="noFee" type="number" min="0" step="1" value="${NO_DELIVERY_FEE}"></div>
               <div class="no-field"><label for="noPayment">Payment</label><select id="noPayment">
                 <option value="cash_on_delivery">Cash on delivery / pickup</option>
@@ -1696,6 +1909,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
         set('noDiscountMode', 'percent'); set('noDiscount', 0);
       }
       set('noFee', pickup ? NO_DELIVERY_FEE : Number(order.delivery_fee || 0));
+      set('noOffer', order.promo_code || '');
+      set('noOfferMember', order.promo_member || '');
       if (order.payment_method === 'card_online') {
         document.getElementById('noPayment').insertAdjacentHTML('beforeend', '<option value="card_online">Card (paid online)</option>');
       }
@@ -1806,7 +2021,30 @@ ${escapeHtml(order.delivery_address)}</div>`}
         total: subtotal - discount - points + delivery };
     }
 
+    // Offer code on a phone / WhatsApp order: fills the discount, the order records the code.
+    function offerReason(t) {
+      const code = document.getElementById('noOffer')?.value;
+      if (!code) return '';
+      const member = document.getElementById('noOfferMember').value.trim();
+      const c = (promoCodes || []).find(x => x.code === code);
+      const what = c?.kind === 'hotel' ? 'Free hotel delivery' : c?.kind === 'bites' ? 'Free Bites' : t.billLabel;
+      return `${code} · ${what}${member ? ` · Member ${member}` : ''}`;
+    }
+
     function updateNewOrder(event) {
+      const offerSelect = document.getElementById('noOffer');
+      if (offerSelect) {
+        const c = (promoCodes || []).find(x => x.code === offerSelect.value);
+        document.getElementById('noOfferMember').hidden = !(c && c.needs_member);
+        document.getElementById('noOfferHint').textContent = !c ? ''
+          : c.kind === 'hotel' ? 'Free delivery to a hotel inside Doha (QAR 30 / 50 areas): delivery is set to 0.'
+          : c.kind === 'bites' ? `Orders of QAR ${Number(c.min_subtotal || 0)}+: add the Bites as an item and give it a 100% item discount.`
+          : `${Number(c.percent)}% off the whole bill${c.free_delivery_min != null ? `, free delivery in Doha from QAR ${Number(c.free_delivery_min)} (set delivery to 0)` : ''}.`;
+        if (event?.target === offerSelect && c) {
+          if (c.kind === 'percent') { document.getElementById('noDiscountMode').value = 'percent'; document.getElementById('noDiscount').value = Number(c.percent); }
+          if (c.kind === 'hotel') document.getElementById('noFee').value = 0;
+        }
+      }
       const pickup = noPickup();
       document.getElementById('noAddress').hidden = pickup;
       document.getElementById('noGiftRow').hidden = pickup;
@@ -2004,7 +2242,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         p_discount_reason: t.discount > 0
           ? (editing && editing.discount_reason && Math.abs(t.discount - Number(editing.discount_amount || 0)) < 0.01
               ? editing.discount_reason
-              : `${t.billDiscount > 0 ? t.billLabel : 'Item discounts'}${editing && editing.source !== 'whatsapp' ? '' : ' · WhatsApp'}`)
+              : offerReason(t) || `${t.billDiscount > 0 ? t.billLabel : 'Item discounts'}${editing && editing.source !== 'whatsapp' ? '' : ' · WhatsApp'}`)
           : null,
         p_delivery_fee: t.delivery,
         p_payment_method: document.getElementById('noPayment').value,
@@ -2027,6 +2265,17 @@ ${escapeHtml(order.delivery_address)}</div>`}
       }
 
       const saved = Array.isArray(data) ? data[0] : data;
+      // Offer code: recorded on the order (also when it is only free delivery).
+      const offerCode = document.getElementById('noOffer')?.value || '';
+      if (saved?.order_id && (offerCode || editing?.promo_code)) {
+        const area = (areas || []).find(a => a.name.toLowerCase() === String(noValue('noArea') || '').trim().toLowerCase());
+        const waived = offerCode && !noPickup() && t.delivery === 0 && area ? Number(area.fee) : 0;
+        const { error: promoError } = await adminSupabase.rpc('admin_set_order_promo', {
+          p_order_id: saved.order_id, p_code: offerCode || null,
+          p_member: document.getElementById('noOfferMember').value.trim() || null, p_delivery_waived: waived
+        });
+        if (promoError) console.warn('Could not record the offer code:', promoError);
+      }
       editingOrder = null;
       salesOrders = null;
       activeFilter = editing ? 'all' : 'active';
@@ -2153,7 +2402,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       if (!button) return;
       activeFilter = button.dataset.filter;
       if (activeFilter === 'new') editingOrder = null;
-      if (activeFilter === 'new' || activeFilter === 'sales') content.innerHTML = '';
+      if (activeFilter === 'new' || activeFilter === 'sales' || activeFilter === 'offers') content.innerHTML = '';
       render();
     });
 
@@ -2161,6 +2410,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
       if (event.target.closest('#newOrderForm')) { newOrderClick(event); return; }
       if (event.target.closest('#areasPanel')) { areasClick(event); return; }
       if (event.target.closest('#salesPanel')) { salesClick(event); return; }
+      if (event.target.closest('#offersPanel')) { offersClick(event); return; }
       const editButton = event.target.closest('[data-edit]');
       if (editButton) { startEditOrder(editButton.dataset.edit); return; }
       const deleteButton = event.target.closest('[data-delete]');
