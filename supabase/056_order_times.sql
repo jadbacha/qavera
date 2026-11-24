@@ -5,6 +5,7 @@
 --   at 8:30 PM -> tomorrow). Chocolate Bonbons boxes can be same day too.
 --   Admin (phone / WhatsApp) orders: the same hours, no 2-hour notice; older
 --   orders keep their time window.
+-- Finds the parts to change by pattern, so small wording differences don't matter.
 -- Paste into Supabase SQL Editor and click Run. Safe to run more than once.
 
 begin;
@@ -14,91 +15,57 @@ declare
   r record;
   v_def text;
   v_new text;
+  v_step text;
+  -- The old time checks (pickup / Friday / delivery windows), up to the delivery one.
+  p_times constant text := $r$if\s+v_pickup\s+and\s+extract\s*\(\s*isodow\s+from\s+p_scheduled_date\s*\)\s*=\s*5\s+then.*?'18:00-23:00'\s*\)\s*then\s+raise\s+exception\s+'[^']*'[^;]*;\s*end\s+if\s*;$r$;
+  p_box constant text := $r$if\s+v_has_box\s+and\s+p_scheduled_date\s*<\s*v_today\s*\+\s*1\s+then\s+raise\s+exception\s+'[^']*'[^;]*;\s*end\s+if\s*;$r$;
+  p_same_day constant text := $r$if\s+p_scheduled_date\s*=\s*v_today\s+and[^;]*\s+then\s+raise\s+exception\s+'[^']*'[^;]*;\s*end\s+if\s*;$r$;
+  new_times constant text := $n$-- Times (056): one hour each. Delivery 12 PM - 10 PM every day; pickup in
+  -- shop hours, 10 AM - 8 PM (Fridays 1 PM - 5 PM); at least 2 hours after ordering.
+  if coalesce(p_time_slot, '') !~ '^([01][0-9]|2[0-3]):00$' then
+    raise exception 'Please choose a % time', case when v_pickup then 'pickup' else 'delivery' end;
+  end if;
+  if v_pickup and extract(isodow from p_scheduled_date) = 5
+     and split_part(p_time_slot, ':', 1)::integer not between 13 and 17 then
+    raise exception 'On Fridays pickup is between 1 PM and 5 PM';
+  elsif v_pickup and split_part(p_time_slot, ':', 1)::integer not between 10 and 20 then
+    raise exception 'Pickup is between 10 AM and 8 PM';
+  elsif not v_pickup and split_part(p_time_slot, ':', 1)::integer not between 12 and 22 then
+    raise exception 'Delivery is between 12 PM and 10 PM';
+  end if;
+  if p_scheduled_date + make_time(split_part(p_time_slot, ':', 1)::integer, 0, 0)
+     < (now() at time zone 'Asia/Qatar') + interval '2 hours' then
+    raise exception 'Please choose a time at least 2 hours from now.';
+  end if;$n$;
+  admin_times constant text := $n$-- Times (056): one hour each ("13:00"); older orders keep their time window.
+  if coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00', '10:00-14:00', '16:00-21:00', '13:00-18:00')
+     and coalesce(p_time_slot, '') !~ '^([01][0-9]|2[0-3]):00$' then
+    raise exception 'Please choose a % time', case when v_pickup then 'pickup' else 'delivery' end;
+  end if;$n$;
 begin
   -- 1. Website checkout
   for r in select p.oid from pg_proc p join pg_namespace n on n.oid = p.pronamespace
             where n.nspname = 'public' and p.proname = 'create_qavera_order'
   loop
     v_def := pg_get_functiondef(r.oid);
-    continue when position('v_slot_hour' in v_def) > 0;  -- already done
-    if position($q1$  v_has_box boolean := false;
-$q1$ in v_def) = 0 or position($q2$  if v_pickup and extract(isodow from p_scheduled_date) = 5 then
-    if coalesce(p_time_slot, '') <> '13:00-18:00' then
-      raise exception 'On Fridays pickup is 1 PM – 6 PM';
+    continue when position('Times (056)' in v_def) > 0;  -- already done
+
+    v_step := 'the time checks';
+    v_new := regexp_replace(v_def, p_times, new_times);
+    if v_new = v_def then
+      raise exception 'Could not find % in create_qavera_order: send this message to Claude', v_step;
     end if;
-  elsif v_pickup and coalesce(p_time_slot, '') not in ('10:00-14:00', '16:00-21:00') then
-    raise exception 'Please choose a pickup time: 10 AM – 2 PM or 4 PM – 9 PM';
-  end if;
-  if not v_pickup and coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00') then
-    raise exception 'Please choose a delivery time: 12 PM – 4 PM or 6 PM – 11 PM';
-  end if;
-$q2$ in v_def) = 0
-       or position($q3$  -- Boxes are made to order: from tomorrow.
-  if v_has_box and p_scheduled_date < v_today + 1 then
-    raise exception 'Premium and Luxury boxes are made to order. The earliest date is tomorrow.';
-  end if;
-$q3$ in v_def) = 0 or position($q4$  -- Same day: a time slot can be chosen until 1 hour before it starts.
-  if p_scheduled_date = v_today
-     and v_now_time >= (case p_time_slot
-                          when '10:00-14:00' then time '09:00'
-                          when '12:00-16:00' then time '11:00'
-                          when '13:00-18:00' then time '12:00'
-                          when '16:00-21:00' then time '15:00'
-                          else time '17:00' end) then
-    raise exception 'This time is no longer available today. Please choose a later time or another day.';
-  end if;
-$q4$ in v_def) = 0 then
-      raise exception 'create_qavera_order is not the expected version: send this message to Claude';
+
+    -- The old same-day cut-off (by time window): replaced by the 2-hour rule above.
+    v_def := v_new;
+    v_new := regexp_replace(v_def, p_same_day, '-- Same-day cut-off: the 2-hour rule above (056).');
+    if v_new = v_def then
+      raise exception 'Could not find the same-day check in create_qavera_order: send this message to Claude';
     end if;
-    v_new := replace(v_def, $q1$  v_has_box boolean := false;
-$q1$, $n1$  v_has_box boolean := false;
-  v_slot_hour integer;
-$n1$);
-    v_new := replace(v_new, $q2$  if v_pickup and extract(isodow from p_scheduled_date) = 5 then
-    if coalesce(p_time_slot, '') <> '13:00-18:00' then
-      raise exception 'On Fridays pickup is 1 PM – 6 PM';
-    end if;
-  elsif v_pickup and coalesce(p_time_slot, '') not in ('10:00-14:00', '16:00-21:00') then
-    raise exception 'Please choose a pickup time: 10 AM – 2 PM or 4 PM – 9 PM';
-  end if;
-  if not v_pickup and coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00') then
-    raise exception 'Please choose a delivery time: 12 PM – 4 PM or 6 PM – 11 PM';
-  end if;
-$q2$, $n2$  -- Times (056): one hour each. Delivery 12 PM – 10 PM every day; pickup in
-  -- shop hours, 10 AM – 8 PM (Fridays 1 PM – 5 PM).
-  if coalesce(p_time_slot, '') !~ '^([01][0-9]|2[0-3]):00$' then
-    raise exception 'Please choose a % time', case when v_pickup then 'pickup' else 'delivery' end;
-  end if;
-  v_slot_hour := split_part(p_time_slot, ':', 1)::integer;
-  if v_pickup and extract(isodow from p_scheduled_date) = 5 and v_slot_hour not between 13 and 17 then
-    raise exception 'On Fridays pickup is between 1 PM and 5 PM';
-  elsif v_pickup and v_slot_hour not between 10 and 20 then
-    raise exception 'Pickup is between 10 AM and 8 PM';
-  elsif not v_pickup and v_slot_hour not between 12 and 22 then
-    raise exception 'Delivery is between 12 PM and 10 PM';
-  end if;
-$n2$);
-    v_new := replace(v_new, $q3$  -- Boxes are made to order: from tomorrow.
-  if v_has_box and p_scheduled_date < v_today + 1 then
-    raise exception 'Premium and Luxury boxes are made to order. The earliest date is tomorrow.';
-  end if;
-$q3$, $n3$  -- Boxes can be delivered the same day too (056).
-$n3$);
-    v_new := replace(v_new, $q4$  -- Same day: a time slot can be chosen until 1 hour before it starts.
-  if p_scheduled_date = v_today
-     and v_now_time >= (case p_time_slot
-                          when '10:00-14:00' then time '09:00'
-                          when '12:00-16:00' then time '11:00'
-                          when '13:00-18:00' then time '12:00'
-                          when '16:00-21:00' then time '15:00'
-                          else time '17:00' end) then
-    raise exception 'This time is no longer available today. Please choose a later time or another day.';
-  end if;
-$q4$, $n4$  -- At least 2 hours after ordering (056): an order at 8:30 PM is for tomorrow.
-  if p_scheduled_date + make_time(v_slot_hour, 0, 0) < (now() at time zone 'Asia/Qatar') + interval '2 hours' then
-    raise exception 'Please choose a time at least 2 hours from now.';
-  end if;
-$n4$);
+
+    -- Boxes made to order "from tomorrow": now same day too (skipped if already gone).
+    v_new := regexp_replace(v_new, p_box, '-- Boxes can be delivered the same day too (056).');
+
     execute v_new;
   end loop;
 
@@ -108,33 +75,11 @@ $n4$);
   loop
     v_def := pg_get_functiondef(r.oid);
     continue when position('Times (056)' in v_def) > 0;
-    if position($q5$  if v_pickup and extract(isodow from p_scheduled_date) = 5 then
-    if coalesce(p_time_slot, '') <> '13:00-18:00' then
-      raise exception 'On Fridays pickup is 1 PM – 6 PM';
+    v_new := regexp_replace(v_def, p_times, admin_times);
+    if v_new = v_def then
+      raise exception 'Could not find the time checks in %: send this message to Claude', (select proname from pg_proc where oid = r.oid);
     end if;
-  elsif v_pickup and coalesce(p_time_slot, '') not in ('10:00-14:00', '16:00-21:00') then
-    raise exception 'Please choose a pickup time';
-  elsif not v_pickup and coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00') then
-    raise exception 'Please choose a delivery time';
-  end if;
-$q5$ in v_def) = 0 then
-      raise exception 'An admin order function is not the expected version: send this message to Claude';
-    end if;
-    execute replace(v_def, $q5$  if v_pickup and extract(isodow from p_scheduled_date) = 5 then
-    if coalesce(p_time_slot, '') <> '13:00-18:00' then
-      raise exception 'On Fridays pickup is 1 PM – 6 PM';
-    end if;
-  elsif v_pickup and coalesce(p_time_slot, '') not in ('10:00-14:00', '16:00-21:00') then
-    raise exception 'Please choose a pickup time';
-  elsif not v_pickup and coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00') then
-    raise exception 'Please choose a delivery time';
-  end if;
-$q5$, $n5$  -- Times (056): one hour each ("13:00"); older orders keep their time window.
-  if coalesce(p_time_slot, '') not in ('12:00-16:00', '18:00-23:00', '10:00-14:00', '16:00-21:00', '13:00-18:00')
-     and coalesce(p_time_slot, '') !~ '^([01][0-9]|2[0-3]):00$' then
-    raise exception 'Please choose a % time', case when v_pickup then 'pickup' else 'delivery' end;
-  end if;
-$n5$);
+    execute v_new;
   end loop;
 end
 $patch$;
