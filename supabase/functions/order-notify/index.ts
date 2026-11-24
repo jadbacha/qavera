@@ -62,6 +62,8 @@ const SLOT_LABELS: Record<string, string> = {
   "16:00-21:00": "4 PM – 9 PM",
   "13:00-18:00": "1 PM – 6 PM",
 };
+// New orders pick one hour ("13:00"); label it like "1:00 PM".
+for (let h = 0; h < 24; h++) SLOT_LABELS[`${String(h).padStart(2, "0")}:00`] = `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`;
 const SHOP_ADDRESS = "QAVERA shop, Zone 55, Street 162, Building 44";
 
 const isPickup = (order: Record<string, any>) => order.fulfillment_type === "pickup";

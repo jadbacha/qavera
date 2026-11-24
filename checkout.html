@@ -325,7 +325,7 @@
 
         <div class="co-step">
           <div class="co-step-head"><span class="num">02</span><h2 id="whenTitle">Delivery date &amp; time</h2></div>
-          <p class="when-note" id="whenNote">Same-day orders are welcome: order at least 1 hour before your time starts.</p>
+          <p class="when-note" id="whenNote">Same-day orders are welcome: choose a time at least 2 hours from now.</p>
           <p class="urgent-note">For urgent deliveries, call us on <a href="tel:+97450968968">+974 5096 8968</a></p>
           <div class="when-fields">
             <div class="v3-field">
@@ -333,11 +333,9 @@
               <input type="date" id="scheduledDate" required>
               <div class="required-error" id="scheduledDateError">Please choose a date.</div>
             </div>
-            <div>
-              <div class="choice slots" role="radiogroup" aria-label="Time">
-                <label><input type="radio" name="timeSlot" value="12:00-16:00"><strong>12 PM – 4 PM</strong><span data-open="Afternoon">Afternoon</span></label>
-                <label><input type="radio" name="timeSlot" value="18:00-23:00"><strong>6 PM – 11 PM</strong><span data-open="Evening">Evening</span></label>
-              </div>
+            <div class="v3-field">
+              <label for="timeSlot" id="timeLabel">Delivery time *</label>
+              <select id="timeSlot"><option value="">Choose a date first</option></select>
               <div class="required-error" id="timeSlotError">Please choose a time.</div>
             </div>
           </div>
@@ -596,25 +594,25 @@
     const findArea = name => areasLoaded
       ? deliveryAreas.find(a => a.name.toLowerCase() === String(name || '').trim().toLowerCase())
       : (String(name || '').trim() ? { name: String(name).trim(), fee: 25 } : undefined);
+    // Older orders used time windows; new orders pick one hour.
     const SLOT_LABELS = {
       '12:00-16:00': '12 PM – 4 PM', '18:00-23:00': '6 PM – 11 PM',
       '10:00-14:00': '10 AM – 2 PM', '16:00-21:00': '4 PM – 9 PM', '13:00-18:00': '1 PM – 6 PM'
     };
-    // Delivery and pickup have their own times; on Fridays pickup is 1 PM – 6 PM only
-    // (the database checks this too).
-    const SLOTS = {
-      delivery: [{ value: '12:00-16:00', note: 'Afternoon' }, { value: '18:00-23:00', note: 'Evening' }],
-      pickup: [{ value: '10:00-14:00', note: 'Morning' }, { value: '16:00-21:00', note: 'Evening' }],
-      pickupFriday: [{ value: '13:00-18:00', note: 'Friday hours' }]
-    };
+    const hourLabel = h => `${h % 12 || 12}:00 ${h < 12 ? 'AM' : 'PM'}`;
+    const slotLabel = v => SLOT_LABELS[v] || (/^\d{2}:00$/.test(v || '') ? hourLabel(Number(v.slice(0, 2))) : (v || ''));
+    // Times (the database checks the same): delivery 12 PM – 10 PM every day;
+    // pickup in shop hours, 10 AM – 8 PM (Fridays 1 PM – 5 PM). Always at least
+    // 2 hours after ordering, so an order at 8:30 PM is delivered the next day.
+    const LEAD_MINUTES = 120;
+    const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
     const isFriday = date => !!date && new Date(`${date}T12:00:00Z`).getUTCDay() === 5;
-    const slotsFor = date => isPickup() ? (isFriday(date) ? SLOTS.pickupFriday : SLOTS.pickup) : SLOTS.delivery;
+    const hoursFor = date => isPickup() ? (isFriday(date) ? range(13, 17) : range(10, 20)) : range(12, 22);
 
     const isPickup = () => document.querySelector('input[name="fulfillment"]:checked')?.value === 'pickup';
     const deliveryFee = () => (isPickup() ? 0 : Number(findArea(document.getElementById('area').value)?.fee || 0));
 
-    // Dates are counted in Qatar time, up to 30 days ahead. Same day is allowed,
-    // except for boxes of bonbons (made to order: from tomorrow).
+    // Dates are counted in Qatar time, up to 30 days ahead. Same day is allowed.
     function qatarDate(offsetDays) {
       const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
       const date = new Date(`${today}T12:00:00Z`);
@@ -629,14 +627,8 @@
     }
 
     const scheduledDateInput = document.getElementById('scheduledDate');
-    scheduledDateInput.min = qatarDate(1);
+    scheduledDateInput.min = qatarDate(0);
     scheduledDateInput.max = qatarDate(30);
-
-    // Today's slots close 1 hour before they start (the database checks this too).
-    const SLOT_CUTOFF_MINUTES = {
-      '12:00-16:00': 11 * 60, '18:00-23:00': 17 * 60,
-      '10:00-14:00': 9 * 60, '16:00-21:00': 15 * 60, '13:00-18:00': 12 * 60
-    };
 
     function qatarMinutesNow() {
       const [h, m] = new Date().toLocaleTimeString('en-GB', {
@@ -645,57 +637,36 @@
       return (h % 24) * 60 + m;
     }
 
-    function cartHasBox() {
-      return cart.some(item =>
-        ['premium', 'luxury', 'chocolate bonbons'].includes(String(item.product_name || '').trim().toLowerCase())
-        || /^(premium|luxury|bonbons)-box-/.test(String(item.id || '')));
+    // Hours still open on a date: today only those at least 2 hours from now.
+    function openHours(date) {
+      const hours = hoursFor(date);
+      if (date !== qatarDate(0)) return hours;
+      const now = qatarMinutesNow();
+      return hours.filter(h => h * 60 >= now + LEAD_MINUTES);
     }
-
-    function slotOpen(slot, date) {
-      return date !== qatarDate(0) || qatarMinutesNow() < SLOT_CUTOFF_MINUTES[slot];
-    }
-
-    // Opening: no deliveries or pickups before this date (the database checks it too).
-    // Once the date has passed it has no effect, so nothing needs to be undone.
-    const FIRST_DELIVERY_DATE = '2026-10-10';
-    const OPENING_NOTE = 'Our first deliveries and pickups are on Saturday 10 October. Please choose 10 October or later.';
 
     function applyDateRules() {
-      const hasBox = cartHasBox();
-      const todayOpen = !hasBox && slotsFor(qatarDate(0)).some(slot => slotOpen(slot.value, qatarDate(0)));
-      const slots = slotsFor(scheduledDateInput.value);
-      const normalMin = todayOpen ? qatarDate(0) : qatarDate(1);
-      scheduledDateInput.min = normalMin < FIRST_DELIVERY_DATE ? FIRST_DELIVERY_DATE : normalMin;
+      const pickup = isPickup();
+      const todayOpen = openHours(qatarDate(0)).length > 0;
+      scheduledDateInput.min = todayOpen ? qatarDate(0) : qatarDate(1);
       scheduledDateInput.max = qatarDate(30);
 
-      document.getElementById('whenNote').textContent = normalMin < FIRST_DELIVERY_DATE
-        ? OPENING_NOTE
-        : hasBox
-          ? 'Your order includes a box of Chocolate Bonbons. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
-          : 'Same-day orders are welcome: order at least 1 hour before your time starts.';
+      document.getElementById('whenNote').textContent = todayOpen
+        ? 'Same-day orders are welcome: choose a time at least 2 hours from now.'
+        : `No ${pickup ? 'pickup' : 'delivery'} times are left today. The earliest is tomorrow.`;
+      document.getElementById('timeLabel').textContent = pickup ? 'Pickup time *' : 'Delivery time *';
 
-      document.querySelectorAll('input[name="timeSlot"]').forEach((input, i) => {
-        const slot = slots[i];
-        input.closest('label').hidden = !slot;
-        if (!slot) {
-          input.checked = false;
-          input.disabled = true;
-          return;
-        }
-        if (input.value !== slot.value) {
-          input.checked = false;
-          input.value = slot.value;
-          input.closest('label').querySelector('strong').textContent = SLOT_LABELS[slot.value];
-          input.closest('label').querySelector('span').dataset.open = slot.note;
-        }
-        const open = slotOpen(input.value, scheduledDateInput.value);
-        const label = input.closest('label');
-        const note = label.querySelector('span');
-        input.disabled = !open;
-        label.classList.toggle('is-closed', !open);
-        note.textContent = open ? note.dataset.open : 'Closed for today';
-        if (!open && input.checked) input.checked = false;
-      });
+      const select = document.getElementById('timeSlot');
+      const date = scheduledDateInput.value;
+      const hours = date && date >= scheduledDateInput.min ? openHours(date) : [];
+      const key = `${pickup}|${date}|${hours.join(',')}`;
+      if (select.dataset.key === key) return;
+      select.dataset.key = key;
+      const previous = select.value;
+      const first = !date ? 'Choose a date first' : hours.length ? 'Choose a time' : 'No times left on this day';
+      select.innerHTML = `<option value="">${first}</option>`
+        + hours.map(h => { const v = `${String(h).padStart(2, '0')}:00`; return `<option value="${v}">${hourLabel(h)}</option>`; }).join('');
+      if (hours.some(h => `${String(h).padStart(2, '0')}:00` === previous)) select.value = previous;
     }
     const POINTS_PER_QAR_SPENT = 0.1; // 100 points per QAR 1,000 spent
     const QAR_PER_100_POINTS = 10;
@@ -1287,11 +1258,7 @@
         dateError.classList.add('show');
         hasError = true;
       } else if (dateValue < scheduledDateInput.min) {
-        dateError.textContent = dateValue < FIRST_DELIVERY_DATE
-          ? OPENING_NOTE
-          : cartHasBox()
-          ? 'Your order includes a box of Chocolate Bonbons. We prepare each box fresh for your order, so the earliest delivery or pickup is tomorrow.'
-          : 'Today is fully booked now. Please choose another day.';
+        dateError.textContent = 'No times are left today. Please choose tomorrow or later.';
         dateError.classList.add('show');
         hasError = true;
       } else if (dateValue > scheduledDateInput.max) {
@@ -1303,7 +1270,7 @@
       }
 
       const slotError = document.getElementById('timeSlotError');
-      if (!document.querySelector('input[name="timeSlot"]:checked')) {
+      if (!document.getElementById('timeSlot').value) {
         slotError.classList.add('show');
         hasError = true;
       } else {
@@ -1599,8 +1566,7 @@
     });
     // Close today's slots on time while the page stays open.
     setInterval(applyDateRules, 60000);
-    document.querySelectorAll('input[name="timeSlot"]').forEach(input =>
-      input.addEventListener('change', () => document.getElementById('timeSlotError').classList.remove('show')));
+    document.getElementById('timeSlot').addEventListener('change', () => document.getElementById('timeSlotError').classList.remove('show'));
 
     document.getElementById('promoApply').addEventListener('click', () => applyPromo(document.getElementById('promoInput').value));
     document.getElementById('promoInput').addEventListener('keydown', event => {
@@ -1640,7 +1606,7 @@
       const totals = getTotals();
       const paymentSelection = document.querySelector('input[name="payment"]:checked')?.value || 'Cash on Delivery';
       const pickup = isPickup();
-      const timeSlot = document.querySelector('input[name="timeSlot"]:checked')?.value;
+      const timeSlot = document.getElementById('timeSlot').value;
       const scheduledDate = scheduledDateInput.value;
       const paymentLabel = pickup ? paymentSelection.replace('Delivery', 'Pickup') : paymentSelection;
       const fawran = paymentSelection === 'Fawran';
@@ -1867,7 +1833,7 @@
             ...(gift ? [['Gift for', document.getElementById('giftName').value.trim()]] : []),
             ...(appliedPromo ? [['Offer', appliedPromo.code]] : []),
             ...(fawran ? [['Fawran to', FAWRAN_DETAILS]] : []),
-            [pickup ? 'Pickup' : 'Delivery', `${formatScheduledDate(scheduledDate)} · ${SLOT_LABELS[timeSlot]}`],
+            [pickup ? 'Pickup' : 'Delivery', `${formatScheduledDate(scheduledDate)} · ${slotLabel(timeSlot)}`],
             ['Total', `QAR ${Number.isInteger(orderTotal) ? orderTotal : orderTotal.toFixed(2)}`],
             ['Payment', paymentLabel]
           ],
