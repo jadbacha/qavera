@@ -273,7 +273,7 @@
     ]
   };
   const pantryId = name => name.toLowerCase().replace(/\s+/g, '-');
-  const isBoxItem = item => ['premium', 'luxury', 'chocolate bonbons', 'just chocolate'].includes(String(item.product_name || '').trim().toLowerCase())
+  const isBoxItem = item => ['premium', 'luxury', 'chocolate bonbons', 'just chocolate', 'christmas box', 'national day box'].includes(String(item.product_name || '').trim().toLowerCase())
     || /^(premium|luxury|bonbons|justchocolate)-box-/.test(String(item.id || ''));
 
   // Products an admin marked sold out (loaded once; nothing is hidden if this fails).

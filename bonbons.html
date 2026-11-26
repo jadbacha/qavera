@@ -22,11 +22,18 @@
     .box-page { background: var(--ink); }
     .custom-intro { color: rgba(216,216,216,.72); font-size: .92rem; line-height: 1.6; margin: .2rem 0 1rem; }
     .custom-intro strong { color: var(--sand); font-weight: 500; }
+    .designs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .7rem; margin-bottom: 1.8rem; }
+    .design { display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; padding: 1rem; border: 1px solid rgba(216,216,216,.22); background: transparent; color: var(--silver); text-align: left; cursor: pointer; font: inherit; transition: border-color .3s ease, background .3s ease; }
+    .design[aria-checked="true"] { border-color: var(--sand); background: rgba(196,169,128,.08); }
+    .design .swatch { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(216,216,216,.35); }
+    .design strong { font-family: var(--display); font-weight: 400; font-size: 1.15rem; }
+    .design .caption { font-size: .58rem; color: rgba(216,216,216,.55); }
+    @media (max-width: 600px) { .designs { gap: .5rem; } .design { padding: .8rem .6rem; } .design strong { font-size: 1rem; } }
     .flavour-row .flavour-desc { display: block; margin-top: .2rem; font-size: .78rem; line-height: 1.4; color: rgba(216,216,216,.6); }
   </style>
 </head>
 <body data-page="bonbons">
-  <script src="v3/qavera.js?v=20261118"></script>
+  <script src="v3/qavera.js?v=20261126"></script>
 
   <main class="v3-main">
     <section class="box-page">
@@ -41,10 +48,15 @@
         <h1 class="display">Chocolate <em>Bonbons</em></h1>
         <p class="lead">Artistic bonbon shells, crafted from premium Belgian chocolate and filled with eight refined flavours. Choose exactly how many of each flavour you want: every box is made just for you.</p>
 
-        <p class="step-label caption"><span>01 · Choose your box</span><b>9 g per piece</b></p>
+        <div class="design-step" hidden>
+          <p class="step-label caption"><span>Choose your design</span><b>Seasonal boxes until 31 December</b></p>
+          <div class="designs" id="designs" role="radiogroup" aria-label="Box design"></div>
+        </div>
+
+        <p class="step-label caption"><span>Choose your box</span><b>9 g per piece</b></p>
         <div class="sizes" id="sizes" role="radiogroup" aria-label="Box size"></div>
 
-        <p class="step-label caption"><span>02 · Choose your flavours</span><b>Fill your box</b></p>
+        <p class="step-label caption"><span>Choose your flavours</span><b>Fill your box</b></p>
         <p class="custom-intro">Choose how many pieces of each flavour you want, or tap <strong>Random mix</strong> and we pick for you.</p>
         <div class="customiser open" id="customiser" aria-hidden="false">
           <div>
@@ -65,7 +77,7 @@
           <div class="total"><small>Total</small><span id="buyTotal">QAR 0</span></div>
           <button type="button" class="btn btn-solid" id="addToBox">Add to cart <span class="arrow">→</span></button>
         </div>
-        <p class="buy-note">Made to order: delivery or pickup from tomorrow. Box colours, chocolate colours, finishes and designs may differ from the images shown. Each box is individually crafted.</p>
+        <p class="buy-note">Made to order: delivery or pickup from 2 hours after ordering. Box colours, chocolate colours, finishes and designs may differ from the images shown. Each box is individually crafted.</p>
       </div>
     </section>
 
@@ -262,9 +274,250 @@
       "colour": "#E8892B",
       "desc": "Pineapple jelly with coconut ganache."
     }
+  ],
+  "designs": [
+    {
+      "key": "classic",
+      "label": "Classic",
+      "note": "2 · 12 · 25 · 48 pieces",
+      "swatch": "#1A2D28",
+      "dbName": "Chocolate Bonbons",
+      "displayName": "Chocolate Bonbons",
+      "sizes": {
+        "mini": {
+          "pieces": 2,
+          "colour": "White",
+          "swatch": "#F4F1EA",
+          "price": 20,
+          "images": [
+            "mini box luxury.jpg",
+            "mini box luxury hover.jpg"
+          ],
+          "variantNames": [
+            "mini"
+          ],
+          "label": "Mini",
+          "dbVariant": "Mini",
+          "cartLabel": "Mini, 2 Pieces — White",
+          "needsDb": true,
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "small": {
+          "pieces": 12,
+          "colour": "Burgundy",
+          "swatch": "#3D030A",
+          "price": 100,
+          "images": [
+            "burgundy box fitted.webp",
+            "burgundy box hover.jpg"
+          ],
+          "variantNames": [
+            "s",
+            "small"
+          ],
+          "dbVariant": "S",
+          "cartLabel": "12 Pieces — Burgundy",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "medium": {
+          "pieces": 25,
+          "colour": "Green",
+          "swatch": "#1A2D28",
+          "price": 210,
+          "images": [
+            "green box fitted.webp",
+            "green box hover.jpg"
+          ],
+          "variantNames": [
+            "m",
+            "medium"
+          ],
+          "dbVariant": "M",
+          "cartLabel": "25 Pieces — Green",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "large": {
+          "pieces": 48,
+          "colour": "Black",
+          "swatch": "#0F0E0E",
+          "price": 390,
+          "images": [
+            "black box.jpg",
+            "black box hover.jpg"
+          ],
+          "variantNames": [
+            "l",
+            "large"
+          ],
+          "dbVariant": "L",
+          "cartLabel": "48 Pieces — Black",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "key": "christmas",
+      "label": "Christmas",
+      "note": "25 · 48 pieces · until 31 Dec",
+      "swatch": "#B3122E",
+      "dbName": "Christmas Box",
+      "displayName": "Christmas Box",
+      "until": "2026-12-31",
+      "needsDb": true,
+      "sizes": {
+        "medium": {
+          "pieces": 25,
+          "colour": "Christmas",
+          "swatch": "#B3122E",
+          "price": 210,
+          "images": [
+            "christmas-box.webp"
+          ],
+          "variantNames": [
+            "m",
+            "medium"
+          ],
+          "dbVariant": "M",
+          "cartLabel": "25 Pieces — Christmas",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "large": {
+          "pieces": 48,
+          "colour": "Christmas",
+          "swatch": "#B3122E",
+          "price": 390,
+          "images": [
+            "christmas-box.webp"
+          ],
+          "variantNames": [
+            "l",
+            "large"
+          ],
+          "dbVariant": "L",
+          "cartLabel": "48 Pieces — Christmas",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "key": "nationalday",
+      "label": "National Day",
+      "note": "25 · 48 pieces · until 31 Dec",
+      "swatch": "#8A1538",
+      "dbName": "National Day Box",
+      "displayName": "National Day Box",
+      "until": "2026-12-31",
+      "needsDb": true,
+      "sizes": {
+        "medium": {
+          "pieces": 25,
+          "colour": "National Day",
+          "swatch": "#8A1538",
+          "price": 210,
+          "images": [
+            "national-day-box.webp"
+          ],
+          "variantNames": [
+            "m",
+            "medium"
+          ],
+          "dbVariant": "M",
+          "cartLabel": "25 Pieces — National Day",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "large": {
+          "pieces": 48,
+          "colour": "National Day",
+          "swatch": "#8A1538",
+          "price": 390,
+          "images": [
+            "national-day-box.webp"
+          ],
+          "variantNames": [
+            "l",
+            "large"
+          ],
+          "dbVariant": "L",
+          "cartLabel": "48 Pieces — National Day",
+          "defaults": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
   ]
 };
   </script>
-  <script src="v3/box.js?v=20261118"></script>
+  <script src="v3/box.js?v=20261126"></script>
 </body>
 </html>
