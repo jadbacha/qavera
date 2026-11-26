@@ -204,7 +204,7 @@
           <div class="co-step-head"><span class="num">01</span><h2>Delivery or <em>pickup</em></h2></div>
 
           <div class="choice" role="radiogroup" aria-label="Delivery or pickup">
-            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em id="deliveryFrom">From QAR 30</em></strong><span>To your door. The charge depends on your area.</span></label>
+            <label><input type="radio" name="fulfillment" value="delivery" checked><strong>Delivery <em id="deliveryFrom">From QAR 15</em></strong><span>To your door. The charge depends on your area.</span></label>
             <label><input type="radio" name="fulfillment" value="pickup"><strong>Pickup <em>Free</em></strong><span>Collect it from the QAVERA shop.</span></label>
           </div>
 
@@ -702,7 +702,7 @@
     }
 
     // ---- Offer codes (JETOUR Club, Klavy). The database checks everything again. ----
-    // "Doha" = areas charged QAR 50 or less (QAR 70 areas are outside Doha).
+    // "Doha" = areas marked Doha on the delivery list (up to about 37 km from the shop).
     // Codes are never listed in the page: only the code the customer types is checked.
     let bitesOptions = [];      // [{ id, name, price }]
     let appliedPromo = null;    // one code per order
@@ -720,7 +720,7 @@
       if (!p) return none;
       const pickup = isPickup();
       const areaKnown = !pickup && !!findArea(document.getElementById('area').value);
-      const doha = fee > 0 && fee <= 50;
+      const doha = fee > 0 && !!findArea(document.getElementById('area').value)?.doha;
       if (p.kind === 'hotel') {
         if (pickup) return { ...none, problem: `${p.code} is for delivery to a hotel. Please choose delivery.` };
         if (!isHotel()) return { ...none, problem: `Tick "Delivering to a hotel" under your delivery area to use ${p.code}.` };
@@ -1491,9 +1491,9 @@
 
     async function loadDeliveryAreas() {
       const { data, error } = await supabaseClient
-        .from('delivery_areas').select('name, fee').eq('active', true).order('name');
+        .from('delivery_areas').select('*').eq('active', true).order('name');
       if (error) { console.error('Could not load delivery areas:', error); return; }
-      deliveryAreas = (data || []).map(a => ({ name: a.name, fee: Number(a.fee) }));
+      deliveryAreas = (data || []).map(a => ({ name: a.name, fee: Number(a.fee), doha: a.doha ?? (Number(a.fee) <= 25) }));
       areasLoaded = deliveryAreas.length > 0;
       const fees = deliveryAreas.map(a => a.fee);
       if (fees.length) document.getElementById('deliveryFrom').textContent = `From QAR ${Math.min(...fees)}`;

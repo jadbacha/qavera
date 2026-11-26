@@ -2044,7 +2044,7 @@ ${escapeHtml(order.delivery_address)}</div>`}
         const c = (promoCodes || []).find(x => x.code === offerSelect.value);
         document.getElementById('noOfferMember').hidden = !(c && c.needs_member);
         document.getElementById('noOfferHint').textContent = !c ? ''
-          : c.kind === 'hotel' ? 'Free delivery to a hotel inside Doha (QAR 30 / 50 areas): delivery is set to 0.'
+          : c.kind === 'hotel' ? 'Free delivery to a hotel inside Doha (up to about 37 km): delivery is set to 0.'
           : c.kind === 'bites' ? `Orders of QAR ${Number(c.min_subtotal || 0)}+: add the Bites as an item and give it a 100% item discount.`
           : `${Number(c.percent)}% off the whole bill${c.free_delivery_min != null ? `, free delivery in Doha from QAR ${Number(c.free_delivery_min)} (set delivery to 0)` : ''}.`;
         if (event?.target === offerSelect && c) {
