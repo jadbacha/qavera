@@ -4,6 +4,10 @@
    BOX.noChoice: no flavour choice at all (an even mix we pack, e.g. Just
    Chocolate); the flavours are only listed. BOX.plain: plain chocolate
    pieces in the flavour list (not painted).
+   BOX.designs: box designs on one page (Classic, Christmas, National Day…),
+   each its own product with its own sizes and photos; a design with "until"
+   (YYYY-MM-DD, Qatar time) disappears after that day, and a design shows only
+   once its product exists in the database.
    The page defines BOX before loading this file (see bonbons.html).
    Sizes/prices come from Supabase (products + product_variants); the numbers
    in BOX are only a fallback while loading. Cart items match what checkout
@@ -26,8 +30,16 @@
     counts: [],
     productId: null,
     productName: BOX.dbName,
-    variants: {} // size -> { id, name, price }
+    variants: {}, // size -> { id, name, price }
+    design: null
   };
+
+  // ---------- box designs ----------
+  const qatarToday = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Qatar' });
+  const DESIGNS = (BOX.designs || []).filter(d => !d.until || qatarToday <= d.until);
+  const designData = {}; // key -> { productId, productName, variants, soldOut, inDb }
+  DESIGNS.forEach(d => { designData[d.key] = { productId: null, productName: d.dbName, variants: {}, soldOut: false, inDb: !d.needsDb }; });
+  const currentDesign = () => DESIGNS.find(d => d.key === state.design) || null;
 
   // ---------- painted bonbon (illustration only: real shell colours vary) ----------
   function shade(hex, amount) {
@@ -55,6 +67,39 @@
   // exists in the database, so it can't be ordered before it is set up.
   function visibleSizes() {
     return SIZE_ORDER.filter(size => BOX.sizes[size] && (!BOX.sizes[size].needsDb || state.variants[size]));
+  }
+
+  function visibleDesigns() {
+    return DESIGNS.filter(d => designData[d.key].inDb);
+  }
+
+  function applyDesign(key) {
+    const d = DESIGNS.find(x => x.key === key);
+    if (!d) return;
+    state.design = key;
+    BOX.sizes = d.sizes;
+    BOX.dbName = d.dbName;
+    BOX.displayName = d.displayName;
+    const data = designData[key];
+    state.variants = data.variants;
+    state.productId = data.productId;
+    state.productName = data.productName;
+    if (!BOX.sizes[state.size]) state.size = SIZE_ORDER.find(sz => BOX.sizes[sz]);
+    state.image = 0;
+    setSoldOut(data.soldOut);
+  }
+
+  function renderDesigns() {
+    const box = el('designs');
+    if (!box) return;
+    const list = visibleDesigns();
+    box.closest('.design-step').hidden = list.length < 2;
+    box.innerHTML = list.map(d => `
+      <button type="button" class="design" role="radio" aria-checked="${d.key === state.design}" data-design="${d.key}">
+        <span class="swatch" style="background:${d.swatch}"></span>
+        <strong>${escapeHtml(d.label)}</strong>
+        <span class="caption">${escapeHtml(d.note || '')}</span>
+      </button>`).join('');
   }
 
   function renderSizes() {
@@ -109,6 +154,7 @@
   }
 
   function renderAll() {
+    renderDesigns();
     renderSizes();
     renderGallery();
     renderCustomiser();
@@ -148,6 +194,15 @@
     if (!button) return;
     state.size = button.dataset.size;
     state.image = 0;
+    resetCounts();
+    el('customMsg').textContent = '';
+    renderAll();
+  });
+
+  if (el('designs')) el('designs').addEventListener('click', event => {
+    const button = event.target.closest('[data-design]');
+    if (!button || button.dataset.design === state.design) return;
+    applyDesign(button.dataset.design);
     resetCounts();
     el('customMsg').textContent = '';
     renderAll();
@@ -200,7 +255,7 @@
     const key = custom ? state.counts.join('-') : 'standard';
 
     window.QaveraCart.add({
-      id: `${BOX.key}-box-${size}-${key}`,
+      id: `${BOX.key}-box-${state.design && state.design !== DESIGNS[0]?.key ? `${state.design}-` : ''}${size}-${key}`,
       size,
       product_id: state.productId,
       variant_id: variant?.id || null,
@@ -229,17 +284,51 @@
     </article>`).join('');
 
   // ---------- sold out (set by an admin) ----------
-  function markSoldOut() {
+  const addLabel = el('addToBox').innerHTML;
+  function setSoldOut(on) {
     const button = el('addToBox');
-    button.disabled = true;
-    button.classList.add('is-sold-out');
-    button.textContent = 'Sold out';
-    button.closest('.buy-row').insertAdjacentHTML('afterend',
+    button.disabled = on;
+    button.classList.toggle('is-sold-out', on);
+    button.innerHTML = on ? 'Sold out' : addLabel;
+    document.querySelectorAll('.sold-out-note').forEach(n => n.remove());
+    if (on) button.closest('.buy-row').insertAdjacentHTML('afterend',
       `<p class="sold-out-note">The ${escapeHtml(BOX.displayName)} is sold out for now. Please check back soon.</p>`);
   }
+  const markSoldOut = () => setSoldOut(true);
 
   // ---------- live sizes and prices from Supabase ----------
+  async function loadDesign(d) {
+    const data = designData[d.key];
+    const { data: product, error } = await sb
+      .from('products').select('*').ilike('name', d.dbName).eq('active', true).maybeSingle();
+    if (error || !product) return;
+    data.inDb = true;
+    data.productId = product.id;
+    data.productName = product.name;
+    data.soldOut = product.in_stock === false;
+    const { data: variants, error: vError } = await sb
+      .from('product_variants').select('id, name, price, active').eq('product_id', product.id).eq('active', true);
+    if (vError || !variants) return;
+    SIZE_ORDER.filter(size => d.sizes[size]).forEach(size => {
+      const words = d.sizes[size].variantNames;
+      const match = variants.find(v => {
+        const n = String(v.name || '').trim().toLowerCase();
+        return words.includes(n) || words.some(w => n.startsWith(w + ' '));
+      });
+      if (match) data.variants[size] = { id: match.id, name: match.name, price: Number(match.price) };
+    });
+  }
+
   async function loadFromSupabase() {
+    if (DESIGNS.length) {
+      try {
+        await Promise.all(DESIGNS.map(d => loadDesign(d).catch(err => console.warn('QAVERA: could not load', d.dbName, err))));
+      } finally {
+        applyDesign(state.design);
+        renderAll();
+      }
+      return;
+    }
     try {
       const { data: product, error } = await sb
         .from('products').select('*').ilike('name', BOX.dbName).eq('active', true).maybeSingle();
@@ -267,6 +356,7 @@
     }
   }
 
+  if (DESIGNS.length) applyDesign(DESIGNS[0].key);
   resetCounts();
   renderAll();
   loadFromSupabase();

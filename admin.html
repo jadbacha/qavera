@@ -824,7 +824,7 @@
     // Box sizes read like the till: "Premium — 12 Pieces".
     const BOX_SIZE_NAMES = { s: '12 Pieces', m: '25 Pieces', l: '48 Pieces', mini: 'Mini, 2 Pieces' };
     function receiptItemName(item) {
-      const box = /^(premium|luxury|chocolate bonbons|just chocolate)$/i.test(String(item.product_name || '').trim());
+      const box = /^(premium|luxury|chocolate bonbons|just chocolate|christmas box|national day box)$/i.test(String(item.product_name || '').trim());
       const size = box ? BOX_SIZE_NAMES[String(item.variant_name || '').trim().toLowerCase()] : null;
       return `${item.product_name || ''}${item.variant_name ? ` — ${size || item.variant_name}` : ''}`;
     }
@@ -1741,6 +1741,8 @@ ${escapeHtml(order.delivery_address)}</div>`}
       Luxury: ['Mouhalabia Fustuq', 'Cheesecake', 'Nocciolla Coffee', 'Raspberry Dunkel', 'Mango Passion', 'Matcha-cha'],
       'Chocolate Bonbons': ['Carmelitto Di QAVERA', 'Caffezinho', 'Noccelle Di QAVERA', 'Pistachio Royal', 'Mouhalabia Fustuq', 'Cheesecake', 'Mango Passion', 'Piña Colada']
     };
+    // Seasonal designs of the same box, same flavours.
+    BOX_FLAVOURS['Christmas Box'] = BOX_FLAVOURS['National Day Box'] = BOX_FLAVOURS['Chocolate Bonbons'];
     let flavourCounts = [];
 
     async function loadCatalog() {
